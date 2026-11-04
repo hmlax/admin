@@ -7,7 +7,7 @@ React → admin HTTP :7788 → operator gRPC :7790 → データベース / Redi
            SSE :7789 ← gRPC イベントストリーム ← Redis Pub/Sub
 ```
 
-- フロントエンドは `frontend` のみです。React 19、Ant Design、TanStack Query を使用します。
+- `frontend/platform-admin` はプラットフォーム管理、`frontend/merchant-admin` は加盟店管理です。両 React アプリは独立してビルド・デプロイし、コンポーネントと API クライアントを共有します。
 - `backend/admin`：HTTP、認証、RBAC、テナント入口検証、フィールド権限、監査。
 - `backend/operator`：業務処理、GORM、ジョブ、データアクセス。
 - `backend/platform`：共通依存、契約、生成コード、ビルド・デプロイツール。backend 直下のディレクトリはこの3つのみです。
@@ -33,10 +33,13 @@ go run ./admin
 ```sh
 cd frontend
 pnpm install --frozen-lockfile
-pnpm dev
+pnpm dev:platform
+# 加盟店側：merchant-admin/.env.development.local.example を
+# merchant-admin/.env.development.local にコピーし、既存の加盟店コードを設定
+pnpm dev:merchant
 ```
 
-フロントエンドは `http://localhost:15888`。新規環境の初期アカウントは `admin / Abcd@1234` です。
+プラットフォーム管理は `http://localhost:15888`、加盟店管理は `http://localhost:15889`。新規環境のプラットフォーム初期アカウントは `admin / Abcd@1234`、加盟店は各テナントのアカウントを使用します。両アプリは admin の HTTP/SSE にプロキシし、入口の権限はバックエンドが検証します。[フロントエンドの起動・デプロイ](frontend/README.md)を参照してください。
 
 デプロイ、Nacos、環境変数、移行の詳細は [サービス分割ガイド](docs/service_split.md) を参照してください。開発情報は [ドキュメント索引](docs/README.md) と [AGENTS.md](AGENTS.md) にあります。
 

@@ -16,17 +16,24 @@ func TestRenderPDFLive(t *testing.T) {
 		body { margin: 20mm; font-family: "Microsoft YaHei", sans-serif; }
 		h1 { font-size: 20pt; }
 	</style></head><body><h1>Go Admin 服务端 PDF 冒烟</h1><p>用户名：admin / 创建时间：2026-10-28</p></body></html>`
-	pdf, err := RenderPDF(context.Background(), Options{
+	options := Options{
 		HTML:          html,
 		PaperWidthMm:  210,
 		PaperHeightMm: 297,
 		Background:    true,
-	})
-	if err != nil {
-		t.Fatalf("render: %v", err)
 	}
-	if len(pdf) < 1000 {
-		t.Fatalf("pdf too small: %d bytes", len(pdf))
+	// The production print service registers one renderer for repeated requests.
+	renderer := &ChromeRenderer{}
+	var pdf []byte
+	for attempt := range 2 {
+		var err error
+		pdf, err = renderer.RenderPDF(context.Background(), options)
+		if err != nil {
+			t.Fatalf("render %d: %v", attempt+1, err)
+		}
+		if len(pdf) < 1000 {
+			t.Fatalf("render %d: pdf too small: %d bytes", attempt+1, len(pdf))
+		}
 	}
 	out := os.Getenv("TEST_PRINT_PDF_OUT")
 	if out != "" {

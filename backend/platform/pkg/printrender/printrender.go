@@ -66,16 +66,13 @@ func RenderPDF(ctx context.Context, opts Options) ([]byte, error) {
 	return r.RenderPDF(ctx, opts)
 }
 
-// ChromeRenderer 基于本机 Chrome/Edge 的渲染器（浏览器实例进程级复用）。
+// ChromeRenderer 基于本机 Chrome/Edge 渲染，每次请求独立创建并关闭浏览器。
 type ChromeRenderer struct {
 	BrowserPath string
 	NoSandbox   *bool
-	mu          sync.Mutex
-	allocCtx    context.Context
-	cancel      context.CancelFunc
 }
 
-// findBrowser 浏览器查找：CHROME_PATH 环境变量 → chromedp 默认探测 → Edge 兜底。
+// findBrowser 按显式配置、PATH 和常见安装路径查找浏览器。
 func findBrowser() (string, error) { return findBrowserAt("") }
 func findBrowserAt(configured string) (string, error) {
 	if p := configured; p != "" {
@@ -87,6 +84,7 @@ func findBrowserAt(configured string) (string, error) {
 		return path, nil
 	}
 	for _, p := range []string{
+		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
 		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
 		"/usr/bin/google-chrome",
@@ -100,6 +98,7 @@ func findBrowserAt(configured string) (string, error) {
 	}
 	// Edge 兜底（Windows 服务器常无 Chrome；Edge 同 Chromium 协议）
 	for _, p := range []string{
+		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
 		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
 		"/usr/bin/microsoft-edge",
@@ -112,11 +111,6 @@ func findBrowserAt(configured string) (string, error) {
 }
 
 func (c *ChromeRenderer) allocator(ctx context.Context) (context.Context, context.CancelFunc, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.allocCtx != nil {
-		return c.allocCtx, c.cancel, nil
-	}
 	path, err := findBrowserAt(c.BrowserPath)
 	if err != nil {
 		return nil, nil, err
@@ -135,7 +129,6 @@ func (c *ChromeRenderer) allocator(ctx context.Context) (context.Context, contex
 		opts = append(opts, chromedp.Flag("no-sandbox", true))
 	}
 	allocCtx, cancel := chromedp.NewExecAllocator(ctx, opts...)
-	c.allocCtx, c.cancel = allocCtx, cancel
 	return allocCtx, cancel, nil
 }
 

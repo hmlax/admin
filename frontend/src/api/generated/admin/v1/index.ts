@@ -7591,7 +7591,7 @@ export type NotificationDelivery = {
   // 存在的理由：台账不存正文快照（见 §3.3），排障时要能跳回业务对象去看发了什么。
   relatedId?: number;
   // 一次派发意图的标识：调用方不传则服务端生成 UUID。唯一性按 (request_id, channel) 组合，
-  // 见 §3.3 与 ent schema 注释（今天没有调用方自传，它是"同一次意图不许两行"的提前落地）。
+  // 见 §3.3 与 GORM schema 注释（今天没有调用方自传，它是"同一次意图不许两行"的提前落地）。
   requestId?: string;
   sentAt?: wellKnownTimestamp;
   status?: DeliveryStatus_DeliveryStatus;
@@ -8441,7 +8441,7 @@ export type ListChannelSchemasResponse = {
 // （钉钉把签名放 URL query 且只看 body 的 errcode，飞书把签名放 body 里且看 code）。
 // 正文形状不在这一格里：它由 webhook_payload_template 决定，留空时回落到本风格的内置默认模板。
 // 为什么在包顶层而不成 `NotificationChannel` 里：proto3 的枚举成员名属于外层作用域而非枚举
-// 自身，嵌进消息就和 `TlsMode.NONE` 撞同一作用域。成员名则必须与 ent 列值逐字相同：
+// 自身，嵌进消息就和 `TlsMode.NONE` 撞同一作用域。成员名则必须与 GORM 列值逐字相同：
 // repo 的 EnumTypeConverter 按名字字符串配对，加前缀等于字段静默丢失。
 export type SignStyle = {
 };
@@ -8452,7 +8452,7 @@ export type SignStyle_SignStyle =
   | 'FEISHU'
   | 'NONE'
   | 'WECOM';
-// 短信服务商。成员名必须与 ent 列值逐字相同（EnumTypeConverter 按名字字符串配对）。
+// 短信服务商。成员名必须与 GORM 列值逐字相同（EnumTypeConverter 按名字字符串配对）。
 // proto3 首成员为零值：库里的存量行在加列时被 DEFAULT 回填成 'ALIYUN'，语义一致。
 export type SmsProvider = {
 };

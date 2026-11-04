@@ -67,6 +67,10 @@ def main():
     if len(sys.argv) != 2 or sys.argv[1] not in {*TEMPLATES, 'hz'}:
         raise SystemExit('usage: codegen.py api|hz|openapi|ts')
     target = sys.argv[1]
+    if target == 'ts' and shutil.which('protoc-gen-typescript-http') is None:
+        # buf's clean option removes the output before invoking the plugin.
+        # Check first so a missing local tool cannot delete committed clients.
+        raise SystemExit('Missing protoc-gen-typescript-http; run make plugin before make ts.')
     if target == 'api':
         sources = sorted((ROOT / 'platform/proto/operator/v1').glob('*.proto'))
         command = ['buf', 'generate', '--template', TEMPLATES[target]]

@@ -12,7 +12,10 @@
  *   ADMIN_USER/PASS 默认 admin/admin
  *   REDIS_CONTAINER 默认 redis-server（登录验证码从该容器 Redis 直读，需 docker 可用）
  *   REDIS_PASSWORD  默认 *Abcd123456（backend/platform/pkg/runtimeconfig/defaults/data.yaml）
+ *   REDIS_DB        默认 0，需与 Nacos 的 data.redis.db 一致
  *   HEADLESS        默认 true，设 false 可看浏览器过程
+ *   BROWSER_CHANNEL 默认 msedge；本机 Chrome 可设为 chrome
+ * 同一账号的退出登录验收会吊销令牌，必须与本巡检串行执行。
  * 退出码：全部通过 0；任一失败 1（失败清单打印在末尾）。
  */
 import { execFileSync } from 'node:child_process';
@@ -23,6 +26,7 @@ const ADMIN_USER = process.env.ADMIN_USER ?? 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS ?? 'admin';
 const REDIS_CONTAINER = process.env.REDIS_CONTAINER ?? 'redis-server';
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD ?? '*Abcd123456';
+const REDIS_DB = process.env.REDIS_DB ?? '0';
 
 /** 有 ListTable 的列表路由（对照 src/router/modules/*.tsx；新增列表页请同步此表） */
 const LIST_ROUTES = [
@@ -39,25 +43,33 @@ const LIST_ROUTES = [
 ];
 
 const redis = (args) =>
-  execFileSync('docker', ['exec', REDIS_CONTAINER, 'redis-cli', '-a', REDIS_PASSWORD, '--no-auth-warning', ...args], {
+  execFileSync('docker', ['exec', REDIS_CONTAINER, 'redis-cli', '-a', REDIS_PASSWORD, '--no-auth-warning', '-n', REDIS_DB, ...args], {
     encoding: 'utf8',
   });
 
 /** 从 Redis 直读验证码答案（键 go-admin:captcha:<id>，id 取登录页验证码请求响应头 X-Captcha-Id） */
 function readCaptchaFromRedis(captchaId) {
-  return redis(['GET', `go-admin:captcha:${captchaId}`]).trim();
+  const value = redis(['GET', `go-admin:captcha:${captchaId}`]).trim();
+  if (!value) throw new Error('CAPTCHA answer missing; check REDIS_CONTAINER and REDIS_DB.');
+  return value;
 }
 
 async function login(page) {
   // 监听要先于 goto 挂上：登录页挂载即拉验证码。captchaId 在 GenerateCaptcha 的
   // JSON 响应体里；答案只在 Redis（键 go-admin:captcha:<id>），须 docker 可用。
-  let captchaIdResolve;
-  const captchaId = new Promise((resolve) => (captchaIdResolve = resolve));
+  // StrictMode can issue multiple requests. Match the image actually rendered
+  // by React so the first (discarded) response cannot select a stale answer.
+  const captchas = new Map();
   page.on('response', async (res) => {
     try {
       if (!(res.headers()['content-type'] ?? '').includes('json')) return;
       const body = await res.json();
-      if (body && typeof body.captchaId === 'string' && body.captchaId) captchaIdResolve(body.captchaId);
+      if (res.url().endsWith('/admin/v1/login') && res.status() >= 400) {
+        console.error('List-height login failed:', res.status(), body.reason, body.message);
+      }
+      if (body && typeof body.captchaId === 'string' && body.captchaId) {
+        captchas.set(body.imageBase64, body.captchaId);
+      }
     } catch {
       // 非 JSON 响应或流已消费，忽略
     }
@@ -65,13 +77,25 @@ async function login(page) {
   await page.goto(`${BASE_URL}/auth/login`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
   if (!page.url().includes('/auth/login')) return; // 已有登录态
-  const id = await Promise.race([captchaId, new Promise((r) => setTimeout(() => r(null), 8000))]);
+  let id;
+  const deadline = Date.now() + 8000;
+  while (!id && Date.now() < deadline) {
+    const image = await page.getByAltText('captcha').getAttribute('src');
+    id = captchas.get(image);
+    // The browser may render before the response observer finishes decoding.
+    if (!id) await page.waitForTimeout(100);
+  }
   if (!id) throw new Error('未捕获 GenerateCaptcha 响应（captchaId）');
   await page.getByPlaceholder('用户名 / 邮箱 / 手机号').fill(ADMIN_USER);
   await page.getByPlaceholder('请输入密码').fill(ADMIN_PASS);
   await page.getByPlaceholder('请输入验证码').fill(readCaptchaFromRedis(id));
   await page.locator('button.login-submit-btn').click();
-  await page.waitForURL((u) => !String(u).includes('/auth/login'), { timeout: 15000 });
+  try {
+    await page.waitForURL((u) => !String(u).includes('/auth/login'), { timeout: 15000, waitUntil: 'domcontentloaded' });
+  } catch (error) {
+    console.error('List-height login did not navigate:', page.url(), await page.locator('body').innerText());
+    throw error;
+  }
 }
 
 /** 页内度量：卡底贴合度 + fixed 容器内容裁剪。
@@ -83,7 +107,9 @@ const MEASURE = () => {
   if (!container) return { hasContainer: false, fixed: false };
   const r = (el) => el.getBoundingClientRect();
   const out = { hasContainer: true, fixed: !!cc && cc.className.includes('--fixed'), kind: cc ? 'cc' : 'pcc' };
-  const cards = document.querySelectorAll('.ant-pro-card');
+  // Portaled drawers can retain hidden cards outside the page. Measure only
+  // cards belonging to this content container, as required by the contract.
+  const cards = container.querySelectorAll('.ant-pro-card');
   const lastCard = cards[cards.length - 1];
   if (lastCard) out.gap = Math.round(r(container).bottom - r(lastCard).bottom);
   if (out.fixed) {
@@ -110,12 +136,18 @@ const MEASURE = () => {
 const GAP_BASELINE = { cc: 19, pcc: 2 };
 
 const failures = [];
-const browser = await chromium.launch({ channel: 'msedge', headless: process.env.HEADLESS !== 'false' });
+const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL ?? 'msedge', headless: process.env.HEADLESS !== 'false' });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await login(page);
   for (const route of LIST_ROUTES) {
     await page.goto(BASE_URL + route, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      document.querySelector('.content-container .ant-table, .page-container-content .ant-table') ||
+      window.location.pathname.startsWith('/auth/login'), undefined, { timeout: 30000 });
+    if (new URL(page.url()).pathname.startsWith('/auth/login')) {
+      throw new Error(`Session revoked while checking ${route}; do not run logout tests with the same account concurrently.`);
+    }
     // 等表格出现后连续采样，gap 连续两次一致才算稳定（hook 的 1.5s 兜底计时器/
     // 主从双表异步加载都会让早采样读到过渡值）
     let m = null;

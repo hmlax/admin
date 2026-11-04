@@ -17,6 +17,7 @@ SRCS_MK		:= admin/Makefile operator/Makefile
 PYTHON ?= python3
 HZ ?= hz
 HZ_VERSION ?= v0.9.1
+TS_PROTO_VERSION ?= v0.0.0-20260831125122-5bb4931991b2
 
 .PHONY: help gen build api openapi init all vendor dep test cover vet lint docker \
 		register install-dev install-prod docker-up docker-down docker-libs pm2-deploy ts build_only \
@@ -39,7 +40,7 @@ plugin:
 	go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
 	go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@latest
-	go install github.com/tx7do/go-wind-toolkit/protoc-gen-typescript-http@latest
+	go install github.com/tx7do/go-wind-toolkit/protoc-gen-typescript-http@$(TS_PROTO_VERSION)
 
 # install cli tools
 cli:
