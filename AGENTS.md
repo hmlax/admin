@@ -22,7 +22,7 @@
 3. 访问令牌及 HTTP 权限在 admin 校验。operator 接收可信网关上下文，不重复挂 JWT/RBAC 中间件；数据归属和租户隔离仍是数据层约束。
 4. operator 仅限内部网络可达，不对浏览器/公网发布 gRPC 端口。
 5. 启动参数从环境变量读取，不增加命令行参数。环境变量只提供 Nacos 连接信息；应用配置只从 Nacos 的 `server.yaml`、`data.yaml` 获取，不使用环境变量覆盖、本地 YAML 或内嵌配置回退。Nacos 基础设施配置变更后重启进程。
-6. 不手改 protobuf/GORM 生成代码。使用本仓库 Makefile 生成，保持 admin/operator/platform 三个顶级目录。Wire 已弃用。
+6. 不手改 protobuf/GORM 生成代码。使用本仓库 Makefile 生成，保持 admin/operator/platform 三个顶级目录。operator 使用 Wire 生成依赖注入；维护 provider 集合及 `cmd/server/wire.go`，运行 `make wire`，不手改 `wire_gen.go`。
 7. 修改 operator 消息或 RPC 后在 backend 运行 `make api`（含 `make hz` 和 gatewaygen）；修改 API 消息或 HTTP 路由/绑定用 `make hz`，实际执行官方 `hz update`。OpenAPI 用 `make openapi`，React TS 用 `make ts`。HTTP 路由、请求及返回类型必须在 proto 定义，详见 `backend/admin/README.md`。
 8. 已部署数据库新增端点需要更新内嵌 OpenAPI、重启 operator，然后管理页「接口同步」；新增菜单用「菜单同步」。
 

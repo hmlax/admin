@@ -28,7 +28,7 @@ make ts        # frontend/src/api/generated/admin/v1
 - 跨仓储操作只使用同一个事务客户端；错误、取消或 panic 回滚，提交失败必须返回调用方。不要把事务中的一部分写回根连接池。
 - 每次数据库调用传递 ctx；错误保留原始原因。搜索使用 contains，ID 使用精确查询。
 - 在 `operator/internal/service/<resource>_service.go` 实现业务、配额和数据归属约束。HTTP JWT、会话吊销、RBAC 和入口检查由 admin 负责，operator 不重复挂 HTTP 中间件。
-- 在 `operator/cmd/server/wiring.go` 手写装配仓储和服务。`make register ENTITY=<resource>` 可辅助登记，仍需检查构造参数和依赖。
+- 在 operator 的 `internal/data/providers.go`、`internal/service/providers.go` 登记构造函数。`make register ENTITY=<resource>` 自动登记 provider 与传输契约，并生成 Wire；额外依赖也由 Wire 解析。用 `make wire-check` 检查生成一致性，不手改 `cmd/server/wire_gen.go`。
 
 普通 CRUD 请求体是 `{data: {...}}`，标记 `body: "*"` 的自定义 RPC 接受扁平请求。HTTP 路由和请求/返回类型只在 proto 中维护。
 

@@ -89,7 +89,7 @@ type userProfileServiceTestEnv struct {
 // newUserProfileServiceForTest 白盒复刻 NewUserProfileService 的字段初始化：
 // log 换 NopLogger；userRepo 用本文件桩；roleRepo 走既有 testkit；
 // userCredentialRepo / configRepo 走 repo_testkit5（miniredis 假 client 注入，
-// 装配关系与生产 wiring.go 一致）；authenticator 走 repo_testkit5 注入式
+// 装配关系与生产 Wire 装配一致）；authenticator 走 repo_testkit5 注入式
 // 构造；notifier（换绑验证码邮件出口）与 mc（需 MinIO 实例）
 // 置 nil，见文件头跳过说明。
 func newUserProfileServiceForTest(t *testing.T) userProfileServiceTestEnv {

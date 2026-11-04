@@ -17,7 +17,7 @@ backend 仅有 `admin/`、`operator/`、`platform/` 三个顶级目录。`go.mod
 
 ## 生成与装配
 
-DI 手写在 operator `cmd/server/wiring.go`，不用 Wire。在 backend 使用 `make api`、`make models`，不使用生成旧 app/service 布局的脚手架命令。
+operator 使用 Wire：`internal/data`、`internal/service`、`internal/server` 各维护 `providers.go`，`cmd/server/wire.go` 声明注入器，`wire_gen.go` 由官方工具生成并提交。在 backend 运行 `make wire` 生成、`make wire-check` 校验一致性；工具版本固定在 go.mod。新增依赖放入 provider 集合，清理通过 provider 返回的 cleanup 交给 Wire 管理。`make api` 末尾也会生成 Wire。不使用生成旧 app/service 布局的脚手架命令。
 
 `make api` 通过 `platform/tools/codegen.py` 生成版本化 RPC 与模型，然后调用 `make hz`，执行官方 `hz update` 和 `platform/tools/gatewaygen.py`（admin gRPC 客户端与 operator 实现注册）。仅修改 HTTP 契约可执行 `make hz` 或 `make -C admin hz`；新增业务服务需同时更新 `platform/tools/gateway-services.json`。HTTP 文件、SSE 编码及入口权限在 admin；业务和数据访问在 operator。
 

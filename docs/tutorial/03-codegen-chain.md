@@ -25,6 +25,6 @@ make ts
 
 仅修改持久化模型或模型生成器时使用 `make models`；仅修改 HTTP 契约使用 `make hz`。生成器根据 proto 产出原生 GORM Scope 和字段 setter，不读取旧 ORM schema。生成模型直接作为 GORM 目标；运行时构造器不会执行 DDL。
 
-手写业务放在 operator 的 data/service；装配在 `operator/cmd/server/wiring.go`。新增 HTTP 路由不能绕开 proto；API/RPC 业务 protobuf 不互相 import、不使用类型别名。
+手写业务放在 operator 的 data/service；各层 `providers.go` 维护 Wire provider 集合，`operator/cmd/server/wire.go` 声明注入器，`make wire` 生成 `wire_gen.go`，`make wire-check` 检查一致性。新增 HTTP 路由不能绕开 proto；API/RPC 业务 protobuf 不互相 import、不使用类型别名。
 
 生成后检查重复生成稳定性、运行 Go 测试并构建两个入口。新增接口部署后还需执行平台「接口同步」，新增菜单执行「菜单同步」。

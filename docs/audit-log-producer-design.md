@@ -146,9 +146,10 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
 | 中间件实例化与 Handle 调用 | `platform/pkg/middleware/logging/logging.go` |
 | 回调闭包注册（闭包内调各 repo.Create） | `internal/server/rest_server.go` `NewRestMiddleware` 的 `applogging.Server(With*…)` 块 |
 | 策略评估包装引擎 | `authz.Server(newEvalLoggingEngine(authorizer.Engine(), policyEvaluationLogRepo))`（同文件） |
-| repo 实例化 | `cmd/server/wiring_ent.go`（手写 DI；五处 `data.New*AuditLogRepo`） |
+| repo 实例化 | `internal/data/providers.go`（Wire provider；审计仓储构造函数） |
 
-> 历史注：本仓 DI 已弃用 Wire 改手写 `wiring_*.go`；本文档早稿中的 `wire_gen.go`/
+> 当前 DI 使用 Wire：维护各层 `providers.go` 和 `cmd/server/wire.go`，运行 `make wire` 生成 `wire_gen.go`。本文档早稿中的路径/模型名以当前目录为准。
+> 历史说明中的 `wire_gen.go`/
 > `wire_set.go` 行号引用即彼时装配点，现状以上表为准。
 
 ## 9. 边界与留空字段

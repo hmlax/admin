@@ -8,7 +8,7 @@
 //   - 生产构造器中经由 *bootstrap.Context 注入的仅是日志助手，无其他隐藏依赖；
 //     依赖 redis/minio 等外部件的构造器不在此导出。
 //   - RoleRepo / OrgUnitRepo 的关联子 repo 由本文件内 testkitXxx 私有构造器组装，
-//     组装关系对齐 cmd/server/wiring.go 的仓储层装配小节。
+//     组装关系对齐 internal/data/providers.go 的仓储依赖图。
 //   - NewTenantUsageRepoForTest 的 authenticator 参数按生产签名保留：
 //     TenantUsageRepo 仅在 CleanupTenantData/EnforceExpiryPolicies 中解引用它且有
 //     nil 守卫，GetUsage 不触碰；测试不覆盖吊销令牌链路时可传 nil。
@@ -59,7 +59,7 @@ func NewTenantUsageRepoForTest(dbClient *store.DBClient, authenticator *Authenti
 }
 
 // NewRoleRepoForTest 逐字段复刻 role_repo.go 的 NewRoleRepo（log 换 NopLogger；
-// 关联子 repo 由 testkit 私有构造器组装，对齐 wiring.go 的装配关系）。
+// 关联子 repo 由 testkit 私有构造器组装，对齐 Wire 的装配关系）。
 func NewRoleRepoForTest(dbClient *store.DBClient) *RoleRepo {
 	repo := &RoleRepo{
 		log:      bLogger.NewHelper(bLogger.NopLogger()),

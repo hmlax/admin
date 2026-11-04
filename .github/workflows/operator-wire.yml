@@ -1,0 +1,29 @@
+name: operator-wire
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/operator-wire.yml'
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/operator-wire.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+      - name: Check Wire generation
+        run: make wire-check
+      - name: Test application injection and module registration
+        run: go test ./operator/cmd/server ./platform/tools/register
+      - name: Build operator
+        run: go build ./operator/cmd/server

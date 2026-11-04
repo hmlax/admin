@@ -13,7 +13,7 @@ import (
 //
 // 为什么它住在 internal/service 而不是 data/channel/：站内信的实现就是同包里的
 // InternalMessageService（收件行落库 + SSE 推送），而 data 包 import service 包会成环。
-// 于是本适配器由 wiring.go 在装配期注册进 data/channel 的 Registry——
+// 于是本适配器由 ProvideChannelRegistry 在装配期注册进 data/channel 的 Registry——
 // 这是全仓唯一一条"渠道实现反向依赖服务层"的边，见 docs/notification_domain_design.md §3.1。
 //
 // 它持有的是 *InternalMessageService 本身而不是那两个协作者（收件仓储 + publisher）：

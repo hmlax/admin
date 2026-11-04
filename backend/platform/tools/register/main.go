@@ -1,5 +1,5 @@
-// register adds standard CRUD construction to operator wiring and the typed
-// gateway manifest, then regenerates both transport adapters.
+// register adds standard CRUD providers and the typed gateway manifest, then
+// regenerates the transport adapters and Wire injector.
 package main
 
 import (
@@ -42,7 +42,15 @@ func main() {
 		fmt.Fprintln(os.Stderr, "generate gateway adapters:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Registered %s in operator wiring and admin/operator transport adapters.\n", *entity)
+	wireCommand := exec.Command("go", "tool", "wire", "gen", "./"+filepath.Base(*appDir)+"/cmd/server")
+	wireCommand.Dir = filepath.Clean(filepath.Join(*appDir, ".."))
+	wireCommand.Stdout = os.Stdout
+	wireCommand.Stderr = os.Stderr
+	if err := wireCommand.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "generate operator Wire injector:", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Registered %s in Wire providers and admin/operator transport adapters.\n", *entity)
 }
 
 type gatewayManifest struct {
@@ -54,34 +62,24 @@ type gatewayManifest struct {
 func registerCRUD(entity, appDir string) error {
 	typ := pascal(entity)
 	name := lowerFirst(typ)
-	wiringPath := appDir + "/cmd/server/wiring.go"
 	if err := apply(
-		// 仓储构造行:注入到仓储层小节末尾
+		// Register repository constructors without hard-coding their arguments.
 		patch{
-			path:   wiringPath,
-			skipIf: "data.New" + typ + "Repo(",
+			path:   filepath.Join(appDir, "internal/data/providers.go"),
+			skipIf: "New" + typ + "Repo,",
 			anchors: []string{
-				"// ── register:repo ── 新模块仓储在此行后注册(make register 工具锚点,勿删)",
+				"// register:repo",
 			},
-			lines: []string{"\t" + name + "Repo := data.New" + typ + "Repo(ctx, dbClient)"},
+			lines: []string{"\tNew" + typ + "Repo,"},
 		},
-		// 服务构造行:注入到服务层小节末尾
+		// Wire resolves constructor dependencies after transport generation.
 		patch{
-			path:   wiringPath,
-			skipIf: "service.New" + typ + "Service(",
+			path:   filepath.Join(appDir, "internal/service/providers.go"),
+			skipIf: "New" + typ + "Service,",
 			anchors: []string{
-				"// ── register:service ── 新模块服务在此行后注册(make register 工具锚点,勿删)",
+				"// register:service",
 			},
-			lines: []string{"\t" + name + "Service := service.New" + typ + "Service(ctx, " + name + "Repo)"},
-		},
-		// NewGRPCServer 实参
-		patch{
-			path:   wiringPath,
-			skipIf: "\t\t" + name + "Service,",
-			anchors: []string{
-				"// register:rest-arg ── 新模块服务实参在此行后追加(make register 工具锚点,勿删)",
-			},
-			lines: []string{"\t\t" + name + "Service,"},
+			lines: []string{"\tNew" + typ + "Service,"},
 		},
 	); err != nil {
 		return err

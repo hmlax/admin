@@ -34,7 +34,7 @@ make api openapi ts
 make register ENTITY=<entity>
 ```
 
-检查 `operator/cmd/server/wiring.go` 和 `platform/tools/gateway-services.json`，补齐额外构造依赖。该命令更新生成的 gRPC 注册与 admin 代理装配。HTTP 路由由 IDL 经 `hz update` 生成。
+检查 operator 各层 `providers.go` 和 `platform/tools/gateway-services.json`，登记额外依赖的 provider。该命令更新生成的 gRPC 注册、admin 代理和 Wire 注入器；`make wire-check` 校验一致性。HTTP 路由由 IDL 经 `hz update` 生成。
 
 ## 4. 实现 React 页面
 

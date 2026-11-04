@@ -72,7 +72,7 @@ React 开发配置为 `VITE_API_URL=/`，Vite 按 `/admin` 前缀代理到 admin
 | `backend/operator/internal/data/ent/schema/**` | 手写 | ✅ |
 | `backend/platform/proto/operator/**` | 手写 proto | ✅ |
 | `internal/service/`、`internal/data/*_repo.go` | 手写（模式化样板） | ✅ |
-| `cmd/server/wiring_*.go` | 手写 DI 装配（项目已弃用 Wire） | ✅ |
+| `cmd/server/wire.go` / `wire_gen.go` | Wire 注入器声明 / 生成的 DI 装配（各层 `providers.go`） | ✅ |
 
 生成链路的完整机制在[第 3 章](./03-codegen-chain.md)，实战在第 4 章。
 

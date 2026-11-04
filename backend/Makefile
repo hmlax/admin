@@ -20,7 +20,7 @@ HZ_VERSION ?= v0.9.1
 
 .PHONY: help gen build api openapi init all vendor dep test cover vet lint docker \
 		register install-dev install-prod docker-up docker-down docker-libs pm2-deploy ts build_only \
-		infra-build infra-up infra-down infra-verify infra-config infra-test-tenant models hz
+		infra-build infra-up infra-down infra-verify infra-config infra-test-tenant models hz wire wire-check
 
 # show environment variables
 env:
@@ -76,15 +76,24 @@ lint:
 # generate code
 gen: api openapi
 
-# register a new CRUD module into the hand-written wiring (usage: make register ENTITY=product)
+# Register CRUD providers and transport bindings, then regenerate Wire.
 register:
 	go run ./platform/tools/register -entity $(ENTITY)
+
+# Generate the operator dependency injector with the module-pinned Wire tool.
+wire:
+	go tool wire gen ./operator/cmd/server
+
+# Fail if the committed injector differs from the provider graph.
+wire-check:
+	go tool wire diff ./operator/cmd/server
 
 # generate protobuf api go code
 api:
 	$(PYTHON) platform/tools/codegen.py api
 	$(MAKE) models
 	$(MAKE) hz
+	$(MAKE) wire
 
 # Persistence fields and GORM tags are defined exclusively in operator model proto.
 models:
