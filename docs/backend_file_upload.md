@@ -1,6 +1,6 @@
 # 文件上传架构与部署说明
 
-本文档说明 GoWind Admin 文件上传链路的架构、部署依赖、元数据落库机制、安全校验，以及预签名上传路径的当前状态与启用条件。面向部署运维与后端开发。
+本文档说明 Go Admin 文件上传链路的架构、部署依赖、元数据落库机制、安全校验，以及预签名上传路径的当前状态与启用条件。面向部署运维与后端开发。
 
 ---
 
@@ -20,7 +20,7 @@ minio:
     - "9000:9000"   # S3 兼容 API
     - "9333:9333"   # Master Web UI
   volumes:
-    - ./scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    - ./platform/scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
   command: server -dir=/data -filer -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json
 ```
 
@@ -28,7 +28,7 @@ minio:
 |---|---|
 | S3 API 端口 | 9000（`-s3.port` 指定，容器内外一致） |
 | Web UI 端口 | 9333（Master UI，替代原 MinIO Console :9001） |
-| 访问凭证 | `root` / `*Abcd123456`，定义于 `scripts/docker/seaweedfs/s3.json` 的 identities（生产环境务必修改，并与 `oss.yaml` 同步） |
+| 访问凭证 | `root` / `*Abcd123456`，定义于 `platform/scripts/docker/seaweedfs/s3.json` 的 identities（生产环境务必修改，并与 `oss.yaml` 同步） |
 | bucket 创建 | 无需预建——应用侧 `EnsureBucketExists` 在上传/签名时自动创建 |
 | 存量迁移 | 旧 MinIO 数据用任意 S3 客户端按桶镜像即可（如 `mc mirror src dst`） |
 
@@ -41,7 +41,7 @@ docker compose -f docker-compose.libs.yaml up -d
 
 ### 后端配置文件
 
-上传相关配置在 `backend/app/admin/service/configs/oss.yaml`：
+上传相关配置在 `backend/operator/configs/oss.yaml`：
 
 ```yaml
 oss:
@@ -133,7 +133,7 @@ return nil, storageV1.ErrorUploadFailed(
 
 ## 安全校验
 
-directUploadFile 在上传前施加多层校验，定义见 `pkg/oss/constants.go`：
+directUploadFile 在上传前施加多层校验，定义见 `platform/pkg/oss/constants.go`：
 
 | 校验 | 位置 | 说明 |
 |---|---|---|
@@ -154,10 +154,10 @@ directUploadFile 在上传前施加多层校验，定义见 `pkg/oss/constants.g
 
 ```
 GET /admin/v1/file/image?path={bucket}/{object}&expires={unix}&sig={hmac}
-sig = HMAC-SHA256(GOWIND_CRYPTO_KEY, "{path}|{expires}")   // hex
+sig = HMAC-SHA256(runtime.crypto_key, "{path}|{expires}")   // hex
 ```
 
-- **密钥**：`GOWIND_CRYPTO_KEY` 环境变量（`go-utils/crypto` 的全局加密器与 HMAC 签名）。
+- **密钥**：Nacos `data.yaml` 的 `runtime.crypto_key`（`go-utils/crypto` 的全局加密器与 HMAC 签名）。
   **未配置时 SignData 报错，PublicUrl 返回空串**——上传与下载不受影响，仅富文本内嵌预览不可用（前端编辑器拿不到公开 URL）。
 - **有效期**：`mediaURLTTL = 365 天`（常量，`file_transfer_service.go`）。已嵌入历史富文本的图片链接在该期限内可访问。
 - **验签**：`crypto.VerifyData`，内部 `hmac.Equal` **恒定时间比较**（防时序侧信道）。
@@ -169,14 +169,14 @@ sig = HMAC-SHA256(GOWIND_CRYPTO_KEY, "{path}|{expires}")   // hex
   安全性完全由 handler 内的三重校验承担：参数齐全 → `expires` 未过 → 签名验证（均失败即 403/400）。
 - 通过后拆分 `{bucket}/{object}`，经 `GetObjectReader` 从对象存储**流式回源**（Content-Type/Content-Length 按对象元数据回填，
   响应头 `Cache-Control: public, max-age=31536000, immutable`）。
-- 该端点不做租户/用户级鉴别：**签名 URL 是不记名凭证**——持有者即可在有效期内访问对象，无接收方绑定、不可撤销轮换（除非换 `GOWIND_CRYPTO_KEY` 全量作废）。
+- 该端点不做租户/用户级鉴别：**签名 URL 是不记名凭证**——持有者即可在有效期内访问对象，无接收方绑定、不可撤销轮换（除非换 `runtime.crypto_key` 全量作废）。
 
 ### 边界与注意
 
 - **对象路径不自动带租户维度**（[tenant_isolation.md](./tenant_isolation.md) 第 6 节覆盖边界）：签名覆盖的是完整
   `{bucket}/{object}` 串，路径本身不可篡改；但 URL 的分发面（富文本内容、转发）即访问面。
 - 需要撤销/短期访问时，走鉴权下载端点（`GET /admin/v1/file/download`）而非公开 URL。
-- 换 `GOWIND_CRYPTO_KEY` 会使全部存量公开 URL 立即失效（含历史富文本内嵌图）——轮换前评估。
+- 换 `runtime.crypto_key` 会使全部存量公开 URL 立即失效（含历史富文本内嵌图）——轮换前评估。
 - 上传侧元数据落库失败时（孤儿对象）按 H3 语义告警并向上抛错，公开 URL 不会签出。
 
 ---
@@ -216,10 +216,10 @@ sig = HMAC-SHA256(GOWIND_CRYPTO_KEY, "{path}|{expires}")   // hex
 | `oss.minio.endpoint` | `configs/oss.yaml` | 对象存储 S3 API 地址（服务端为 SeaweedFS；容器内为 `minio:9000`，本地开发改为 `localhost:9000`） |
 | `oss.minio.upload_host` / `download_host` | `configs/oss.yaml` | 对对象存储返回的 URL 做主机替换，指向客户端可达地址 |
 | `oss.minio.access_key` / `secret_key` | `configs/oss.yaml` | 对象存储凭证（生产环境务必修改，并与 `s3.json` 的 identities 一致） |
-| `MaxUploadSize` | `pkg/oss/constants.go:13` | 单次直传上限（50 MiB），改常量需重新编译 |
-| `AllowedMimePrefixes` / `AllowedExactMimeTypes` | `pkg/oss/constants.go:21,29` | 上传 MIME 白名单 |
-| `s3.json` identities | `backend/scripts/docker/seaweedfs/s3.json`（compose 挂载） | SeaweedFS S3 凭证与权限；须与 `oss.yaml` 的 `access_key`/`secret_key` 一致 |
-| `GOWIND_CRYPTO_KEY` | 环境变量 | 签名公开 URL 的 HMAC 密钥（`go-utils/crypto`）；未配置则 `PublicUrl` 恒为空串，富文本内嵌预览不可用；轮换=全部存量公开 URL 作废 |
+| `MaxUploadSize` | `platform/pkg/oss/constants.go:13` | 单次直传上限（50 MiB），改常量需重新编译 |
+| `AllowedMimePrefixes` / `AllowedExactMimeTypes` | `platform/pkg/oss/constants.go:21,29` | 上传 MIME 白名单 |
+| `s3.json` identities | `backend/platform/scripts/docker/seaweedfs/s3.json`（compose 挂载） | SeaweedFS S3 凭证与权限；须与 `oss.yaml` 的 `access_key`/`secret_key` 一致 |
+| `runtime.crypto_key` | Nacos `data.yaml` | 签名公开 URL 的 HMAC 密钥（`go-utils/crypto`）；未配置则 `PublicUrl` 恒为空串，富文本内嵌预览不可用；轮换=全部存量公开 URL 作废 |
 
 ---
 
@@ -227,13 +227,13 @@ sig = HMAC-SHA256(GOWIND_CRYPTO_KEY, "{path}|{expires}")   // hex
 
 | 文件 | 说明 |
 |---|---|
-| `backend/app/admin/service/internal/service/file_transfer_service.go` | 上传/下载业务逻辑（directUploadFile / presignedUploadFile / recordFile / DownloadFile） |
-| `backend/app/admin/service/internal/server/i_file_transfer_http.pb.go` | 手动注册的上传/下载 HTTP 端点（multipart `FormFile` 与 JSON `Bind` 双模式兼容，前端实际走 JSON+base64）；含签名图片代理路由的免鉴权手动注册块 |
-| `go-utils/crypto` | 签名公开 URL 的 HMAC-SHA256 签发/恒定时间验签（`GOWIND_CRYPTO_KEY`） |
-| `backend/pkg/oss/minio.go` | 对象存储客户端封装（minio-go SDK，S3 兼容服务端通用；UploadFile / DownloadFile / GetUploadPresignedUrl 等） |
+| `backend/operator/internal/service/file_transfer_service.go` | 上传/下载业务逻辑（directUploadFile / presignedUploadFile / recordFile / DownloadFile） |
+| `backend/operator/internal/server/i_file_transfer_http.pb.go` | 手动注册的上传/下载 HTTP 端点（multipart `FormFile` 与 JSON `Bind` 双模式兼容，前端实际走 JSON+base64）；含签名图片代理路由的免鉴权手动注册块 |
+| `go-utils/crypto` | 签名公开 URL 的 HMAC-SHA256 签发/恒定时间验签（`runtime.crypto_key`） |
+| `backend/platform/pkg/oss/minio.go` | 对象存储客户端封装（minio-go SDK，S3 兼容服务端通用；UploadFile / DownloadFile / GetUploadPresignedUrl 等） |
 | `go-utils/ossutil` | 安全常量与校验函数（大小上限、MIME 白名单、目录校验）及 objectName 生成、MIME 嗅探、bucket 路由等工具 |
-| `backend/app/admin/service/configs/oss.yaml` | 对象存储连接配置（键名沿用 `minio` 前缀） |
-| `backend/scripts/docker/seaweedfs/s3.json` | SeaweedFS S3 凭证配置（compose 挂载） |
+| `backend/operator/configs/oss.yaml` | 对象存储连接配置（键名沿用 `minio` 前缀） |
+| `backend/platform/scripts/docker/seaweedfs/s3.json` | SeaweedFS S3 凭证配置（compose 挂载） |
 | `backend/docker-compose.libs.yaml` | SeaweedFS 容器定义（服务名沿用 minio） |
-| `api/protos/storage/service/v1/file.proto` | `storage.File` 元数据 message 定义 |
-| `api/protos/storage/service/v1/file_transfer.proto` | 上传/下载 RPC 定义 |
+| `platform/proto/operator/v1/file.proto` | `storage.File` 元数据 message 定义 |
+| `platform/proto/operator/v1/file_transfer.proto` | 上传/下载 RPC 定义 |

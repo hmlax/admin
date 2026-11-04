@@ -68,7 +68,7 @@ Lua 与 JS 模块能力一致（`log`/`crypto`/`util`/`cache`/`eventbus`/`oss`/`
 ## 5. 运维要点
 
 - **事实源是数据库** `sys_scripts`（`version` 字段为热更新指纹）：变更后本实例即时 Resync，
-  其他实例经 Redis 频道 `gowind:script:resync` 自动重同步；
+  其他实例经 Redis 频道 `go-admin:script:resync` 自动重同步；
 - **`SCRIPT_HTTP_ALLOWED_DOMAINS`**（环境变量，逗号分隔，支持 `*.example.com`）——
   **不设置 = 全部出站拒绝**，要用 Webhook 先配它；
 - **存量部署升级后**：`/admin/v1/script*` 端点不在 Api 表里，须在「接口管理 → 接口同步」触发一次

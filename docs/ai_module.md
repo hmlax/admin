@@ -1,7 +1,9 @@
 # AI 模块（提供商 / 流式对话 / 用量配额 / 知识库 RAG / 脚本与任务集成 / 安全洞察 / 智能问数）
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **定位**：AI 模块的参考层文档：子域划分、流式对话语义、密钥与配额机制、知识库 RAG 链路与部署要求。
-> 改 AI 相关代码（`api/protos/ai/`、`pkg/ai/`、`internal/service/ai_*.go`、三端 `ai` 页面）前先读本文。
+> 改 AI 相关代码（`platform/proto/operator/ai/`、`platform/pkg/ai/`、`internal/service/ai_*.go`、三端 `ai` 页面）前先读本文。
 
 ## 子域与数据模型
 
@@ -13,7 +15,7 @@
 | 用量流水 | `sys_ai_usage_logs` | 每次成功调用一行（只增不改），配额聚合的事实源 |
 | 知识库 | `sys_ai_knowledge_bases` / `sys_ai_docs` / `sys_ai_chunks` | RAG：文档切片 → 向量化 → 余弦检索（`embedding` 向量列不进 ent schema，走启动期 SQL 补建 + 原生 SQL 读写） |
 | 菜单语义搜索 | `sys_ai_search_index` | 全局搜索的菜单向量化索引：标题 embedding 余弦检索返回 title/route；经 `RebuildSearchIndex` RPC 原子重建（见下「菜单语义搜索」节） |
-| 脚本集成 | — | 脚本内 `ai.chat / ai.chatWith / ai.chatWithSystem`（`pkg/scripting/api/module_ai.go`），复用提供商解析与用量记账 |
+| 脚本集成 | — | 脚本内 `ai.chat / ai.chatWith / ai.chatWithSystem`（`platform/pkg/scripting/api/module_ai.go`），复用提供商解析与用量记账 |
 | 定时任务 | — | `ai_doc_reindex`（向量重索引，按需）与 `ai_audit_digest`（审计日报，每日 08:00 常驻） |
 
 ## 流式对话语义
@@ -21,12 +23,12 @@
 - `POST /admin/v1/ai/chat/completions` 是**普通 POST**（body 为扁平请求体，**不包 `data`**——与站内信 send 同型，多包一层会被 protojson 丢弃），同步返回完整回复（含会话与 tokens）。
 - 生成过程中的增量 token 通过 SSE 网关（:7789）以 `ai_chat_chunk` 事件推送给发起用户（streamID=userId），事件 data 为 `ChatChunkEvent` 的 protojson（`conversationId`/`seq`/`delta`，camelCase）。**seq=0 时 protojson 省略零值字段**，前端不能依赖 seq 存在。
 - chunk 是尽力而为（`TryPublish` 缓冲满即丢帧），以 POST 同步响应为最终事实。
-- 流式时长由 context deadline（5 分钟）控制，不是 `http.Client.Timeout`——`pkg/ai/client.go` 显式注入无超时 client 覆盖上游默认 30s，否则长回复被腰斩。
+- 流式时长由 context deadline（5 分钟）控制，不是 `http.Client.Timeout`——`platform/pkg/ai/client.go` 显式注入无超时 client 覆盖上游默认 30s，否则长回复被腰斩。
 - 脚本 `ai` 模块与定时任务/洞察共用同一条 provider 解析 → 密钥解密 → 客户端工厂链路（`newOpenAIClientForProvider` / `ChatForScript`），不会出现第二套接入逻辑。
 
 ## 密钥与配置
 
-- api_key 经全局加密器（`go-utils/crypto`，密钥来自环境变量 `GOWIND_CRYPTO_KEY`）加密落库；未设置该变量时明文落库（与全局加密既有语义一致）。
+- api_key 经全局加密器（`go-utils/crypto`，密钥来自 Nacos `data.yaml` 的 `runtime.crypto_key`）加密落库；应用启动时必须提供该密钥。
 - Update 语义：apiKey 留空 = 不修改已存 Key（该字段从 updateMask 摘除，防 FieldMask 空值清写）。
 
 ## 配额与租户门禁
@@ -37,13 +39,13 @@
   实测归属（48 行流水全表逐页读，`model|completionTokens|duration` 三元组）：库内 4 行 NULL 全是 `deepseek-chat` 且带 completion tokens（23/23/23/37）⇒ 来自 `GenerateContent`（表单旁的 ✨ 场景化内容生成），**不是** embedding。
   另三处 embedding 已在 2026-09-29 逐个活验证（把 `127.0.0.1:18080` 的 mock LLM 临时挂成 LOCAL 默认 provider 后逐条打通）：`RebuildSearchIndex` → 流水 `text-embedding-3-small | 7 ms`、`SemanticSearch` 查询向量化 → `text-embedding-3-small | 2 ms`、知识库入库 `embedTextsForBase`（建一个 probe 知识库 + 上传一条文档）→ `mock-embedding | 1 ms`，三行在 `/ai/usage` 均渲染成真值而非 `-`。模型名取自 `base.EmbeddingModel`（第三行是 `mock-embedding` 而非硬编码，证实这条路径读的是知识库自己的配置）。验证用的 provider/知识库/文档已删除，`sys_ai_search_index` 按快照逐字节还原（14/14 embedding 全等，id 回到 60029–60042）；三条流水留着当证据（id 50/51/52）。
 - **用量页摘要与流水同口径（2026-09-29）**：`GetUsageSummary` 的 `MonthStats` 只在 `tenantId>0` 时加租户谓词——租户管理员按本租户统计，平台管理员统计全量，与他下方看到的全量流水列表一致（此前无条件 `TenantIDEQ(tid)`，平台管理员的卡是 47 条/3,259 tokens 而列表是 48 条，同屏两个数字对不上）。配额不受影响：租户分支谓词不变，平台侧本就跳过检查（上一条）且卡上显示 ∞。
-- **套餐模块白名单**：AI 六服务已登记进 `pkg/constants/module_mapping.go`（Module 枚举 `AI=11`），租户访问 AI 端点要求租户套餐的白名单里有 `AI` 模块行（`sys_plan_modules`），否则 403 "module not allowed"。漏登记的后果是 fail-closed 拒绝，不是放行。
+- **套餐模块白名单**：AI 六服务已登记进 `platform/pkg/constants/module_mapping.go`（Module 枚举 `AI=11`），租户访问 AI 端点要求租户套餐的白名单里有 `AI` 模块行（`sys_plan_modules`），否则 403 "module not allowed"。漏登记的后果是 fail-closed 拒绝，不是放行。
 - 菜单归类：`ComponentToModule` 已加 `app/ai/` 前缀 → AI 模块。
 ### 新部署注意：给租户放行 AI
 
 `sys_plan_modules` 不会自动出现 `AI` 行，Api 表里 AI 端点的模块归类也不会自动出现——两步都要手动做，缺任何一步租户访问 AI 端点一律 403：
 
-1. **接口同步（Api 表）**：在管理页触发「接口同步」。全量重建读的是打进二进制的 `assets/openapi.yaml`——若本版本比已部署版本新增了 AI 相关 proto，必须先 `make openapi`、重启进程、再触发同步，否则同步"成功"而新端点依旧不在表里。同步后 AI 六服务的端点以 `business_module=AI` 落进 Api 表（模块归类由 openapi 的服务标记经 `pkg/constants/module_mapping.go` 的映射而来，AI 服务已登记）。
+1. **接口同步（Api 表）**：在管理页触发「接口同步」。全量重建读的是打进二进制的 `assets/openapi.yaml`——若本版本比已部署版本新增了 AI 相关 proto，必须先 `make openapi`、重启进程、再触发同步，否则同步"成功"而新端点依旧不在表里。同步后 AI 六服务的端点以 `business_module=AI` 落进 Api 表（模块归类由 openapi 的服务标记经 `platform/pkg/constants/module_mapping.go` 的映射而来，AI 服务已登记）。
 2. **套餐白名单加 `AI` 行**：管理页 → 租户管理 → 套餐管理（路由 `/tenant/plans`，仅平台管理员）→ 目标套餐行「编辑」→ 模块多选框勾选 `AI` → 保存。该多选框直接增删 `sys_plan_modules` 行；保存即生效——租户闸门每个请求实时查这张表，没有缓存、无需重启。无管理页的环境（直接操作数据库）SQL 等价直插：`INSERT INTO sys_plan_modules (plan_id, module) VALUES (<套餐ID>, 'AI');`（该表其余列均可空）。
 3. **验证**：以该套餐下的租户用户调用任一 AI 端点（如 `GET /admin/v1/ai/providers`）。加行前 403；加行后应为 200。
 
@@ -60,7 +62,7 @@
 
 链路：上传纯文本或文件 → 切片（500 字符/片，50 重叠）→ 调 provider 端点的 OpenAI 兼容 `/v1/embeddings` 批量向量化 → `sys_ai_chunks` 落库 → 检索（pgvector `<=>` 余弦距离 topK，SQL 层 tenant 过滤兜底）→ chat 携带 `knowledgeBaseId` 时把命中片段注入 system 消息（检索失败降级为普通对话，不阻断）。
 
-**文件上传**：`POST /admin/v1/ai/knowledge-bases/{baseId}/docs/file`，body 为 JSON（`fileName` + `contentBase64`，protojson 的 bytes 即 base64——kratos 无 form-data codec 的既定形态）。抽取器在 `pkg/doctext`：纯文本族直读、docx 走标准库 zip+XML 剥标签、pdf 走 `ledongthuc/pdf` 文本层（扫描件无文本层会明确报错），其余扩展名拒绝；上限 10MB。
+**文件上传**：`POST /admin/v1/ai/knowledge-bases/{baseId}/docs/file`，body 为 JSON（`fileName` + `contentBase64`，protojson 的 bytes 即 base64——kratos 无 form-data codec 的既定形态）。抽取器在 `platform/pkg/doctext`：纯文本族直读、docx 走标准库 zip+XML 剥标签、pdf 走 `ledongthuc/pdf` 文本层（扫描件无文本层会明确报错），其余扩展名拒绝；上限 10MB。
 
 **重索引**：更换知识库 embedding 模型后，经「任务管理」创建 `ai_doc_reindex` 类型任务（payload `{"baseId":N}`，0=全部库）触发全量重算——切片文本不变只换向量，分批 32 条/次。启动迁移因维度不匹配整列重建 `embedding` 后（见「部署要求」），该任务是恢复检索的唯一途径。
 
@@ -78,7 +80,7 @@
    `CREATE EXTENSION` 需要超级用户权限；失败仅 RAG 降级（检索/入库报错），其余功能不受影响。
 3. **换 embedding 模型的边界**：`sys_ai_chunks` 与 `sys_ai_search_index` 的维度与 `text-embedding-3-small` 绑定。知识库配置了输出维度 ≠1536 的 embedding 模型时，向量化会在**写入期**收到维度不符报错（fail-fast，防止混维向量让 `<=>` 检索整体报错）；换模型必须同步改 `data.AiEmbeddingDimensions` 并触发全量重索引。
 4. **embedding 向量列不进 ent schema**（ent 对 pgvector 自定义类型支持受限），切片读写走原生 SQL（`entClient.DB()`）。手改表结构时注意保持列名 `embedding` 与定维。
-5. Docker 部署示例：把 `backend/scripts/deploy/` 下的 compose 里 postgres 镜像换成 `pgvector/pgvector:pg16` 即可，其余不变。
+5. Docker 部署示例：把 `backend/platform/scripts/deploy/` 下的 compose 里 postgres 镜像换成 `pgvector/pgvector:pg16` 即可，其余不变。
 6. **HNSW 自动门槛（2026-09-28 起，`sys_ai_chunks` 专属）**：启动迁移在定维检查后按**精确行数**（`data.CountTableRows`；不用 `pg_class.reltuples`——未 ANALYZE 前恒为 -1，会漏判）对照门槛 `data.HnswIndexRowThreshold = 10000`：越线即自动建 `CREATE INDEX ... USING hnsw (embedding vector_cosine_ops)` 并把本库 `hnsw.iterative_scan` 默认设为 `relaxed_order`（允许 planner 对带租户/知识库/文档过滤的 ANN 查询走迭代索引扫描），同时打 WARN 告警。菜单索引表不接此门槛（行数随菜单数有界，永不越线）。**越线后的语义变化**：ANN 检索变为近似召回（实测对抗性近重复数据上 top-8 尾部错位；`hnsw.ef_search` 可调）、距离序可能不严格（relaxed_order 的取舍）、写入承担索引维护代价（实测 ~3×/行，含 `ai_doc_reindex` 重索引任务）。阈值取 1 万的原因：建索引代价随表规模超线性增长（实测 1.1 万行 2.7s），越线即建是最便宜的建设时机，拖到更大表会把秒级构建拖成分钟级阻塞启动。门槛只负责建索引与放开 GUC，何时真正走索引由 planner 按选择性自主决定（实测 1/3 选择性下仍选顺序扫描）。
 7. **向量负载隔离（部署层，规模触发）**：单表到十万级行或 RAG 成为常驻负载时，建议把向量负载迁出主 OLTP 库（独立实例/读副本），属 DSN 级部署改动、无需改代码——本仓不做自动迁移，出现上述 WARN 后人工评估即可。
 
@@ -92,7 +94,7 @@
 
 ## 智能问数（NL → 只读 SQL）
 
-三端「智能问数」页：自然语言提问 → LLM 生成只读 SQL → 只读事务执行 → 结果表格 +（可选）自然语言结论。`POST /admin/v1/ai/query/ask`，响应含 `sql/columns/rows/rowCount/answer/totalTokens`。
+三端「智能问数」页：自然语言提问 → LLM 生成只读 SQL → 只读事务执行 → 结果表格 +（可选）自然语言结论。`POST /admin/v1/ai/query/ask`，响应含 `platform/sql/columns/rows/rowCount/answer/totalTokens`。
 
 **五重安全护栏**（每轮生成的 SQL 全量过检，多轮追问不豁免）：
 

@@ -1,13 +1,15 @@
 # 06 · 多租户与行级隔离
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](../crud_module_guide/backend.md) 与 [租户隔离](../tenant_isolation.md) 为准。
+
 > 前置：[05 章](./05-permission-model.md)（三轴正交的框架）。读完你会理解：租户上下文怎么进请求、行级隔离在数据层怎么强制、部署侧的 Api 表闸门为什么是 fail-closed、以及隔离的**覆盖边界**——出了边界要自己负责。
 
 ## 1. 租户模型
 
 - 每个带租户维度的表有 `tenant_id` 列（ent `mixin.TenantID[uint32]{}` 装配，见第 03 章）；
-- 请求进入后端后，认证中间件（`pkg/middleware/auth`）从已验签的令牌构建
+- 请求进入后端后，认证中间件（`platform/pkg/middleware/auth`）从已验签的令牌构建
   **ViewerContext**（租户 ID + 平台/系统上下文标志；标准实现在 `go-crud/viewer` 库，
-  本仓 `pkg/entgo/viewer` 仅做数据范围声明的映射适配），
+  本仓 `platform/pkg/entgo/viewer` 仅做数据范围声明的映射适配），
   作为隔离层判定依据。平台管理员上下文（tid=0）跨租户可见；
 - 租户与其套餐的绑定由平台管理员在「租户管理 / 套餐管理」页维护；租户侧用户看到的数据范围由本章所述各层自动裁剪。
 
@@ -79,7 +81,7 @@ Create 强制覆盖 tenant_id 防伪造；显式改 tenant_id 值仅放行"同�
 - [plan_billing.md](../plan_billing.md) —— 套餐与计费管控唯一权威：三档到期策略全链路、模块白名单上线 checklist、配额与用量计量、租户数据清理
 - [data_scope_design.md](../data_scope_design.md) —— 数据范围唯一权威（五档/聚合/接入/运维/边界）
 - [frontend_authority.md](../frontend_authority.md) —— 字段级权限（字段轴，与本章行级轴正交）
-- `backend/app/admin/service/internal/data/ent/schema/tenant_mutation_guard.go`、
+- `backend/operator/internal/data/ent/schema/tenant_mutation_guard.go`、
   `data_scope_guard.go` —— 仓内守卫与组合策略源码（文件头注释含守卫的历史定位与库 v0.0.55 现状）
 - 根 [AGENTS.md](../../AGENTS.md)「仓库布局」节的 Api 表播种说明 —— 接口同步义务的出处
 

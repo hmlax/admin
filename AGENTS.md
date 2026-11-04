@@ -1,95 +1,38 @@
-# AGENTS.md — go-wind-admin Monorepo 开发指南（AI Agent 入口）
+# AGENTS.md — React / admin / operator
 
-本文件是 monorepo 总入口：定位布局、指路各端规范、声明全仓铁律。**深入开发前必读对应端的 AGENTS.md**。
+本分支只维护 React。此前 Vue 两端与三端门禁已按项目要求移除。
 
-## 仓库布局
+## 布局与职责
 
-> **三端是"给不同技术栈团队的三个并列选项"，不是"同时要 React 和 Vue 的团队"的需求。**
-> 一个采用者 / 一次部署只取一套；本仓同时把三端都维护到可用，是**上游维护者的负担**，不是采用者的。
-> 对外表述统一按"三选一"口径（见 [docs/adopt-one-frontend.md](./docs/adopt-one-frontend.md)）——
-> 不要因为仓库里同时存在三个目录，就在文档 / 报错 / 提示里把"三端"当成使用者的义务。
+- `frontend/platform-admin/`：平台管理后台；`frontend/merchant-admin/`：商户管理后台。两套 React 19 + Ant Design 应用独立启动、构建和部署，共享 `frontend/src/`。开发前读 `frontend/AGENTS.md`。
+- `backend/admin/`：Hertz HTTP API（7788）、SSE（7789）；负责 JWT、Redis 会话吊销、RBAC、租户入口门禁、字段权限及审计。
+- `backend/operator/`：Kratos gRPC（7790）；负责业务、GORM、Redis、对象存储与任务，不提供 HTTP 监听。
+- `backend/platform/`：公共依赖、共享协议和生成代码、配置安全库、代码生成及部署工具。backend 下只保留 admin、operator、platform 三个顶级目录。
+- 两个后端项目共用 `backend/go.mod`，各自维护独立的 API/RPC protobuf 契约、构建和部署。
+- operator 的 gRPC 数据结构、方法和持久化模型定义在 `backend/platform/proto/operator/v1/*.proto`（`operator.v1`），生成到 `backend/platform/pb/operator/`。API 使用独立的 `backend/admin/idl/proto/admin/v1/*.proto`（`admin.v1`）定义 HTTP 路由及自己的请求、响应、分页和业务 DTO，生成到 `backend/admin/biz/model/admin/v1/`。两套业务 protobuf 不共用、不互相 import、不使用类型别名；handler 通过显式逐字段转换调用 operator gRPC。前端只使用 `generated/admin/v1`。
+- `backend/platform/pkg/runtimeconfig/`：环境变量启动、Nacos 配置管理和服务发现。
+- `backend/platform/pkg/apidocs/`：HTTP OpenAPI 与策略资产。
 
-```
-backend/                    Go + Kratos + Ent（DI 手写装配 wiring_*.go，已弃用 Wire；HTTP :7788，SSE 网关 :7789）
-frontend/admin/
-├── react/                  React 19 + antd 6 + ProComponents + TanStack Query + zustand
-├── vue-element/            Vue 3 + Element Plus + vxe-table + TanStack vue-query + Pinia
-└── vue-vben/               Vben Admin 5.x 单包结构（src/ 应用 + framework/ 框架壳，原 apps/packages 已并入）+ Ant Design Vue
-docs/                       文档体系（总入口 docs/README.md：教程层 docs/tutorial/ + 参考层专题文档）
-```
+开发后端前读 `backend/AGENTS.md`；部署与环境变量见 `docs/service_split.md`。
 
-## 三端门禁（必须保持全绿）
+## 铁律
 
-> 这是**本仓维护者**的门禁：上游有义务让三端各自都能编译通过，好让任一团队的采用者拿到手都是可用的一端。采用者只跑自己那一端的门禁，贡献者只落一端（`CONTRIBUTING.md`）。
+1. 不吞错：catch 必须记录原始错误对象或重新抛出；纯本地 best-effort 例外须注释原因。
+2. 搜索用 contains，ID 不做模糊搜索。CRUD 请求体包 `{ data: {...} }`；`body: "*"` 自定义 RPC 收扁平请求。
+3. 访问令牌及 HTTP 权限在 admin 校验。operator 接收可信网关上下文，不重复挂 JWT/RBAC 中间件；数据归属和租户隔离仍是数据层约束。
+4. operator 仅限内部网络可达，不对浏览器/公网发布 gRPC 端口。
+5. 启动参数从环境变量读取，不增加命令行参数。环境变量只提供 Nacos 连接信息；应用配置只从 Nacos 的 `server.yaml`、`data.yaml` 获取，不使用环境变量覆盖、本地 YAML 或内嵌配置回退。Nacos 基础设施配置变更后重启进程。
+6. 不手改 protobuf/GORM 生成代码。使用本仓库 Makefile 生成，保持 admin/operator/platform 三个顶级目录。Wire 已弃用。
+7. 修改 operator 消息或 RPC 后在 backend 运行 `make api`（含 `make hz` 和 gatewaygen）；修改 API 消息或 HTTP 路由/绑定用 `make hz`，实际执行官方 `hz update`。OpenAPI 用 `make openapi`，React TS 用 `make ts`。HTTP 路由、请求及返回类型必须在 proto 定义，详见 `backend/admin/README.md`。
+8. 已部署数据库新增端点需要更新内嵌 OpenAPI、重启 operator，然后管理页「接口同步」；新增菜单用「菜单同步」。
 
-| 端 | 命令（在各自目录下） | dev 端口 |
-|---|---|---|
-| react | `npm run typecheck` | 15888 |
-| vue-element | `npx vue-tsc --noEmit`（或 `npm run type-check`） | 15777 |
-| vue-vben | `pnpm run typecheck` | 15666 |
+## 验证
 
-2026-09-07 起三端 typecheck 全部 0 错误。**门禁出现任何新报错，一律当作自己引入的 bug 修复**，不存在"可忽略的既有错误"。改完代码先跑门禁再声称完成。
+- React：`npm run typecheck`、`npm run build`（在 React 目录）。
+- 后端：`go test ./...`、分别构建 `./admin`、`./operator/cmd/server`。
+- 不引入或忽略新的门禁错误。
 
-## 全仓铁律
+## 专题
 
-1. **不吞错**：任何 catch 至少二选一——`console.error/warn` 带出**原始错误对象**，或重新抛出。用户可见的通知/Message ≠ 日志（只有翻译文案）。合法裸 catch 仅限纯本地 best-effort 兜底且注释写明原因。历史教训：认证链路静默吞错曾让 bug 排查耗时数日。
-2. **vue-vben 工具链版本已钉死**（catalog 精确版本 + packageManager 匹配本机 pnpm）：禁止改回 `^` 范围、禁止顺手升级 vue/typescript/vue-tsc/pnpm。原因与升级流程见 `frontend/admin/vue-vben/AGENTS.md`「工具链与已知坑」。
-3. **搜索条件一律 contains 而非 EQ**、ID 类字段不进模糊搜索；CRUD 请求体必须包 `{ data: {...} }`，但**仅限 CRUD**——`body: "*"` 的自定义 RPC（如 `internal-message/send`）收的是扁平请求体，多包一层 `data` 会被 protojson 当未知字段丢掉，接口照样 200、字段全为空。细节见 `docs/crud_module_guide/`。
-
-## 开发策略：react 先行，其余移植
-
-新功能/新模块以 **react 端为行为基准先实现**，验证通过后再移植到 vue-element / vue-vben。移植是"有参照的翻译"，远比三端并行首创便宜；vue-vben 框架变体语料薄，直接首创容易产出框架级错误（详见其 AGENTS.md）。
-
-> 这条工序解释的是"为什么 react 端总是最新"，不是"你要维护三端"。对外要说的是：跟上游同步就选 react，选定一端后可把另两端删掉（[docs/adopt-one-frontend.md](./docs/adopt-one-frontend.md)）。
-
-**CRUD 模块**：全流程手册在 `docs/crud_module_guide/`（后端 + 前端端到端流程）。
-
-**代码生成器**：配套工具 [go-wind-toolkit/gowind-uiapp](https://github.com/tx7do/go-wind-toolkit/tree/main/gowind-uiapp)（桌面 GUI + CLI，从数据库表/SQL 生成前后端代码，含简单表单）。CLI（`gowind-cli`）非交互、JSON 输出，适合 Agent 调用。工具产物仍须按本仓铁律与约定验收补齐（`{ data: {...} }` 包裹、contains 搜索、已部署实例的新端点走管理页「接口同步」登记进 Api 表、`make ts` 生成三端 TS 等）。
-
-> 系统默认数据（admin 用户、角色、菜单、权限、语言等）由服务启动时在 Go 侧自动播种（`pkg/constants/default_data.go` + 各 service 的 count==0 守卫；Api 表仅在空表时于启动期自动同步，**已部署实例新增端点须在管理页「接口同步」手动触发全量重建**，否则租户闸门 fail-closed 403；「接口同步」重建读的是**打进二进制的** `backend/app/admin/service/cmd/server/assets/openapi.yaml`，所以新 proto 必须先 `make openapi` 再重启进程，否则同步"成功"而新端点依旧不在表里。新菜单同理：`count==0` 守卫意味着老库要靠各端「菜单同步」(MERGE) 才会多出这一行），**不要**找 SQL 种子脚本，`backend/sql/` 下只剩演示数据。
-
-## 后端任务：gow 优先，make 兜底
-
-后端的运行与代码生成统一走 [gow CLI](https://github.com/tx7do/go-wind-toolkit/tree/main/gowind)（安装：`go install github.com/tx7do/go-wind-toolkit/gowind/cmd/gow@latest`），在 `backend/` 下执行。**接手后不要上来就用 Makefile 的 make 命令**：Windows 无原生 make、嵌套 Makefile 需要跨目录 cd，而 gow 自动发现 `app/*/service`，行为一致：
-
-| 任务 | gow 命令 |
-|---|---|
-| 运行服务 | `gow run admin` |
-| Ent 生成 | `gow ent`（全部服务）/ `gow ent admin` |
-| Proto / API Go 代码 | `gow api` |
-| 从数据库表生成 CRUD | `gow generate`（DSN 驱动；`--proto-only` 仅出 proto） |
-
-项目已弃用 Wire（DI 为手写 `wiring_*.go`），不要运行 `gow wire`，也不要在新代码里引入 wire 依赖。
-
-gow 未覆盖的任务（三端 TS 生成 `make ts`、OpenAPI `make openapi`、`make test/lint` 等）才退回 Makefile（`backend/` 根目录执行）。
-
-## 本地验证要点
-
-- 后端起在 `:7788`（`gow run admin`；启动方式见 `docs/windows-startup-guide.md` / `docs/backend_deploy.md`）；前端 dev 端口见上表，代理已配置好 API 转发。
-- 登录账号：全新环境播种为 `admin / Abcd@1234`（`pkg/constants/default_data.go` 的 `DefaultUserPassword`）；本机 `gwa` 库实测（2026-09-20）即为此值，历史备注的 `admin / admin` 已失效（登录返回 `INVALID_PASSWORD`）。图形验证码的答案可在 Redis 中按 `gowind:captcha:<captchaId>` 直接读取，便于自动化验证。
-- vue-element 若见 router-view 塌空/白屏：**别再往 vite 依赖优化/HMR 上归因**（那是早先的误判）。真因是 `<transition mode="out-in">` 叠 vue-router 5 懒加载路由的竞态，已通过去掉 `out-in` 改同帧交叉淡入淡出修掉；回归判定与保留的防御见 `frontend/admin/vue-element/AGENTS.md`「白屏（router-view 塌空）真因与处置」。
-- AI 功能本地调试：`.zcode/tmp/mock_llm.py`（OpenAI 兼容 echo + embeddings，端口 18080）可替代真实模型打通全部链路；生产需配置真实 provider（管理页）与 `pgvector` 扩展（见 `docs/ai_module.md`）。
-- `go test ./...` 偶发 `fork/exec %TEMP%\go-build...\x.test.exe: Access is denied.`（Windows 上对刚链接好的测试二进制执行被拦，疑似安全策略/杀软实时扫描）：属环境问题、**不是代码失败**。复验办法是绕开 Temp 执行——`go test -c -o <工作区内路径>/x.test.exe ./pkg/x` 后直接跑该 exe；判成"测试挂了"之前先这样确认一次。
-
-## 文档索引
-
-- **文档总入口（两层索引：教程层 + 参考层）**：`docs/README.md`；渐进教程系列（面向采用者的 10 章学习路径）在 `docs/tutorial/`
-- 各端规范：`frontend/admin/{react,vue-element,vue-vben}/AGENTS.md`
-- **表单抽屉关闭守卫**：`docs/form_drawer_close_guard.md`（遮罩/ESC/X/取消四路径脏数据确认的三端统一规范）——新做或改表单抽屉关闭行为前必读
-- 后端：`docs/backend_project_struct.md`、`docs/backend_deploy.md`、`docs/audit-log-producer-design.md`
-- 前端权限模型：`docs/frontend_authority.md`
-- 查询/分页规则：`docs/list_query_rule.md`
-- **改一个字段速查**：`docs/field_change_guide.md`（给**已有**资源加字段的四档判定 + 命令数 + 文件清单，含"哪些事明确不用做"）——本仓最高频的任务，别套用 04 章的新模块流程；接到"加个字段/页面少一列"这类需求先读它
-- **新增 CRUD 模块全流程**：`docs/crud_module_guide/`（新增完整业务模块的端到端手册：README 跨端编排与通用陷阱、backend.md 后端全流程与样例镜像索引、三端各自的页面实现参考；正文为英文原稿）——接到「新增模块/新增资源/新建管理页」这类需求、动工新增整个模块前先读它；只给已有资源加字段读上面的速查，别套新模块流程
-- 脚本系统：`docs/script_system.md`（Lua/JS 脚本级插件：钩子点/定时任务/HTTP 出站/安全模型；改钩子点或模块先读它）
-- 认证与令牌链路：`docs/authentication.md`（登录全流程/令牌与刷新轮换/MFA/限流策略/会话吊销/已知问题；改登录、令牌、刷新、MFA、限流或登录策略前先读它）
-- 多租户隔离：`docs/tenant_isolation.md`（上下文链路/HTTP 闸门/数据层读写隔离/套餐联动/覆盖边界与排障；改隔离层、Api 表、套餐门禁或给新表接租户前先读它）
-- 套餐与计费管控：`docs/plan_billing.md`（三档到期策略全链路/模块白名单/配额与用量计量/租户数据清理；改套餐、配额、到期处置或排租户 403 前先读它）
-- 任务调度系统：`docs/task_system.md`（配置与启动链/任务数据模型/调度生命周期/系统级常驻任务/脚本任务桥/多租户语义与排障；加任务类型、排"任务没跑"或接新调度需求前先读它）
-- SSE 推送架构：`docs/sse_architecture.md`（服务端配置与生命周期/流鉴权与 streamID 语义/事件生产/三端消费/部署与排障；改推送链路、加事件类型或排"收不到通知"前先读它）
-- 数据权限范围：`docs/data_scope_design.md`（角色级行数据范围：语义/聚合/接入步骤/运维边界；新表接入数据范围或改聚合规则先读它）
-- 设计语言规范：`docs/design-language.md`（三端视觉唯一权威值表，改颜色/圆角/布局尺寸先改这里再同步三端）
-- AI 模块：`docs/ai_module.md`（模型提供商/流式对话/用量配额/知识库 RAG/脚本 ai 模块/安全洞察/智能问数的架构与部署要求；改 AI 相关代码、接新模型、部署 pgvector 或排租户 AI 403 前先读它）
-- 打印模板：`docs/print_template.md`（单据打印设计器：定位边界/fork 接管 MIT 内核选型/三端接入/输出链与 M0–M4 分期；动打印模板相关代码前先读它）
-- BI 仪表盘：`docs/bi_dashboard.md`（BI 设计器+大屏渲染：定位边界/数据模型（乐观锁）/三端入口/主题跟随语义/宿主集成注意；动 BI 模块相关代码前先读它）
-- 教程第 10 章：`docs/tutorial/10-ai-module.md`（AI 功能的采用者上手路径：配置三步/使用/集成）
+已有资源加字段先读 `docs/field_change_guide.md`；新增资源读 `docs/crud_module_guide/`；表单关闭行为读 `docs/form_drawer_close_guard.md`。
+认证、租户、套餐、任务、SSE、数据范围、AI、打印、BI 分别参考 `docs/authentication.md`、`docs/tenant_isolation.md`、`docs/plan_billing.md`、`docs/task_system.md`、`docs/sse_architecture.md`、`docs/data_scope_design.md`、`docs/ai_module.md`、`docs/print_template.md`、`docs/bi_dashboard.md`。这些文档中的旧单体/多前端路径以本指南和 `docs/service_split.md` 为准。

@@ -1,264 +1,49 @@
-# GO后端
+# Go 后端
 
-本项目是基于 Go + `gow` 脚手架 构建的**微服务后端架构**，支持：
+backend 只有 `admin/`、`operator/`、`platform/` 三个顶级目录。两个应用共用根目录的 Go module，分别编译、启动和部署：
 
-- 多协议：RESTful API + gRPC
-- 多存储：MySQL/PostgreSQL、Redis、SeaweedFS（S3 兼容对象存储）
-- 服务治理：Etcd 注册发现、Jaeger 链路追踪
-- 代码生成：Ent ORM、Wire 依赖注入、Protobuf 自动生成、TypeScript 客户端
-- 容器化：Docker + Docker Compose 一键部署
-- 文档自动生成：Swagger UI、OpenAPI v3
-- CRUD自动生成：基于 SQL的DDL语句 一键生成 CRUD 接口和实现
+- `admin/`：Hertz HTTP（7788）和 SSE（7789），负责 JWT、Redis 吊销、RBAC、租户入口、字段权限、审计。
+- `operator/`：Kratos gRPC（7790），负责业务、GORM、任务、对象存储；仅内部网络可达。
+- `platform/`：公共依赖、共享协议、生成代码、配置安全库以及代码生成和部署工具。
+- `platform/proto/operator/v1/*.proto`：operator 内部数据结构和 gRPC 方法；`admin/idl/proto/admin/v1/*.proto`：独立 API 数据结构、请求/响应与 HTTP 路由。
+- `platform/pb/operator/`：RPC 消息、gRPC 客户端/服务端；`admin/biz/model/admin/v1/`：独立 API protobuf；`platform/pkg/apidocs/`：内嵌 OpenAPI 与策略资产。
+- `platform/pkg/runtimeconfig/`：环境变量启动、Nacos 配置管理和服务发现。
 
-## 前置环境要求
+## 启动
 
-### 基础环境
+Go 版本以 `go.mod` 为准。先启动 PostgreSQL、Redis 和 S3 兼容存储，在 Nacos 同一分组发布 `server.yaml`、`data.yaml`，仅将 Nacos 连接信息放在环境变量中。
 
-| 工具             | 版本要求  | 说明          |
-|----------------|-------|-------------|
-| Go             | 1.21+ | 核心开发语言      |
-| Docker         | 20.0+ | 容器化部署       |
-| Docker Compose | v2+   | 服务编排        |
-| Make           | 3.8+  | 构建工具        |
-| PM2            | 可选    | 进程管理（物理机部署） |
-
-### 中间件（自动部署）
-
-| 中间件        | 版本要求          | 说明                                 |
-|------------|---------------|------------------------------------|
-| Redis      | 未固定         | compose 拉 `bitnami/redis:latest`。旧版本此处写"必须 ≥8.0，使用 `HExpire`/`HSETEX`"——两条命令在 `backend/**` 与本仓依赖树里均 **0 命中**（2026-09-25 实测，命令见下方"Redis 命令报错"一节），实际只用到 `Set`/`Expire`/`Publish`/`HSet` 一类长期命令 |
-| Postgresql | 14+           | 关系型数据库，支持 JSON / 事务                |
-| SeaweedFS  | 4.51          | S3 兼容对象存储（MinIO 社区版停维护后的替代，容器服务名沿用 minio） |
-| Jaeger     | 1.40+         | 分布式链路追踪，可视化请求耗时                    |
-
-## 内置API文档
-
-### Swagger UI
-
-- [Admin Swagger UI](http://localhost:7788/docs/)
-
-### openapi.yaml
-
-- [Admin openapi.yaml](http://localhost:7788/docs/openapi.yaml)
-
-## 项目目录结构
-
-```text
-myproject/
-├── api/                    # API定义/Protobuf
-├── app/                    # 微服务主目录
-│   └── admin/              # 单个服务
-│       └── service/        # 服务启动目录
-│              ├── cmd/         # 启动入口
-│              ├── configs/     # 配置文件
-│              └── internal/    # 业务核心代码
-│                     ├── data/     # 数据访问层（Ent ORM）
-│                     ├── server/   # gRPC/HTTP服务层
-│                     └── service/  # 业务逻辑层
-├── scripts/             # 部署脚本
-├── go.mod               # Go模块依赖
-├── go.sum               # 依赖校验
-└── Makefile             # 构建命令
+```sh
+go run ./operator/cmd/server
+# 另一个终端使用同一 Nacos 连接配置
+go run ./admin
 ```
 
-## gow 脚手架工具使用
+环境变量只配置 Nacos 连接。监听、数据库、Redis、JWT、加密密钥、对象存储、SSO 等应用配置全部读取 Nacos `server.yaml`、`data.yaml`，不读取应用环境变量覆盖或本地回退。配置变更后重启进程。完整环境变量、Nacos、部署和隔离验证见 [服务拆分指南](../docs/service_split.md)。
 
-### 安装
+## 生成与构建
 
-```bash
-# 安装最新版
-go install github.com/tx7do/go-wind-toolkit/gowind/cmd/gow@latest
+以下命令在 backend 目录执行。`make plugin` 安装 protobuf 插件；需要 buf CLI。
 
-# 验证安装
-gow version  # 查看版本
-gow help     # 查看帮助
+```sh
+make api              # protobuf、Hertz HTTP/SSE 绑定及类型化 gRPC 代理
+make openapi          # HTTP OpenAPI，含文件和事件流的响应定义
+make ts               # React TypeScript 客户端
+make models  # GORM 模型；DI 为手写 wiring，不使用 Wire
+make register ENTITY=product
+make build_only       # admin/bin/admin 与 operator/bin/operator
 ```
 
-### 环境变量配置（可选）
+API 接口以 `admin/idl/proto/admin/v1` 为准，RPC 以 `platform/proto/operator/v1` 为准，handler 显式转换两套独立 DTO。admin 通过生成的 gRPC 客户端调用 operator，Hertz 处理 HTTP/SSE 路由、权限、参数绑定及编码；operator 仅注册并监听 gRPC。修改后执行 `make api openapi ts`；不要手改生成代码。内部 RPC 命名空间为 `operator.v1`，两个服务配套更新；已有数据库新增端点需重启 operator 后执行「接口同步」。
 
-将 Go 安装目录加入环境变量，确保全局可调用`gow`：
+## 部署与验证
 
-```bash
-# Linux/Mac
-export PATH=$PATH:$(go env GOPATH)/bin
+复制 `.env.example` 为 `.env` 并设置 Nacos 连接，并在 Nacos 配置实际连接和密钥，然后执行 `docker compose up --build -d`。operator 的 gRPC 不映射到宿主机。PM2 部署使用 `make pm2-deploy`，两个应用均从 Nacos 读取应用配置。
 
-# Windows（PowerShell）
-$env:PATH += ";$(go env GOPATH)\bin"
+```sh
+go test ./...
+go build -o admin/bin/admin ./admin
+go build -o operator/bin/operator ./operator/cmd/server
 ```
 
-### 核心命令
-
-#### 创建新项目
-
-```bash
-# 基础创建（默认模块名）
-gow new myproject
-cd myproject
-go mod tidy  # 安装依赖
-
-# 指定自定义模块名（推荐）
-gow new myproject -m github.com/yourname/myproject
-```
-
-#### 添加微服务
-
-```shell
-# 基础服务（默认REST）
-gow add service admin
-gow add service user
-
-# 高级用法
-gow add service order -s grpc          # 纯gRPC服务
-gow add service pay -s rest -s grpc    # 双协议服务
-gow add svc goods -d gorm -d redis     # 带数据库+缓存
-go mod tidy                            # 同步依赖
-```
-
-#### 运行服务
-
-```shell
-# 方式1：进入服务目录运行
-cd app/admin/service
-gow run
-
-# 方式2：根目录指定服务运行
-gow run admin
-```
-
-#### 代码自动生成
-
-```bash
-# 生成Ent ORM代码
-gow ent          # 所有服务
-gow ent admin    # 指定服务
-
-# 生成Protobuf/API代码
-gow api
-```
-
-## Makefile 构建命令详解
-
-### 环境初始化
-
-```bash
-make init     # 安装所有依赖、工具、插件
-make cli      # 更新命令行工具
-make plugin   # 更新项目插件
-```
-
-### 代码生成（开发常用）
-
-```bash
-# 进入服务目录
-cd app/admin/service
-
-make api      # 生成API/Protobuf代码
-make ent      # 生成Ent ORM代码
-make openapi  # 生成OpenAPI文档
-make ts       # 生成前端TS代码
-
-# 根目录执行:登记新CRUD模块到手写装配(wiring_ent.go + rest_server.go)
-cd ../.. && make register ENTITY=product
-```
-
-### 运行与构建
-
-```bash
-make run      # 调试运行服务
-make build    # 编译二进制文件
-```
-
-### Docker 容器管理
-
-```bash
-make compose-up      # 启动所有服务+中间件
-make compose-down    # 停止所有服务+中间件
-make docker         # 构建服务Docker镜像
-```
-
-## 一键部署整个项目
-
-部署项目有两种方法：
-
-1. 三方中间件和微服务都运行在Docker之下；
-2. 三方中间件运行在Docker下，微服务通过PM2管理运行在OS下。
-
-#### 1. 三方中间件和微服务都运行在Docker之下
-
-```bash
-cd ./scripts/docker
-chmod +x *.sh
-./full_deploy.sh
-```
-
-#### 2. 三方中间件运行在Docker下，微服务运行在OS下
-
-先部署三方中间件：
-
-```bash
-cd ./scripts/docker
-chmod +x *.sh
-./libs_only.sh
-```
-
-接着部署PM2管理的微服务：
-
-```bash
-cd ./scripts/deploy
-chmod +x *.sh
-./pm2_service.sh
-```
-
-## 常见问题 FAQ
-
-### go.sum 依赖验证失败
-
-有时候，有的依赖包在`go mod tidy`之后会出现`go.sum`验证不通过的问题，解决方法：
-
-```bash
-go clean -modcache
-go mod tidy
-```
-
-如果还不行的话，可以删除`go.sum`文件，然后重新执行`go mod tidy`。
-
-### 中间件连接失败（postgres/redis/minio）
-
-**原因**：容器内域名解析需要配置 hosts
-
-我们需要修改`hosts`文件，修改需要管理员权限，其配置文件路径在：
-
-- Linux：`/etc/hosts`
-- MacOS: `/private/etc/hosts`
-- Windows: `C:\Windows\System32\drivers\etc\hosts`
-
-增加以下内容：
-
-```ini
-127.0.0.1 postgres
-127.0.0.1 redis
-127.0.0.1 minio
-127.0.0.1 consul
-127.0.0.1 jaeger
-```
-
-> 注意：如果注册中心使用Consul，consul的地址填写为`consul`会返回`502`，使用`localhost`或者`127.0.0.1`都可以。
-> ```yaml
-> registry:
-> type: "consul"
->
-> consul:
-> address: "localhost:8500"
-> ```
-
-# Redis 命令报错 / 版本过低
-
-- **本仓不要求 Redis 8**：旧版本文档写的"项目使用 `HExpire` 命令，仅支持 Redis 8.0+"没有代码依据——
-  `grep -rnE "\.HExpire\(|\.HPExpire\(|\.HExpireAt\(|\.HTTL\(" --include=*.go app pkg` 在本仓 **0 命中**，
-  在 `hibiken` / `go-kratos` / `tx7do` / `go-redsync` 四个依赖目录下同样 **0 命中**（2026-09-25 实测）。
-  应用实际用到的是 `Set` / `Expire` / `Publish` / `HSet` 一类的长期命令（同口径 837 处调用）。
-- **仍然报"unknown command"时**：compose 拉的是 `bitnami/redis:latest`，未在配置里固定版本，
-  因此报错一般来自**你自己指向的旧服务端**（例如自建 6.x/7.x 或云厂商锁定版本）。
-  按报错的那条命令去查它的最低服务端版本，再决定升级——不要照搬"必须 8.0+"。
-- **认证失败**（与版本无关）：`data.yaml` / `server.yaml` 里的 `password` 要与服务端一致，
-  开发库默认 `*Abcd123456`。
+详细开发规则见 [AGENTS.md](AGENTS.md)。React 独立位于 `../frontend/admin/react`，执行 `npm run typecheck`、`npm run build` 验证。

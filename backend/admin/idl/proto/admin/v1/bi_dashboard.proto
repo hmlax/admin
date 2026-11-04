@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/bi_dashboard_types.proto";
+import "admin/v1/pagination_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// BI 仪表盘管理服务
+service BiDashboardService {
+  // 查询 BI 仪表盘列表
+  rpc List(admin.v1.PagingRequest) returns (admin.v1.ListBiDashboardResponse) {
+    option (api.get) = "/admin/v1/bi-dashboards";
+  }
+
+  // 查询 BI 仪表盘详情
+  rpc Get(admin.v1.GetBiDashboardRequest) returns (admin.v1.BiDashboard) {
+    option (api.get) = "/admin/v1/bi-dashboards/:id";
+  }
+
+  // 创建 BI 仪表盘
+  rpc Create(admin.v1.CreateBiDashboardRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/bi-dashboards";
+    option (admin.http.body) = "*";
+  }
+
+  // 更新 BI 仪表盘
+  rpc Update(admin.v1.UpdateBiDashboardRequest) returns (google.protobuf.Empty) {
+    option (api.put) = "/admin/v1/bi-dashboards/:id";
+    option (admin.http.body) = "*";
+  }
+
+  // 删除 BI 仪表盘
+  rpc Delete(admin.v1.DeleteBiDashboardRequest) returns (google.protobuf.Empty) {
+    option (api.delete) = "/admin/v1/bi-dashboards/:id";
+  }
+
+  // 复制 BI 仪表盘（模板派生 / 另存为）
+  rpc Copy(admin.v1.CopyBiDashboardRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/bi-dashboards/:id:copy";
+    option (admin.http.body) = "*";
+  }
+}

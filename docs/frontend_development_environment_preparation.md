@@ -43,7 +43,7 @@ corepack enable
 三端的 API 客户端 TypeScript **不是**由 `ts-proto` 之类的 npm 包生成的，因此无需 `npm install -g ts-proto`。
 生成链路属于后端 buf 流程：三份 buf 配置把 TS 直接写到各端源码目录——
 
-| 端 | buf 模板（`backend/api/`） | 输出 |
+| 端 | buf 模板（`backend/admin/`） | 输出 |
 |---|---|---|
 | react | `buf.react.admin.typescript.gen.yaml` | `frontend/admin/react/src/api/generated/` |
 | vue-element | `buf.vue-element.admin.typescript.gen.yaml` | `frontend/admin/vue-element/src/api/generated/` |
@@ -70,7 +70,7 @@ make ts
 cd backend && docker compose -f docker-compose.libs.yaml up -d
 
 # 2. 起后端（HTTP :7788）
-gow run admin
+go run ./admin
 
 # 3. 起前端——三选一，以 react 端为例
 cd ../frontend/admin/react && pnpm install && pnpm dev

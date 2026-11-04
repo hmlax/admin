@@ -1,5 +1,7 @@
 # 任务调度系统（Task System）参考文档
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **定位**：本仓 asynq 任务调度体系的唯一权威说明——配置与启动链、任务数据模型、调度
 > 生命周期、系统级常驻任务（含跨链路的到期扫描 / 审计归档 / 备份 / 站内信广播 / 通知异步派发 /
 > 通知台账清扫）、脚本任务桥、管理页、多租户语义与运维排障。给任务系统加新类型、排"任务没跑"的问题、或接入新调度需求前先读它。
@@ -83,7 +85,7 @@
 
 ### 5.1 租户到期扫描（`tenant_expiry_scan`）
 
-cron `0 * * * *`（`pkg/task/tenant_expiry.go`）。handler 语义完整见
+cron `0 * * * *`（`platform/pkg/task/tenant_expiry.go`）。handler 语义完整见
 [plan_billing.md](./plan_billing.md) 第 4 节（状态映射 + 令牌吊销 + READONLY 分工）。
 不写 sys_tasks——规避 typeName 去重（第 8 节），注册点固定在 `startAllTask` 末尾。
 
@@ -98,7 +100,7 @@ cron `30 3 * * *`。把超过保留期的六类审计行导出 JSONL 归档文�
 
 `AsyncBackup`：SystemContext 全量导出核心表 → JSON 序列化 → gzip → 上传对象存储（SeaweedFS）桶
 `backups`（对象名 `<日期>/<名称>-<时间>.json.gz`）。**这是应用级逻辑备份**，
-与 `scripts/backup/pg_backup.sh`（pg_dump 物理备份，30 份轮换）互补、互不替代。
+与 `platform/scripts/backup/pg_backup.sh`（pg_dump 物理备份，30 份轮换）互补、互不替代。
 桶内对象的保留/清理策略当前无自动化（见第 10 节）。
 
 ### 5.4 站内信广播（`broadcast_message`，一次性 + 幂等）
@@ -122,7 +124,7 @@ asynq 侧、在业务侧"的那个例外）：
   推论：**还有重试额度的失败必须留在 SENDING**，只写 `last_error` + `attempts`，否则第一次瞬态错误落了
   终态就把额度静默作废 —— 加新任务型时容易反过来写（写终态更"顺手"）。
 - **选项写死在代码里**，不走 `sys_tasks.task_options`：`asynq.MaxRetry(3)`（⇒ 最多 4 次尝试，第 4 次才落
-  终态 FAILED）+ `asynq.Timeout(30s)`（`pkg/mailer` 用 `DialContext`，配 `RegisterSubscriberWithCtx` 才真掐得断
+  终态 FAILED）+ `asynq.Timeout(30s)`（`platform/pkg/mailer` 用 `DialContext`，配 `RegisterSubscriberWithCtx` 才真掐得断
   卡死的握手）。配置类错误（渠道没配/没启用/类型不对）与未注册渠道一律包 `asynq.SkipRetry`：
   重试不会让配置变好，只会把一个 OTP 载荷送进归档队列。
 - **不入 `sys_tasks`**，与 5.1/5.2 同为"代码常驻"。但它确实进了 `ListTaskTypeName` 的注册面，
@@ -132,7 +134,7 @@ asynq 侧、在业务侧"的那个例外）：
 
 ### 5.6 通知台账超时清扫（`notification_delivery_sweep`）
 
-cron `*/5 * * * *`（`pkg/task/notification_delivery_sweep.go`）。把 `sys_notification_deliveries` 里
+cron `*/5 * * * *`（`platform/pkg/task/notification_delivery_sweep.go`）。把 `sys_notification_deliveries` 里
 `status = SENDING` 且 `created_at` 已超期 threshold 的行结算为 `FAILED`，`last_error` 写
 `swept by notification_delivery_sweep: …`，**`attempts` 原样保留**——"拨过号却没回写结论"这条线索
 正是它存在的理由。
@@ -169,7 +171,7 @@ cron `*/5 * * * *`（`pkg/task/notification_delivery_sweep.go`）。把 `sys_not
 
 ### 5.7 套餐配额水位扫描（`plan_quota_watermark_scan`）
 
-系统级常驻 cron（每日 09:00，`pkg/task/plan_quota_watermark.go`），不写入 `sys_tasks`；调度项在
+系统级常驻 cron（每日 09:00，`platform/pkg/task/plan_quota_watermark.go`），不写入 `sys_tasks`；调度项在
 `startAllTask` 末尾与其他系统级任务同构注册（`RestartAllTask` 后必然恢复），handler 在
 `NewAsynqServer` 注册订阅（本节上方表格）。
 

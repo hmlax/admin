@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// 站内信消息用户接收信息表
+message InternalMessageRecipients {
+  option (operator.v1.model) = {
+    entity: "InternalMessageRecipient"
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID", (operator.v1.immutable) = true];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_internal_msg_recipient_tenant_created_at,priority:2;index:idx_internal_msg_recipient_tenant_recipient_created_at,priority:3;index:idx_internal_msg_recipient_tenant_status_created_at,priority:3;index:idx_internal_msg_recipient_recipient_status_created_at,priority:3;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt", (operator.v1.immutable) = true];
+
+  // 更新时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "gorm:\"column:updated_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:更新时间\" json:\"updated_at,omitempty\"", (operator.v1.go_name) = "UpdatedAt"];
+
+  // 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "gorm:\"column:deleted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:删除时间\" json:\"deleted_at,omitempty\"", (operator.v1.go_name) = "DeletedAt"];
+
+  // 租户ID
+  optional uint32 tenant_id = 5 [(tagger.tags) = "gorm:\"column:tenant_id;type:bigint;default:0;index:idx_internal_msg_recipient_tenant_created_at,priority:1;index:idx_internal_msg_recipient_tenant_message,priority:1;index:idx_internal_msg_recipient_tenant_recipient_created_at,priority:1;index:idx_internal_msg_recipient_tenant_status_created_at,priority:1;comment:租户ID\" json:\"tenant_id,omitempty\"", (operator.v1.go_name) = "TenantID", (operator.v1.immutable) = true];
+
+  // 站内信内容ID
+  optional uint32 message_id = 6 [(tagger.tags) = "gorm:\"column:message_id;type:bigint;index:idx_internal_msg_recipient_tenant_message,priority:2;uniqueIndex:uq_internal_msg_recipient_message_recipient,priority:1;comment:站内信内容ID\" json:\"message_id,omitempty\"", (operator.v1.go_name) = "MessageID"];
+
+  // 接收者用户ID
+  optional uint32 recipient_user_id = 7 [(tagger.tags) = "gorm:\"column:recipient_user_id;type:bigint;index:idx_internal_msg_recipient_tenant_recipient_created_at,priority:2;index:idx_internal_msg_recipient_recipient_status_created_at,priority:1;uniqueIndex:uq_internal_msg_recipient_message_recipient,priority:2;comment:接收者用户ID\" json:\"recipient_user_id,omitempty\"", (operator.v1.go_name) = "RecipientUserID"];
+
+  // 消息状态
+  optional string status = 8 [(tagger.tags) = "gorm:\"column:status;type:varchar(255);index:idx_internal_msg_recipient_tenant_status_created_at,priority:2;index:idx_internal_msg_recipient_recipient_status_created_at,priority:2;comment:消息状态\" json:\"status,omitempty\"", (operator.v1.go_name) = "Status", (operator.v1.enum_values) = { name: "StatusSent" value: "SENT" }, (operator.v1.enum_values) = { name: "StatusReceived" value: "RECEIVED" }, (operator.v1.enum_values) = { name: "StatusRead" value: "READ" }, (operator.v1.enum_values) = { name: "StatusRevoked" value: "REVOKED" }, (operator.v1.enum_values) = { name: "StatusDeleted" value: "DELETED" }];
+
+  // 消息到达用户收件箱的时间
+  google.protobuf.Timestamp received_at = 9 [(tagger.tags) = "gorm:\"column:received_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:消息到达用户收件箱的时间\" json:\"received_at,omitempty\"", (operator.v1.go_name) = "ReceivedAt"];
+
+  // 用户阅读消息的时间
+  google.protobuf.Timestamp read_at = 10 [(tagger.tags) = "gorm:\"column:read_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:用户阅读消息的时间\" json:\"read_at,omitempty\"", (operator.v1.go_name) = "ReadAt"];
+}

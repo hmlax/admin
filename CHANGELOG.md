@@ -14,7 +14,7 @@
   SeaweedFS（`chrislusf/seaweedfs:4.51`，S3 兼容网关单进程）。容器服务名/主机名沿用 `minio`、
   S3 API 端口仍为 9000——`oss.yaml` 与 hosts 映射零改动；代码侧仍走 minio-go SDK 的标准 S3 语义，
   Go 代码零改动。配套调整：凭证从镜像环境变量改为 compose 挂载的
-  `backend/scripts/docker/seaweedfs/s3.json`（identities，须与 `oss.yaml` 凭证一致）；Web UI 从
+  `backend/platform/scripts/docker/seaweedfs/s3.json`（identities，须与 `oss.yaml` 凭证一致）；Web UI 从
   9001 迁至 9333；bucket 由应用侧 `EnsureBucketExists` 自动创建（`MINIO_DEFAULT_BUCKETS` 移除）。
   全链路经 `pkg/oss` live test（19 用例，含真实 PutObject 流式签名、Range 直读、建桶后回读）与
   预签名 PUT/GET 真实网络回放验证通过。存量 MinIO 数据用任意 S3 客户端按桶镜像迁移（如
@@ -67,19 +67,19 @@
 - 一批"写了但从未生效"的暗色适配规则：react 偏好抽屉等 5 个 `.less` 仍用 antd v5 的 cssVar
   名（v6 下整块空转）、页签栏一段死"暗色适配"块、聊天卡上的白 α 投影（§2.3 要求暗色投影走黑 α）。
 - 暗色占位符收回三级档 `#6E7681`（react）：照抄浅色值会让提示语跳到与已输入内容同一优先级上。
-- 语义色文字档三端接上同一组值：link / text / plain 按钮与 tag 的前景走 `--gowind-*-text`，
+- 语义色文字档三端接上同一组值：link / text / plain 按钮与 tag 的前景走 `--go-admin-*-text`，
   不再吃基准色（白字在 `#FF3860` 上只有 3.51:1）。
 - vue-element 的一条机制错判：`_element-plus.scss` 顶部 `@forward ... with (...)` 的设计 token
   map **到不了运行时**（EP 样式按预编译 CSS 引入），文档原记的"浅色边框 `#E4E4E7` 由该 map 落地"
-  从未生效——卡片描边现由本端自建 `--gowind-card-border` 承担。
+  从未生效——卡片描边现由本端自建 `--go-admin-card-border` 承担。
 - 暗色侧栏展开的子菜单面板不再比侧栏更暗（react）：一块 `rgba(0,0,0,.22)` 的"凹陷底"与
   §4 的"父级展开链路只做文字/图标提亮，不铺底色"直接冲突，实测与侧栏只差 1.049:1——起不到
   分组作用、又让三端里只有 react 的菜单看着多出一层。收平走 token 而非删 CSS：antd 出厂的
   `darkSubMenuItemBg` 是 `#000c17`，只删那条 `!important` 反而会露出更黑的藏青井。
 - 聊天页两张卡不再挂浮层晕（vue-element）：`.chat-card` 与四张 Pro 卡并列为页面容器，却仍吃
   `--el-box-shadow-light`——亮色 `0 0 12px 12% 黑`、暗色实测 `0 0 12px 72% 黑`，正是本端为
-  `.el-card` 定档时点名"会在窄间距卡片间叠出黑缝"的那一档。现改走 `--gowind-card-shadow` /
-  `--gowind-card-border`，与 Pro 卡同档（亮 `0 1px 2px 5%` + `#E4E4E7`、暗 `0 1px 2px 36%` + 8% 白），
+  `.el-card` 定档时点名"会在窄间距卡片间叠出黑缝"的那一档。现改走 `--go-admin-card-shadow` /
+  `--go-admin-card-border`，与 Pro 卡同档（亮 `0 1px 2px 5%` + `#E4E4E7`、暗 `0 1px 2px 36%` + 8% 白），
   明暗两态实测与 react 同值。设计文档原把"聊天页"记在浮层一档，一并纠正。
 - 浅色页签选中态不再铺中性灰底（react）：§4「温和配方」给浅色定的是**主色 15% 淡底**（vue-element 早已照做），
   代码却写成 `rgba(128,128,128,.12)`——压白栏合成 `#F0F0F0`，与页面画布 `#F1F3F6` 只差 1.008:1，读起来像白栏
@@ -261,7 +261,7 @@
   通知规则 / 通知投递台账四行（三语同步，parity CI 通过）。
 - 移除失效的 `make install-golang` 目标（原指向的 `install_golang.sh` 已在脚本模块化
   重构中并入 `install_unix_dev/prod`，由 `lib/go-utils.sh` 的 `install_golang()` 承担），
-  `backend/scripts/README.md` 对应段落改记现状；修正 `config_repo.go` 两处滞后于
+  `backend/platform/scripts/README.md` 对应段落改记现状；修正 `config_repo.go` 两处滞后于
   多实例失效广播的注释。
 
 ### 修复
@@ -457,7 +457,7 @@
 
 ## [0.x] — 早期开发版本
 
-1.0.0 之前 GoWind Admin 处于 `0.x` 阶段，没有正式发布版本。
+1.0.0 之前 Go Admin 处于 `0.x` 阶段，没有正式发布版本。
 下列条目为该阶段对使用者有影响的变更摘要（以 Git 提交记录为准），仅作历史留存。
 
 ### 新增

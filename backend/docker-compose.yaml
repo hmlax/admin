@@ -77,7 +77,7 @@ services:
     networks:
       - app-tier
     volumes:
-      - ./scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - ./platform/scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
 #      - ${APP_ROOT:-/root/app}/seaweedfs/data:/data
     command: server -dir=/data -filer -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json
 
@@ -99,24 +99,41 @@ services:
 #      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
 #      - COLLECTOR_OTLP_ENABLED=true
 
-  admin-service:
-    image: go-wind-admin/admin-service
-    restart: always
-    pull_policy: never
-    networks:
-      - app-tier
-    ports:
-      - "7788:7788"
-      - "7789:7789"
-    depends_on:
-      - postgres
-      - redis
-      - minio
+  operator:
+    image: go-admin/operator
+    restart: unless-stopped
+    networks: [app-tier]
+    # Internal gRPC only: deliberately no host port mapping.
+    expose: ['7790']
+    depends_on: [postgres, redis, minio]
     environment:
-      - TZ=Asia/Shanghai
+      NACOS_ADDR: ${NACOS_ADDR:?set NACOS_ADDR}
+      NACOS_NAMESPACE_ID: ${NACOS_NAMESPACE_ID:-}
+      NACOS_GROUP: ${NACOS_GROUP:-GO_ADMIN}
+      NACOS_USERNAME: ${NACOS_USERNAME:-}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-}
+      NACOS_CLUSTER: ${NACOS_CLUSTER:-DEFAULT}
     build:
-      context: ./  # 指定 Dockerfile 所在的上下文路径
-      dockerfile: Dockerfile
+      context: .
+      args:
+        SERVICE_NAME: operator
+        APP_VERSION: 1.0.0
+
+  admin:
+    image: go-admin/admin
+    restart: unless-stopped
+    networks: [app-tier]
+    ports: ['7788:7788', '7789:7789']
+    depends_on: [operator, redis]
+    environment:
+      NACOS_ADDR: ${NACOS_ADDR:?set NACOS_ADDR}
+      NACOS_NAMESPACE_ID: ${NACOS_NAMESPACE_ID:-}
+      NACOS_GROUP: ${NACOS_GROUP:-GO_ADMIN}
+      NACOS_USERNAME: ${NACOS_USERNAME:-}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-}
+      NACOS_CLUSTER: ${NACOS_CLUSTER:-DEFAULT}
+    build:
+      context: .
       args:
         SERVICE_NAME: admin
         APP_VERSION: 1.0.0

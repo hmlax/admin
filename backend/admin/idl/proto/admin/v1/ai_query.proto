@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "admin/v1/ai_query_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 智能问数服务（NL → 只读 SQL → 结构化结果）
+// 平台管理员专属：第一版查的是全平台数据，且 SQL 会触达原生库表。
+service AiQueryService {
+  // 智能问数
+  rpc Ask(admin.v1.AskAiQueryRequest) returns (admin.v1.AskAiQueryResponse) {
+    option (api.post) = "/admin/v1/ai/query/ask";
+    option (admin.http.body) = "*";
+  }
+}

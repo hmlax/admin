@@ -1,5 +1,7 @@
 # 审计日志采集层（Audit Log Producers）参考文档
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **定位**：六类审计日志采集机制的唯一权威说明——采集层架构、生产者字段、脱敏与指纹、
 > 防递归、管道接线点位、管理页与归档、设计沿革与留空字段。
 > 改审计采集、加新日志字段、排"审计没落库"前先读它。归档任务的调度语义见
@@ -31,7 +33,7 @@ audit 域 proto 有 Create RPC 但同样无 HTTP 绑定。
 
 ### 2.1 transport 中间件类（api / login / operation / permission）
 
-HTTP 可得字段（IP、UA、auth token、路径、成败、归属地等）由 `pkg/middleware/logging/utils.go`
+HTTP 可得字段（IP、UA、auth token、路径、成败、归属地等）由 `platform/pkg/middleware/logging/utils.go`
 的既有包级函数提取，四类中间件复用。
 
 **operation 名解析**（operation / permission 两类的 `resource_type`/`target_type` 与 `action` 来源）：
@@ -39,7 +41,7 @@ HTTP 可得字段（IP、UA、auth token、路径、成败、归属地等）由 
 - kratos operation 字符串全命名空间统一为 `/<package>.<ServiceName>/<Method>`——
   设计期核查全部 admin 命名空间 operation（其时 162 个）均遵循此格式，无例外。
   **162 只是历史快照，别当基线**：接口只增不减（2026-09-25 实测
-  `grep -rho "option (google.api.http)" backend/api/protos/admin/service/v1/*.proto | wc -l` 已是 206），
+  `grep -rho "option (google.api.http)" backend/platform/proto/admin/service/v1/*.proto | wc -l` 已是 206），
   需要核实就现场数一遍，不要引用文档里的数字；
 - `<ServiceName>` 去 "Service" 后缀转小写 → `resource_type` / `target_type`（`RoleService`→`role`）；
 - `<Method>` → ActionType 映射：Create/BatchCreate→CREATE、Update→UPDATE、Delete→DELETE、
@@ -66,7 +68,7 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
    {sql_text, sql_digest(SHA256), latency_ms, dialect, access_type(SQL 首词解析), affected_rows}
    append 进 context 累积器。注入点 `ent_client.go`：
    `ent.Driver(&auditDriver{drv})`。
-2. **context 累积器**（`pkg/audit/event.go`）：`AuditEvent` 类型 +
+2. **context 累积器**（`platform/pkg/audit/event.go`）：`AuditEvent` 类型 +
    `AccumulatorKey`/`SinkKey` context key。中间件 pre-handler 植入 `*[]AuditEvent`，
    包装器向其 append，post-handler 取出。非 HTTP 路径（如迁移）无累积器，不采集。
 3. **transport 中间件**（`data_access_audit_log.go`）：post-handler 取累积器逐条调
@@ -78,14 +80,14 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
 
 | 审计类型 | 生产者字段 | proto 定义（仓库根相对路径） |
 |---|---|---|
-| ApiAuditLog | `api_module` | `backend/api/protos/audit/service/v1/api_audit_log.proto:101` |
-| OperationAuditLog | `resource_type` / `resource_id` / `action` / `before_data` / `after_data` | `backend/api/protos/audit/service/v1/operation_audit_log.proto:72,77,82,87,92` |
-| DataAccessAuditLog | `data_source` / `table_name` / `data_id` / `access_type` / `sql_digest` / `sql_text` / `affected_rows` / `db_user` | `backend/api/protos/audit/service/v1/data_access_audit_log.proto:97,102,107,112,117,122,127,172`<br>（117 = `sql_digest`、122 = `sql_text`，按升序对应，别写反） |
-| PermissionAuditLog | `target_type` / `target_id` / `target_name` / `action` / `old_value` / `new_value` | `backend/api/protos/audit/service/v1/permission_audit_log.proto:72,77,82,88,94,99` |
+| ApiAuditLog | `api_module` | `backend/platform/proto/operator/v1/api_audit_log.proto:101` |
+| OperationAuditLog | `resource_type` / `resource_id` / `action` / `before_data` / `after_data` | `backend/platform/proto/operator/v1/operation_audit_log.proto:72,77,82,87,92` |
+| DataAccessAuditLog | `data_source` / `table_name` / `data_id` / `access_type` / `sql_digest` / `sql_text` / `affected_rows` / `db_user` | `backend/platform/proto/operator/v1/data_access_audit_log.proto:97,102,107,112,117,122,127,172`<br>（117 = `sql_digest`、122 = `sql_text`，按升序对应，别写反） |
+| PermissionAuditLog | `target_type` / `target_id` / `target_name` / `action` / `old_value` / `new_value` | `backend/platform/proto/operator/v1/permission_audit_log.proto:72,77,82,88,94,99` |
 
 字段语义边界见第 9 节（哪些字段当前留空）。
 
-## 4. 脱敏与指纹（`pkg/audit/sqlmask.go`）
+## 4. 脱敏与指纹（`platform/pkg/audit/sqlmask.go`）
 
 - PostgreSQL **词法扫描器**（纯 Go、零依赖——PG 的纯 Go AST 解析器均系 cgo，
   MySQL 方言解析器不认 `RETURNING`/`::`/双引号标识符；字面量脱敏本是词法层问题）；
@@ -140,8 +142,8 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
 
 | 环节 | 位置 |
 |---|---|
-| 回调类型/字段/Option | `pkg/middleware/logging/options.go`（五类 `Write*LogFunc`） |
-| 中间件实例化与 Handle 调用 | `pkg/middleware/logging/logging.go` |
+| 回调类型/字段/Option | `platform/pkg/middleware/logging/options.go`（五类 `Write*LogFunc`） |
+| 中间件实例化与 Handle 调用 | `platform/pkg/middleware/logging/logging.go` |
 | 回调闭包注册（闭包内调各 repo.Create） | `internal/server/rest_server.go` `NewRestMiddleware` 的 `applogging.Server(With*…)` 块 |
 | 策略评估包装引擎 | `authz.Server(newEvalLoggingEngine(authorizer.Engine(), policyEvaluationLogRepo))`（同文件） |
 | repo 实例化 | `cmd/server/wiring_ent.go`（手写 DI；五处 `data.New*AuditLogRepo`） |
@@ -157,6 +159,6 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
 | `old_value` / `new_value`（权限审计值变化） | **实测全空**（209/209 行）——留空待评估，需 handler 上下文来源 |
 | `target_id`（权限审计目标） | **已采集，但不是每行都有**：实测 130 / 209 行有值——设计即"能拿到目标 id 的变更才填"（如角色授权到具体角色），批量/无明确目标的操作只有 `target_type`。`reason` 209/209 全填 |
 | `db_user`（数据访问审计库用户） | **实测全空**（34,369/34,369 行）——仓储层 `SetNillableDbUser` 只做透传，没有任何生产者赋值，需 DSN 解析 |
-| `table_name` / `data_category`（数据访问审计表名/分类） | **已采集，实测两列 34,369 / 34,369 全有值**：从脱敏 SQL 抽表名（多表按 `/` 连接）、首表映射数据分类（`backend/pkg/middleware/logging/data_access_audit_log.go:88-92`）。本文早稿把这三列与 `db_user` 一并记为"留空待 SQL 解析"，已失效 |
+| `table_name` / `data_category`（数据访问审计表名/分类） | **已采集，实测两列 34,369 / 34,369 全有值**：从脱敏 SQL 抽表名（多表按 `/` 连接）、首表映射数据分类（`backend/platform/pkg/middleware/logging/data_access_audit_log.go:88-92`）。本文早稿把这三列与 `db_user` 一并记为"留空待 SQL 解析"，已失效 |
 | 非写操作的审计 | 设计即跳过（Get/List 等不产生操作/权限审计行） |
 | 六类查询页的详情形态 | **三端并不对称**（2026-09-25 实测目录）：vue-element 六类各有 `pages/app/log/<type>/detail-drawer.vue`；vue-vben 五类有 `views/app/log/<type>/<type>-detail-drawer.vue`，仅 `api_audit_log` 没有；react 只有 `pages/app/log/login-audit-log/DetailDrawer.tsx` 一处，其余五类仍是纯列表。本文早稿的"三端均无详情抽屉"已失效 |

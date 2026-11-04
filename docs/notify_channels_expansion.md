@@ -1,5 +1,7 @@
 # 通知渠道扩展：接入 go-utils/notify 全量渠道
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **状态：已立项（2026-10-15 用户拍板"都搞"），M1 实施**——settings 列 + schema 驱动动态表单 +
 > 通用 SettingsSender + 39 个新渠道全量接入（react 先行）。
 >

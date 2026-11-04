@@ -39,7 +39,7 @@ build/
 testdata/
 
 # Scripts (if not needed at runtime)
-scripts/
+platform/scripts/
 
 # Logs
 *.log
@@ -55,5 +55,9 @@ vendor/
 .env
 
 # SQL seed/migration dumps (not needed for image build)
-sql/
-
+platform/sql/
+.env.*
+**/node_modules/
+/data/
+platform/deploy/infra/nacos/*.yaml
+platform/artifacts/

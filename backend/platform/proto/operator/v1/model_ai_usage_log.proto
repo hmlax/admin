@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// AI 调用用量流水
+message SysAiUsageLogs {
+  option (operator.v1.model) = {
+    entity: "AiUsageLog"
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID"];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_sys_ai_usage_logs_tenant_created_at,priority:2;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt"];
+
+  // 租户ID
+  optional uint32 tenant_id = 3 [(tagger.tags) = "gorm:\"column:tenant_id;type:bigint;default:0;index:idx_sys_ai_usage_logs_tenant_created_at,priority:1;comment:租户ID\" json:\"tenant_id,omitempty\"", (operator.v1.go_name) = "TenantID"];
+
+  // 提供商ID
+  optional uint32 provider_id = 4 [(tagger.tags) = "gorm:\"column:provider_id;type:bigint;comment:提供商ID\" json:\"provider_id,omitempty\"", (operator.v1.go_name) = "ProviderID"];
+
+  // 会话ID（0=非对话调用）
+  optional uint32 conversation_id = 5 [(tagger.tags) = "gorm:\"column:conversation_id;type:bigint;comment:会话ID（0=非对话调用）\" json:\"conversation_id,omitempty\"", (operator.v1.go_name) = "ConversationID"];
+
+  // 发起用户ID
+  optional uint32 user_id = 6 [(tagger.tags) = "gorm:\"column:user_id;type:bigint;index:idx_sys_ai_usage_logs_user,priority:1;comment:发起用户ID\" json:\"user_id,omitempty\"", (operator.v1.go_name) = "UserID"];
+
+  // 模型名称
+  optional string model_name = 7 [(tagger.tags) = "gorm:\"column:model_name;type:varchar(255);comment:模型名称\" json:\"model_name,omitempty\"", (operator.v1.go_name) = "ModelName"];
+
+  // 输入 token 数
+  optional uint32 prompt_tokens = 8 [(tagger.tags) = "gorm:\"column:prompt_tokens;type:bigint;comment:输入 token 数\" json:\"prompt_tokens,omitempty\"", (operator.v1.go_name) = "PromptTokens"];
+
+  // 输出 token 数
+  optional uint32 completion_tokens = 9 [(tagger.tags) = "gorm:\"column:completion_tokens;type:bigint;comment:输出 token 数\" json:\"completion_tokens,omitempty\"", (operator.v1.go_name) = "CompletionTokens"];
+
+  // 总 token 数
+  optional uint32 total_tokens = 10 [(tagger.tags) = "gorm:\"column:total_tokens;type:bigint;comment:总 token 数\" json:\"total_tokens,omitempty\"", (operator.v1.go_name) = "TotalTokens"];
+
+  // 调用耗时（毫秒）
+  optional uint32 duration_ms = 11 [(tagger.tags) = "gorm:\"column:duration_ms;type:bigint;comment:调用耗时（毫秒）\" json:\"duration_ms,omitempty\"", (operator.v1.go_name) = "DurationMs"];
+}

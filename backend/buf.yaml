@@ -1,0 +1,24 @@
+version: v2
+
+modules:
+  - path: admin/idl/proto
+  - path: platform/proto
+  - path: platform/third_party
+    # Third-party annotation definitions retain their original package.
+    lint:
+      use: [MINIMAL]
+deps:
+  - 'buf.build/googleapis/googleapis'
+  - 'buf.build/kratos/apis'
+  - 'buf.build/gnostic/gnostic'
+  - 'buf.build/tx7do/pagination'
+  - 'buf.build/go-wind/redact'
+  - 'buf.build/envoyproxy/protoc-gen-validate'
+
+breaking:
+  use:
+    - FILE
+
+lint:
+  use:
+    - DEFAULT

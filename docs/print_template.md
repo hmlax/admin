@@ -1,5 +1,7 @@
 # 打印模板（单据打印设计器）设计文档
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **状态：M0 尖刺已验证通过（2026-10-27 实测），内核选型定案；M1 起未实施。** 本文档是打印模板模块的唯一权威说明：
 > 定位边界、选型决策记录、总体架构、数据模型、三端接入、输出链与分期计划。
 > 动打印模板相关代码前先读本文；实施后各阶段状态以文内标记为准。
@@ -69,7 +71,7 @@
 │  @go-wind/print-common   Custom Element 形态（react 宿主）   │
 └──────────────────────────────────────────────────────────┘
             │ npm 精确版本
-┌─ go-wind-admin（本仓）─────────────────────────────────────┐
+┌─ go-admin（本仓）─────────────────────────────────────┐
 │  后端模板域：sys_print_templates CRUD + 种子模板 + 权限/租户  │
 │  三端接入：模板管理页 + 数据绑定面板 + 列表行「打印」         │
 │  输出链：浏览器打印 / 服务端 PDF（chromedp）/ 静默打印对接    │
@@ -109,7 +111,7 @@ sys_print_templates.payload (TemplateData JSON, 毫米布局, 含 schemaVersion)
 - 命令链：proto → `gow api` → `make ts` → 管理页「接口同步」登记 Api 表 → 「菜单同步」MERGE；
   与 `docs/field_change_guide.md`、`docs/crud_module_guide/` 完全同轨，无特殊命令。
 - 权限点照常登记（模板管理页 + 行打印按钮各一组）；租户闸门 fail-closed 语义不变。
-- **种子模板**走 `pkg/constants/default_data.go` 的 count==0 播种定式：选不依赖业务域的样例
+- **种子模板**走 `platform/pkg/constants/default_data.go` 的 count==0 播种定式：选不依赖业务域的样例
   （用户工牌、资产标签、通用单据各一），绑演示资源；worm 自带的采购收货单等业务模板作参考不直接搬。
 - **无新增数据通道 = 无新增越权面**：模板渲染数据就是前端在既有权限下已可见的行数据；
   服务端 PDF 批量渲染时后端按当前用户上下文调用既有 List/Get 服务，不旁路权限。
@@ -149,7 +151,7 @@ dev 策略例外说明：本模块**内核三端同一份**（设计器交互一
 
 ### 6.1 服务端 PDF 实现说明（M3 已落地，2026-10-28）
 
-- **渲染器**：`backend/pkg/printrender`（chromedp 池，自动探测 Chrome→Edge，`CHROME_PATH` 可覆盖；
+- **渲染器**：`backend/platform/pkg/printrender`（chromedp 池，自动探测 Chrome→Edge，`CHROME_PATH` 可覆盖；
   `SetRenderer` 留接口可切 worm 生态 print-render 伴生容器）。只做 HTML → PDF（PrintToPDF），
   分页/布局全部由前端内核完成——**预览即所得**，后端不重排。
 - **端点**：`POST /admin/v1/print-templates:render-pdf`（PrintTemplateService.RenderPdf）。
@@ -274,7 +276,7 @@ FieldMask 的 protojson JSON 形态是逗号分隔字符串（`"updateMask":"nam
 
 ## 10. 交叉引用
 
-- 定位参照：`docs/adopt-one-frontend.md`（三端并列、采用者取其一——fork 包按端独立可装，core 共享）
+- 当前前端与部署边界：[服务拆分指南](./service_split.md)（本分支只维护 React，打印内核依赖仍由对应包管理）
 - 接入定式：`docs/crud_module_guide/`、`docs/field_change_guide.md`、`docs/list_query_rule.md`
 - 视觉与交互：`docs/design-language.md`（管理页外壳）、`docs/form_drawer_close_guard.md`（预览抽屉）
 - 安全与租户：`docs/tenant_isolation.md`、`docs/frontend_authority.md`、`docs/plan_billing.md`（M4 配额）

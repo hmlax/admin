@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// 监控告警规则表
+message MonitorAlertRules {
+  option (operator.v1.model) = {
+    entity: "MonitorAlertRule"
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID", (operator.v1.immutable) = true];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt", (operator.v1.immutable) = true];
+
+  // 更新时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "gorm:\"column:updated_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:更新时间\" json:\"updated_at,omitempty\"", (operator.v1.go_name) = "UpdatedAt"];
+
+  // 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "gorm:\"column:deleted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:删除时间\" json:\"deleted_at,omitempty\"", (operator.v1.go_name) = "DeletedAt"];
+
+  // 创建者ID
+  optional uint32 created_by = 5 [(tagger.tags) = "gorm:\"column:created_by;type:bigint;comment:创建者ID\" json:\"created_by,omitempty\"", (operator.v1.go_name) = "CreatedBy"];
+
+  // 更新者ID
+  optional uint32 updated_by = 6 [(tagger.tags) = "gorm:\"column:updated_by;type:bigint;comment:更新者ID\" json:\"updated_by,omitempty\"", (operator.v1.go_name) = "UpdatedBy"];
+
+  // 删除者ID
+  optional uint32 deleted_by = 7 [(tagger.tags) = "gorm:\"column:deleted_by;type:bigint;comment:删除者ID\" json:\"deleted_by,omitempty\"", (operator.v1.go_name) = "DeletedBy"];
+
+  // 备注
+  optional string remark = 8 [(tagger.tags) = "gorm:\"column:remark;type:varchar(255);comment:备注\" json:\"remark,omitempty\"", (operator.v1.go_name) = "Remark"];
+
+  // 规则名称
+  optional string name = 9 [(tagger.tags) = "gorm:\"column:name;type:varchar(255);comment:规则名称\" json:\"name,omitempty\"", (operator.v1.go_name) = "Name", (operator.v1.min_len) = 1];
+
+  // 监控指标
+  optional string metric = 10 [(tagger.tags) = "gorm:\"column:metric;type:varchar(255);comment:监控指标\" json:\"metric,omitempty\"", (operator.v1.go_name) = "Metric", (operator.v1.enum_values) = { name: "MetricGoGoroutines" value: "GO_GOROUTINES" }, (operator.v1.enum_values) = { name: "MetricGoMemAllocMb" value: "GO_MEM_ALLOC_MB" }, (operator.v1.enum_values) = { name: "MetricDbOpenConnections" value: "DB_OPEN_CONNECTIONS" }, (operator.v1.enum_values) = { name: "MetricDbPingFail" value: "DB_PING_FAIL" }, (operator.v1.enum_values) = { name: "MetricRedisDbSize" value: "REDIS_DB_SIZE" }];
+
+  // 比较运算（DB_PING_FAIL 忽略本列）
+  optional string op = 11 [(tagger.tags) = "gorm:\"column:op;type:varchar(255);comment:比较运算（DB_PING_FAIL 忽略本列）\" json:\"op,omitempty\"", (operator.v1.go_name) = "Op", (operator.v1.enum_values) = { name: "OpGe" value: "GE" }, (operator.v1.enum_values) = { name: "OpLe" value: "LE" }];
+
+  // 阈值（DB_PING_FAIL 忽略本列）
+  optional double threshold = 12 [(tagger.tags) = "gorm:\"column:threshold;type:double precision;comment:阈值（DB_PING_FAIL 忽略本列）\" json:\"threshold,omitempty\"", (operator.v1.go_name) = "Threshold"];
+
+  // 重复告警冷却（分钟）：持续越限时按此间隔重发
+  uint32 cooldown_minutes = 13 [(tagger.tags) = "gorm:\"column:cooldown_minutes;type:bigint;not null;default:30;comment:重复告警冷却（分钟）：持续越限时按此间隔重发\" json:\"cooldown_minutes,omitempty\"", (operator.v1.go_name) = "CooldownMinutes"];
+
+  // 告警渠道（显式指定，不经路由表）
+  optional string channel = 14 [(tagger.tags) = "gorm:\"column:channel;type:varchar(255);comment:告警渠道（显式指定，不经路由表）\" json:\"channel,omitempty\"", (operator.v1.go_name) = "Channel", (operator.v1.enum_values) = { name: "ChannelEmail" value: "EMAIL" }, (operator.v1.enum_values) = { name: "ChannelWebhook" value: "WEBHOOK" }];
+
+  // 投递目标：EMAIL 为收件地址，WEBHOOK 为回调 URL（显式指定）
+  optional string target = 15 [(tagger.tags) = "gorm:\"column:target;type:varchar(255);comment:投递目标：EMAIL 为收件地址，WEBHOOK 为回调 URL（显式指定）\" json:\"target,omitempty\"", (operator.v1.go_name) = "Target", (operator.v1.min_len) = 1];
+
+  // 是否启用
+  optional bool is_enabled = 16 [(tagger.tags) = "gorm:\"column:is_enabled;type:boolean;not null;default:true;index:idx_monitor_alert_enabled,priority:1;comment:是否启用\" json:\"is_enabled,omitempty\"", (operator.v1.go_name) = "IsEnabled"];
+
+  // 上次扫描是否越限（用于区分「首次触发」与「恢复」）
+  bool last_firing = 17 [(tagger.tags) = "gorm:\"column:last_firing;type:boolean;not null;default:false;comment:上次扫描是否越限（用于区分「首次触发」与「恢复」）\" json:\"last_firing,omitempty\"", (operator.v1.go_name) = "LastFiring"];
+
+  // 上次扫描的指标值
+  optional double last_value = 18 [(tagger.tags) = "gorm:\"column:last_value;type:double precision;comment:上次扫描的指标值\" json:\"last_value,omitempty\"", (operator.v1.go_name) = "LastValue"];
+
+  // 上次告警时间（冷却判断锚）
+  google.protobuf.Timestamp last_alerted_at = 19 [(tagger.tags) = "gorm:\"column:last_alerted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:上次告警时间（冷却判断锚）\" json:\"last_alerted_at,omitempty\"", (operator.v1.go_name) = "LastAlertedAt"];
+}

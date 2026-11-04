@@ -10,7 +10,7 @@
 |---|---|
 | 8 张核心身份/权限/组织表：tenants、users、roles、permissions、memberships、org_units、positions、menus | 审计日志等大体量表（备份本就不含，走等保归档 JSONL） |
 | 保留原 ID 与时间字段 | 增量合并恢复（只支持空库整体恢复） |
-| XLSX/JSON 双格式里的 JSON 备份（`*.json.gz`） | 密码外的加密 payload 解密依赖（GOWIND_CRYPTO_KEY 未设时明文，设了照常恢复） |
+| XLSX/JSON 双格式里的 JSON 备份（`*.json.gz`） | 密码外的加密 payload 解密依赖（runtime.crypto_key 未设时明文，设了照常恢复） |
 
 > 等保视角：核心身份/权限数据 ≥6 个月留存由审计归档 JSONL 承担；本工具链解决
 > "核心配置表误删/迁移"场景。两者互补，不互相替代。

@@ -36,3 +36,10 @@ bin/
 
 # Go workspace file
 go.work
+
+# Local infrastructure credentials and deployment state.
+.env.infra
+.infra-deployment.json
+platform/deploy/infra/nacos/*.yaml
+platform/artifacts/
+__pycache__/

@@ -1,0 +1,90 @@
+package service
+
+import (
+	"context"
+
+	paginationV1 "github.com/tx7do/go-crud/api/gen/go/pagination/v1"
+	"github.com/tx7do/go-utils/trans"
+	"github.com/tx7do/kratos-bootstrap/bootstrap"
+	bLogger "github.com/tx7do/kratos-bootstrap/logger"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"go-admin/operator/internal/data"
+
+	operatorV1 "go-admin/platform/pb/operator"
+	"go-admin/platform/pkg/middleware/auth"
+)
+
+type InternalMessageCategoryService struct {
+	operatorV1.UnimplementedInternalMessageCategoryServiceServer
+	log *bLogger.Helper
+
+	repo *data.InternalMessageCategoryRepo
+}
+
+func NewInternalMessageCategoryService(ctx *bootstrap.Context, repo *data.InternalMessageCategoryRepo) *InternalMessageCategoryService {
+	return &InternalMessageCategoryService{
+		log:  ctx.NewLoggerHelper("internal-message-category/service/admin-service"),
+		repo: repo,
+	}
+}
+
+func (s *InternalMessageCategoryService) List(ctx context.Context, req *paginationV1.PagingRequest) (*operatorV1.ListInternalMessageCategoryResponse, error) {
+	return s.repo.List(ctx, req)
+}
+
+func (s *InternalMessageCategoryService) Get(ctx context.Context, req *operatorV1.GetInternalMessageCategoryRequest) (*operatorV1.InternalMessageCategory, error) {
+	return s.repo.Get(ctx, req)
+}
+
+func (s *InternalMessageCategoryService) Create(ctx context.Context, req *operatorV1.CreateInternalMessageCategoryRequest) (*emptypb.Empty, error) {
+	if req.Data == nil {
+		return nil, operatorV1.ErrorAdminBadRequest("invalid parameter")
+	}
+
+	// 获取操作人信息
+	operator, err := auth.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Data.CreatedBy = trans.Ptr(operator.UserId)
+
+	if err = s.repo.Create(ctx, req); err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (s *InternalMessageCategoryService) Update(ctx context.Context, req *operatorV1.UpdateInternalMessageCategoryRequest) (*emptypb.Empty, error) {
+	if req.Data == nil {
+		return nil, operatorV1.ErrorAdminBadRequest("invalid parameter")
+	}
+
+	// 获取操作人信息
+	operator, err := auth.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Data.Id = trans.Ptr(req.GetId())
+
+	req.Data.UpdatedBy = trans.Ptr(operator.UserId)
+	if req.UpdateMask != nil {
+		req.UpdateMask.Paths = append(req.UpdateMask.Paths, "updated_by")
+	}
+
+	if err = s.repo.Update(ctx, req); err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (s *InternalMessageCategoryService) Delete(ctx context.Context, req *operatorV1.DeleteInternalMessageCategoryRequest) (*emptypb.Empty, error) {
+	if err := s.repo.Delete(ctx, req); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

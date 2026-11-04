@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package admin.v1;
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+message EventSubscriptionRequest {
+  string stream = 1;
+  // Optional EventSource credential; Authorization: Bearer is preferred.
+  string token = 2;
+}
+
+message EventFrame {
+  bytes id = 1;
+  // Polymorphic SSE wire data, not an RPC business DTO wrapper.
+  bytes data = 2;
+  bytes event = 3;
+  bytes retry = 4;
+  bytes comment = 5;
+}

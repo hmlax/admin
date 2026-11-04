@@ -1,5 +1,7 @@
 # 参数管理（sys_config）：平台全局动态参数
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 本文档是参数管理子系统的唯一权威说明：数据模型、服务侧缓存读取器、写路径与多实例失效广播、内置参数补种机制、新参数接入步骤。**改口令策略阈值链路、接入新的运行时参数、排"改了参数没生效"之前先读本文。**
 
 定位：平台全局运行时参数的键值存储——管理页可改、服务侧按键读取。与两个邻居划清边界：
@@ -52,7 +54,7 @@ maxAge := r.configRepo.GetConfigInt(ctx, passwordPolicy.ConfigKeyMaxAgeDays, pas
 所有写路径（Create / Update / Delete / SeedDefaults）在落库后执行 `invalidateCacheKey`：
 
 1. 删除**本进程**缓存里的对应键（含负缓存条目）；
-2. 向 Redis Pub/Sub 频道 **`gowind:config:invalidate`** 发布该键名；
+2. 向 Redis Pub/Sub 频道 **`go-admin:config:invalidate`** 发布该键名；
 
 每个实例的 repo 构造时起一个订阅 goroutine（`subscribeInvalidations`），收到其他实例的失效通知后清除本进程对应缓存条目——**多实例部署下参数变更即时全局生效**。连接断开由 go-redis 自动重连；广播是尽力而为：Redis 不可用时 Publish 仅告警，本地失效不受影响。
 
@@ -70,7 +72,7 @@ maxAge := r.configRepo.GetConfigInt(ctx, passwordPolicy.ConfigKeyMaxAgeDays, pas
 - 键不存在 → 按默认值创建（缺一补一，管理员自建行不阻断补种）；
 - 键已存在 → 跳过，**绝不把管理员改过的值重置回默认**。
 
-种子定义在 `pkg/constants/default_data.go` 的 `DefaultConfigs`，键与默认值**单源自 `pkg/constants/password_policy.go` 的口令策略常量**——种子行与读取器缺省回退永远一致：
+种子定义在 `platform/pkg/constants/default_data.go` 的 `DefaultConfigs`，键与默认值**单源自 `platform/pkg/constants/password_policy.go` 的口令策略常量**——种子行与读取器缺省回退永远一致：
 
 | 键 | 默认 | 语义 |
 |---|---|---|
@@ -82,13 +84,13 @@ maxAge := r.configRepo.GetConfigInt(ctx, passwordPolicy.ConfigKeyMaxAgeDays, pas
 
 ## 5. 管理页与接口
 
-- BFF：`api/protos/admin/service/v1/i_config.proto`，标准 5 RPC，路由前缀 `/admin/v1/configs`。
+- BFF：`platform/proto/operator/v1/config.proto`，标准 5 RPC，路由前缀 `/admin/v1/configs`。
 - 三端管理页（菜单 `menu.system.config`，系统管理 → 参数管理）：增删改查 + 列表；内置参数不提供删除入口。
 - 管理页改值 → 走同一套写路径 → 失效广播自动生效，无需重启进程。
 
 ## 6. 接入新参数的步骤
 
-1. 在 `pkg/constants/default_data.go` 的 `DefaultConfigs` 追加键（内置参数把默认值常量与消费方回退值**单源**放同一处，如 `pkg/constants/password_policy.go` 的做法）；
+1. 在 `platform/pkg/constants/default_data.go` 的 `DefaultConfigs` 追加键（内置参数把默认值常量与消费方回退值**单源**放同一处，如 `platform/pkg/constants/password_policy.go` 的做法）；
 2. 消费方经 wiring 注入 `*data.ConfigRepo`，按键 `GetConfigXxx(ctx, key, def)` 读取——`def` 必须与种子默认值一致；
 3. 重新部署。老库启动时 `SeedDefaults` 自动补种，**不需要手工 SQL**；
 4. 键命名沿用现状 `sys.<域>.<名>`（如 `sys.password.minLen`）；`value_type` 按语义选，读取器与声明保持一致。
@@ -104,10 +106,10 @@ maxAge := r.configRepo.GetConfigInt(ctx, passwordPolicy.ConfigKeyMaxAgeDays, pas
 
 | 文件 | 说明 |
 |---|---|
-| `backend/app/admin/service/internal/data/ent/schema/config.go` | `SysConfig` 实体（表 `sys_configs`、唯一键、value_type 枚举） |
-| `backend/app/admin/service/internal/data/config_repo.go` | 读写路径、缓存读取器、失效广播、`SeedDefaults` |
-| `backend/app/admin/service/internal/service/config_service.go` | BFF 服务实现 + 启动期播种触发点 |
-| `backend/api/protos/config/service/v1/config.proto` | domain proto（消息与领域服务） |
-| `backend/api/protos/admin/service/v1/i_config.proto` | BFF proto（`/admin/v1/configs` 路由） |
-| `backend/pkg/constants/default_data.go` | `DefaultConfigs` 内置参数种子（单源引用 `pkg/password` 常量） |
-| `backend/pkg/password/policy.go` | 口令策略阈值常量与消费示例（键清单的权威来源） |
+| `backend/operator/internal/data/ent/schema/config.go` | `SysConfig` 实体（表 `sys_configs`、唯一键、value_type 枚举） |
+| `backend/operator/internal/data/config_repo.go` | 读写路径、缓存读取器、失效广播、`SeedDefaults` |
+| `backend/operator/internal/service/config_service.go` | BFF 服务实现 + 启动期播种触发点 |
+| `backend/platform/proto/operator/v1/config.proto` | domain proto（消息与领域服务） |
+| `backend/platform/proto/operator/v1/config.proto` | BFF proto（`/admin/v1/configs` 路由） |
+| `backend/platform/pkg/constants/default_data.go` | `DefaultConfigs` 内置参数种子（单源引用 `platform/pkg/password` 常量） |
+| `backend/platform/pkg/password/policy.go` | 口令策略阈值常量与消费示例（键清单的权威来源） |

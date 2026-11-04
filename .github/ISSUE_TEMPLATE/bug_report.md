@@ -1,6 +1,6 @@
 ---
 name: Bug 报告
-about: 报告 GoWind Admin 的缺陷
+about: 报告 Go Admin 的缺陷
 title: "[bug] "
 labels: bug
 ---
@@ -27,7 +27,7 @@ labels: bug
 
 - 后端 commit / tag：
 - 数据库：MySQL / PostgreSQL（版本）：
-- 前端版本：react / vue-element / vue-vben
+- 前端版本：React
 - 浏览器 / 运行环境：
 - 是否多租户场景：是 / 否
 

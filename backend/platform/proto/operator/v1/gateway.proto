@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/empty.proto";
+import "operator/v1/api_audit_log.proto";
+import "operator/v1/data_access_audit_log.proto";
+import "operator/v1/login_audit_log.proto";
+import "operator/v1/operation_audit_log.proto";
+import "operator/v1/permission_audit_log.proto";
+import "operator/v1/policy_evaluation_log.proto";
+
+// Internal data access for admin; access decisions belong to the gateway.
+service GatewayService {
+  rpc ResolveTenantCode(ResolveTenantCodeRequest) returns (ResolveTenantCodeResponse);
+  rpc GetPolicies(google.protobuf.Empty) returns (PoliciesResponse);
+  rpc GetTenantAccessData(TenantAccessRequest) returns (TenantAccessData);
+  rpc WriteAudit(AuditRecord) returns (google.protobuf.Empty);
+  rpc ResolvePolicy(ResolvePolicyRequest) returns (ResolvePolicyResponse);
+  rpc Export(ExportRequest) returns (FileResponse);
+  rpc ReadMedia(MediaRequest) returns (FileResponse);
+  rpc SubscribeEvents(SubscribeRequest) returns (stream Event);
+}
+message ResolveTenantCodeRequest { string code = 1; }
+message ResolveTenantCodeResponse { uint32 tenant_id = 1; }
+message GatewayPermission { string domain = 1; string path = 2; string method = 3; }
+message RolePolicy { string role = 1; repeated GatewayPermission permissions = 2; }
+message PoliciesResponse { repeated RolePolicy policies = 1; }
+message TenantAccessRequest { uint32 tenant_id = 1; string path = 2; string method = 3; }
+message TenantAccessData {
+  bool tenant_exists = 1; optional string status = 2; optional int64 expires_at = 3;
+  string expiry_policy = 4; uint32 plan_id = 5; bool api_exists = 6;
+  bool module_classified = 7; bool module_in_plan = 8;
+  optional uint64 api_call_limit = 9; optional uint64 api_call_count = 10;
+}
+message AuditRecord {
+  oneof record {
+    operator.v1.ApiAuditLog api = 1;
+    operator.v1.LoginAuditLog login = 2;
+    operator.v1.OperationAuditLog operation = 3;
+    operator.v1.PermissionAuditLog permission = 4;
+    operator.v1.DataAccessAuditLog data_access = 5;
+    operator.v1.PolicyEvaluationLog policy_evaluation = 6;
+  }
+}
+message ResolvePolicyRequest { string subject = 1; string path = 2; string method = 3; }
+message ResolvePolicyResponse { uint32 permission_id = 1; uint32 policy_id = 2; }
+message ExportRequest {
+  enum Resource { RESOURCE_UNSPECIFIED = 0; AUDIT = 1; AI_USAGE = 2; NOTIFICATION_DELIVERY = 3; }
+  Resource resource = 1; string type = 2; string format = 3; uint32 max_rows = 4; string query = 5;
+}
+// File bytes contain downloadable content, never serialized business DTOs.
+message FileResponse { bytes content = 1; string content_type = 2; string disposition = 3; int32 status = 4; string cache_control = 5; }
+message MediaRequest { string path = 1; int64 expires = 2; string signature = 3; }
+message SubscribeRequest { string stream = 1; }
+// SSE data is a polymorphic wire event; business RPCs retain their typed contracts.
+message Event { bytes id = 1; bytes data = 2; bytes event = 3; bytes retry = 4; bytes comment = 5; }

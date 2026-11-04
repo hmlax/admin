@@ -10,22 +10,22 @@
 | 完整模式（full_deploy） | Docker | Docker | 一键演示、容器化生产 |
 | PM2 物理机 | 物理机 | PM2 进程托管 | 非容器的生产物理机 |
 
-统一入口是 `backend/scripts/`（完整用法见 [`scripts/README.md`](../../backend/scripts/README.md)）：
+统一入口是 `backend/platform/scripts/`（完整用法见 [`platform/scripts/README.md`](../../backend/platform/scripts/README.md)）：
 
 ```bash
 # 完整模式
-./scripts/docker/full_deploy.sh          # Linux/macOS
-.\scripts\docker\full_deploy.ps1         # Windows
+./platform/scripts/docker/full_deploy.sh          # Linux/macOS
+.\platform\scripts\docker\full_deploy.ps1         # Windows
 
 # 依赖模式
-./scripts/docker/libs_only.sh
+./platform/scripts/docker/libs_only.sh
 
 # PM2 物理机
-./scripts/deploy/pm2_service.sh
+./platform/scripts/deploy/pm2_service.sh
 ```
 
-注意：**Shell 脚本要先赋执行权限**，且 `scripts/` 下有三层子目录，`chmod +x ./scripts/**/*.sh`
-会漏掉 `env/lib` 与 `deploy/sse`——用 `find ./scripts -name '*.sh' -exec chmod +x {} +` 一次到位。
+注意：**Shell 脚本要先赋执行权限**，且 `platform/scripts/` 下有三层子目录，`chmod +x ./platform/scripts/**/*.sh`
+会漏掉 `env/lib` 与 `platform/deploy/sse`——用 `find ./platform/scripts -name '*.sh' -exec chmod +x {} +` 一次到位。
 完整模式下宿主机访问容器服务要改 hosts（`postgres` / `redis` / `minio` 三个主机名映射 127.0.0.1，
 清单见 [backend_deploy.md](../backend_deploy.md)）。
 
@@ -64,14 +64,14 @@ openssl pkey -in jwt_private_key.pem -pubout -out jwt_public_key.pem
 其他生产前核对项：
 
 - **对象存储（SeaweedFS）**：`configs/oss.yaml` 的 `endpoint`/`upload_host`/`download_host` 指向客户端可达入口，
-  并替换 root 凭证（compose 挂载的 `scripts/docker/seaweedfs/s3.json` 同步改，见 [backend_file_upload.md](../backend_file_upload.md)）；
+  并替换 root 凭证（compose 挂载的 `platform/scripts/docker/seaweedfs/s3.json` 同步改，见 [backend_file_upload.md](../backend_file_upload.md)）；
 - **authz 引擎**：`configs/auth.yaml` 的 `authz.type` 从 `noop` 切到 casbin/opa（第 05 章）；
 - **审计留存**：`AUDIT_RETENTION_DAYS` 按合规要求核对（第 07 章）；
 - **脚本出站**：`SCRIPT_HTTP_ALLOWED_DOMAINS` 按需配置（第 08 章）。
 
 ## 4. 数据备份
 
-[`scripts/backup/pg_backup.sh`](../../backend/scripts/backup/pg_backup.sh) 定时全量备份
+[`platform/scripts/backup/pg_backup.sh`](../../backend/platform/scripts/backup/pg_backup.sh) 定时全量备份
 （pg_dump，默认保留 30 份自动轮换），支持 Docker 容器 / 本地直连双模式，附恢复操作文档。
 用 cron/计划任务挂上，并**演练一次恢复**——没验证过的备份等于没有。
 
@@ -83,14 +83,14 @@ openssl pkey -in jwt_private_key.pem -pubout -out jwt_public_key.pem
 4. 新端点做了「接口同步」、新菜单进了菜单管理（第 04/06 章）；
 5. 备份任务挂上且恢复演练过；
 6. SSE 网关与后端同网络、缓冲配置未被改动；
-7. 演示数据清理（`backend/sql/` 是演示数据，生产库别导）；
-8. 若启用 AI 模块：数据库装 pgvector 扩展、`GOWIND_CRYPTO_KEY` 密钥注入、提供商在管理页配置、目标套餐加 `AI` 模块白名单行（详见 [ai_module.md](../ai_module.md)）。
+7. 演示数据清理（`backend/platform/sql/` 是演示数据，生产库别导）；
+8. 若启用 AI 模块：数据库装 pgvector 扩展、`runtime.crypto_key` 密钥注入、提供商在管理页配置、目标套餐加 `AI` 模块白名单行（详见 [ai_module.md](../ai_module.md)）。
 9. 新端点做了「接口同步」已列第 4 条——AI 端点同理，租户可见性还依赖套餐白名单。
 
 ## 深读
 
 - [backend_deploy.md](../backend_deploy.md) —— 部署唯一权威：两模式、PM2、SSE 网关、密钥、hosts
-- [`backend/scripts/README.md`](../../backend/scripts/README.md) —— 脚本逐个用法
+- [`backend/platform/scripts/README.md`](../../backend/platform/scripts/README.md) —— 脚本逐个用法
 - [backend_file_upload.md](../backend_file_upload.md) —— 对象存储的生产配置
 - 根 [README.md](../../README.md)「安全与等保合规」—— 安全能力矩阵（对外口径）
 

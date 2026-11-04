@@ -1,11 +1,11 @@
 # 脚本系统（脚本级插件系统）
 
-GoWind Admin 内置一套以 **Lua / JavaScript** 为载体的脚本级插件系统：平台管理员可以在
+Go Admin 内置一套以 **Lua / JavaScript** 为载体的脚本级插件系统：平台管理员可以在
 不改主版本代码的前提下，编写轻量脚本来扩展平台行为——响应业务事件、注册定时任务、
 对外推送 Webhook 等。脚本以数据库为唯一事实源，通过管理界面增删改查，变更即时生效。
 
-- 后端内核：`backend/pkg/scripting`（语言无关编排器 + 各语言适配器）
-- 平台运行时：`backend/app/admin/service/internal/service`（`script_runtime.go` 多语言实例/数据库加载/任务桥，`script_entity_hooks.go` 实体钩子）
+- 后端内核：`backend/platform/pkg/scripting`（语言无关编排器 + 各语言适配器）
+- 平台运行时：`backend/operator/internal/service`（`script_runtime.go` 多语言实例/数据库加载/任务桥，`script_entity_hooks.go` 实体钩子）
 - 管理面：`系统管理 → 脚本管理`（三端齐备：React / vue-element / vue-vben）
 
 ## 定位与边界
@@ -27,7 +27,7 @@ GoWind Admin 内置一套以 **Lua / JavaScript** 为载体的脚本级插件系
 
 平台在实体的写路径上暴露同步/异步钩子点，命名 `<entity>.before_<op>` / `<entity>.after_<op>`
 （op = create / update / delete）。已登记实体：`user`、`tenant`、`role`、
-`internal_message`、`notification_channel`（见 `backend/app/admin/service/internal/service/script_entity_hooks.go` 的 `EntityHooksMapping`，
+`internal_message`、`notification_channel`（见 `backend/operator/internal/service/script_entity_hooks.go` 的 `EntityHooksMapping`，
 新增实体登记一行即生效）。
 
 | 类型 | 时机 | 语义 |
@@ -90,10 +90,10 @@ Resync 时按代际自动清理。
 也可直接运行未保存的草稿。
 
 > **耗时看「执行日志」，不看试运行弹窗**：响应体 `TestRunScriptResponse.duration_ms` 有定义但
-> 服务端从未赋值（`backend/app/admin/service/internal/service/script_service.go` 的 `TestRun` 只回填
+> 服务端从未赋值（`backend/operator/internal/service/script_service.go` 的 `TestRun` 只回填
 > `Success` / `Error` / `Context`），三端弹窗读 `result.durationMs ?? 0` 因而恒显示 `0ms`。
 > 同一次试运行会以 `trigger_type=test_run` 落一条执行日志
-> （`backend/app/admin/service/internal/service/script_runtime.go` 的 `logExecution`），需要耗时就去「执行日志」查。
+> （`backend/operator/internal/service/script_runtime.go` 的 `logExecution`），需要耗时就去「执行日志」查。
 > 注意该列是 `time.Since(started).Milliseconds()` 的整数毫秒：跑不满 1ms 的脚本仍会记成 `0`
 > （本机库 5 条 hook 日志实测全为 0，即此原因），要看量级请挑有循环或 I/O 的脚本试。
 
@@ -150,7 +150,7 @@ JavaScript 与 Lua 的模块能力一致（`log` / `crypto` / `util` / `cache` /
 提供商走「AI 提供商」管理页配置（id 见列表），api_key 解密与用量记账复用对话主链路。
 
 > **唯一例外：`task` 是 Lua 独有的。** JS 侧的 `task` 模块只是一个**空表占位、无实现**
-> （`backend/pkg/scripting/runtime_javascript.go:107-111` 注册的是 `map[string]any{}`，注释即写明
+> （`backend/platform/pkg/scripting/runtime_javascript.go:107-111` 注册的是 `map[string]any{}`，注释即写明
 > in-script 任务注册 API 尚未实现），其上没有任何 `register_handler` 可用。
 > 任务处理器当前只能用 Lua 编写；asynq 任务桥与执行链路本身与语言无关，已通。
 
@@ -180,7 +180,7 @@ JavaScript 与 Lua 的模块能力一致（`log` / `crypto` / `util` / `cache` /
 ## 运维要点
 
 - **存储**：脚本唯一事实源是数据库 `sys_scripts` 表（version 字段为热更新指纹）；
-  变更后本实例即时 Resync，其他实例经 Redis 频道 `gowind:script:resync` 收到通知自动重同步。
+  变更后本实例即时 Resync，其他实例经 Redis 频道 `go-admin:script:resync` 收到通知自动重同步。
 - **环境变量**：`SCRIPT_HTTP_ALLOWED_DOMAINS`（HTTP 出站白名单，未设置即全部拒绝）。
 - **部署**：全新部署会自动建表；存量部署升级后需在「系统管理 → API 管理」触发一次
   同步，使 `/admin/v1/script*` 端点进入 Api 表（平台管理员不受影响，租户门禁依赖该表）。

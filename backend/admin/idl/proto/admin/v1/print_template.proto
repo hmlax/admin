@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/print_template_types.proto";
+import "admin/v1/pagination_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 打印模板管理服务
+service PrintTemplateService {
+  // 查询打印模板列表
+  rpc List(admin.v1.PagingRequest) returns (admin.v1.ListPrintTemplateResponse) {
+    option (api.get) = "/admin/v1/print-templates";
+  }
+
+  // 查询打印模板详情
+  rpc Get(admin.v1.GetPrintTemplateRequest) returns (admin.v1.PrintTemplate) {
+    option (api.get) = "/admin/v1/print-templates/:id";
+  }
+
+  // 创建打印模板
+  rpc Create(admin.v1.CreatePrintTemplateRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/print-templates";
+    option (admin.http.body) = "*";
+  }
+
+  // 更新打印模板
+  rpc Update(admin.v1.UpdatePrintTemplateRequest) returns (google.protobuf.Empty) {
+    option (api.put) = "/admin/v1/print-templates/:id";
+    option (admin.http.body) = "*";
+  }
+
+  // 删除打印模板
+  rpc Delete(admin.v1.DeletePrintTemplateRequest) returns (google.protobuf.Empty) {
+    option (api.delete) = "/admin/v1/print-templates/:id";
+  }
+
+  // 服务端 PDF 渲染（前端内核 HTML → 后端 Chromium 打印）
+  rpc RenderPdf(admin.v1.RenderPrintTemplateRequest) returns (admin.v1.RenderPrintTemplateResponse) {
+    option (api.post) = "/admin/v1/print-templates:render-pdf";
+    option (admin.http.body) = "*";
+  }
+}

@@ -1,7 +1,7 @@
 <!--
 感谢你的贡献！请按以下模板填写，便于评审。
 提交前请确认：本地通过 make lint vet test（后端）与前端 lint；
-若改动 proto / ent schema，已重新生成代码并一并提交。
+若改动 proto / GORM 模型，已重新生成代码并一并提交。
 -->
 
 ## 类型
@@ -27,9 +27,9 @@
 
 ## 影响范围
 
-<!-- 是否影响三端（react / vue-element / vue-vben）？是否影响多租户隔离？是否破坏向后兼容？-->
+<!-- 是否影响React / admin / operator？是否影响多租户隔离？是否破坏向后兼容？-->
 
-- [ ] 涉及 proto / schema 重新生成（已执行 `make api` / `make ent`）
+- [ ] 涉及 proto / schema 重新生成（已执行 `make api` / `make models`）
 - [ ] 影响认证 / 授权 / 多租户隔离
 - [ ] 影响前后端接口契约
 - [ ] 仅局部改动，无全局影响

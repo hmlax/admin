@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/plan_quota_types.proto";
+import "admin/v1/pagination_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 套餐配额管理服务
+service PlanQuotaService {
+  // 分页查询套餐配额列表
+  rpc List(admin.v1.PagingRequest) returns (admin.v1.ListPlanQuotaResponse) {
+    option (api.get) = "/admin/v1/plan-quotas";
+  }
+
+  // 创建套餐配额
+  rpc Create(admin.v1.CreatePlanQuotaRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/plan-quotas";
+    option (admin.http.body) = "*";
+  }
+
+  // 更新套餐配额
+  rpc Update(admin.v1.UpdatePlanQuotaRequest) returns (google.protobuf.Empty) {
+    option (api.put) = "/admin/v1/plan-quotas/:id";
+    option (admin.http.body) = "*";
+  }
+
+  // 删除套餐配额
+  rpc Delete(admin.v1.DeletePlanQuotaRequest) returns (google.protobuf.Empty) {
+    option (api.delete) = "/admin/v1/plan-quotas";
+  }
+}

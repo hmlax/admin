@@ -1,155 +1,53 @@
-# Add CRUD Module (go-wind-admin)
+# 新增 CRUD 业务模块
 
-> **定位**：本目录是「新增完整 CRUD 业务模块」的参考层手册：跨端编排、执行顺序与通用陷阱在本页；
-> 后端全流程与样例镜像索引在 [backend.md](./backend.md)，三端各自的页面实现在
-> [react.md](./react.md)、[vue-element.md](./vue-element.md)、[vue-vben.md](./vue-vben.md)。
-> 范围划界：给**已有**资源加字段走 [field_change_guide.md](../field_change_guide.md)；修 bug、重构、
-> 改既有模块逻辑不在本手册范围。教程层[第 4 章](../tutorial/04-first-crud-module.md)是本手册的路线图视角。
-> 正文为英文原稿，保留原文以避免转译失真。
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](backend.md) 与 [租户隔离](../tenant_isolation.md) 为准。
 
-This guide walks through scaffolding a **complete CRUD business module** across the backend and one or more frontends of the go-wind-admin monorepo, following the project's real (not documented-aspirational) patterns.
+本分支只维护 React。后端使用 Hertz admin API、Kratos operator gRPC 和公共 platform；目录与服务边界见 [服务拆分指南](../service_split.md)。已有资源加字段请看 [字段修改指南](../field_change_guide.md)。
 
-The monorepo has one backend and three frontends — **three parallel alternatives for teams on different stacks, not a bundle anyone must consume whole** (an adopter typically keeps exactly one; see [docs/adopt-one-frontend.md](../adopt-one-frontend.md)). They differ enough in their list/form/refresh mechanisms that each has its own chapter file. **This file is the orchestrator — it does not contain the per-framework code templates.** Read the matching chapter file(s) in this directory before writing any code.
+开发前阅读 [后端手册](./backend.md)、[React 手册](./react.md) 和对应目录的 AGENTS.md。仓库约定以 AGENTS.md 为准。
 
-## The three-layer architecture in one breath
+## 开发顺序
 
-```
-Backend (always first):  Proto (domain + BFF) → Service → Data/Repo → Server → hand-written wiring (cmd/server/wiring_ent.go)
-Frontend (depends on generated types):  generated → hooks/composables → pages → router/i18n
-```
+1. 从需求与现有模块确认实体名、业务字段、所属业务模块，以及普通 CRUD、树、主从或租户资源的形态。
+2. 在 `backend/platform/proto/operator/v1/` 定义 operator 的数据结构和 gRPC 方法。
+3. 在 `backend/admin/idl/proto/admin/v1/` 独立定义 HTTP 路由、请求及响应。API 不能 import RPC 业务消息或使用 Go 类型别名；handler 通过显式字段转换调用 RPC。
+4. 在 backend 执行 `make api openapi ts`，生成 RPC、API 模型、Hertz 路由、转换、OpenAPI 和 React 客户端。
+5. 修改 operator 的 Ent schema 后执行 `make ent`；实现 Repository 和 Service。
+6. 使用 `make register ENTITY=<entity>` 装配新模块，检查 `operator/cmd/server/wiring_ent.go` 和 `platform/tools/gateway-services.json`，构造函数有额外依赖时补齐。不要手改生成路由。
+7. 在 React 添加 `apiClient` Service getter、Hooks、页面、路由及中英文词条。参考 [React 手册](./react.md)。
 
-**Hard rule:** the frontend `generated/` types every frontend imports come from the backend's codegen: `make api` emits only the **Go** code (`backend/api/gen/go/`), `make ts` emits the **three TypeScript** trees (`backend/api/buf.{react,vue-element,vue-vben}.admin.typescript.gen.yaml`, see `backend/Makefile`'s `ts:` target). The frontend cannot be completed before the backend proto + codegen is done. Always do backend first (or at least through Step 3 of the backend flow).
+参考模块：`platform/proto/operator/v1/dict_type.proto`、`admin/idl/proto/admin/v1/dict_type.proto`、`operator/internal/data/dict_type_repo.go`、`operator/internal/service/dict_type_service.go`。
 
-## Step 0 — Clarify requirements (once, up front)
+## React 约定
 
-Before writing anything, ask the requester (batch all of them into one round) for:
+- 列表使用 ProTable，表单使用 DrawerForm + formRef，数据请求使用 TanStack Query。
+- 用 `new PaginationQuery({ paging, formValues })` 创建分页参数，搜索使用 contains，ID 精确匹配。
+- CRUD 请求体为 `{ data: {...} }`，自定义 RPC 的完整请求体绑定使用 `body: "*"`。
+- Update 通过 Hooks 传递 `updateMask`，关联 ID 列表遵循后端手册的快照、字段掩码和同事务 Replace 模式。
+- 写操作成功后 `queryClient.invalidateQueries({ queryKey: ['listXxx'] })` 刷新对应列表。
+- 业务词条放 `src/locales/<lang>/_modules/`；菜单标题使用 `meta.title: 'routes:xxx'`，词条放 `_core/routes.json`。
+- catch 必须记录原始错误对象或重新抛出。纯本地 best-effort 兜底需注释原因。
+- 前端只导入 `src/api/generated/admin/v1/`，生成文件通过 `make ts` 更新。
 
-1. **Entity name** in three forms: PascalCase (`Product`), snake_case (`product`), and Chinese label (`商品`).
-2. **Core fields** — a list of `{name, type, enum?, required?}`. Distinguish business fields from the audit fields (created_by/updated_by/deleted_by + timestamps) which are added automatically by Ent mixins and need not be listed.
-3. **Functional domain** — does it belong to an existing domain (`permission`, `dict`, `identity`, `opm`, `system`, `tenant`, `log`, …) or is it a brand-new domain? This decides whether you edit an existing proto package / route file or create a new one.
-4. **Which frontends** — react, vue-element, vue-vben (pick one or more). Backend is always included.
-5. **Module shape** — plain CRUD, tree (parent_id), master-detail (two linked tables like dict_type+dict_entry), or tenant-scoped. Plain CRUD is the default; the other shapes extend the chapter templates.
+## 验证与部署
 
-Only proceed once you have these answers. Guessing leads to rework across all four ends.
-
-## Step 1 — Execution order (the rule that prevents 80% of mistakes)
-
-```
-1. Backend  →  read backend.md, execute Steps 1–11
-                 (ends with `make api` having produced generated/*.pb.go AND,
-                  for the chosen frontend(s), `make ts` having regenerated the
-                  frontend generated/ TypeScript)
-2. Frontend →  for each chosen framework, read <framework>.md and execute its steps
-                 frontend steps DEPEND on the regenerated apiClient.<entity>Service existing
-```
-
-If the user insists on frontend-only for an entity that has no backend proto yet, stop and explain the dependency: the frontend's `apiClient.<entity>Service` getter is *generated* from the backend proto, so there is nothing to call without it.
-
-## Step 2 — Backend
-
-Read **`backend.md`** in full before touching backend files. It covers the 11-step flow with real sample references:
-
-```
-1. domain proto  → 2. BFF proto  → 3. make api (+openapi)
-4. ent schema    → 5. make ent
-6. repo          → 7. service  → 8. register server
-9. make register ENTITY=<entity> → 10. make build verify
-11. seeds & the Api registry (count == 0 guards; existing deployments need manual 接口同步)
-```
-
-Real samples to mirror: `backend/api/protos/dict/service/v1/dict_type.proto`, `backend/api/protos/admin/service/v1/i_api.proto`, `backend/app/admin/service/internal/data/api_repo.go`, `backend/app/admin/service/internal/service/dict_type_service.go`. **Read the matching sample file before writing your version** — copy its structure, change names/fields.
-
-After backend Step 3 (`make api` → Go only), if a frontend is in scope, regenerate the frontend TypeScript types — no frontend has a `generate:api` npm script; the TS codegen lives in `backend/Makefile`'s `ts:` target (three buf templates under `backend/api/`):
+在 backend 执行：
 
 ```bash
-cd backend && make ts                         # all three ends at once
-# or, per end, from backend/api:
-buf generate --template buf.react.admin.typescript.gen.yaml
-buf generate --template buf.vue-element.admin.typescript.gen.yaml
-buf generate --template buf.vue-vben.admin.typescript.gen.yaml
+go test ./...
+go build -o /tmp/go-admin-check ./admin
+go build -o /tmp/go-operator-check ./operator/cmd/server
 ```
 
-Each template writes only into its own end (`frontend/admin/react/src/api/generated/`, `frontend/admin/vue-element/src/api/generated/`, `frontend/admin/vue-vben/src/api/generated/`). Afterwards check the generated index (`src/api/generated/admin/service/v1/index.ts`) has the new `get <entity>Service()` getter.
+在 `frontend/admin/react/` 执行：
 
-## Step 3 — Frontend(s)
+```bash
+npm run typecheck
+npm run build
+```
 
-For **each** chosen framework, read its chapter file and follow its step list. They are not interchangeable:
+启动后在 `http://localhost:7788/docs` 检查新接口，实测列表、搜索、分页、新建、编辑及删除；关联字段需覆盖新增、清空和重新添加。租户资源同时验证跨租户隔离与无权限访问。
 
-| Framework | Chapter | List component | Form | Refresh mechanism |
-|---|---|---|---|---|
-| react | `react.md` | ProTable | DrawerForm + formRef | `queryClient.invalidateQueries(['listXxx'])` |
-| vue-element | `vue-element.md` | ProPage (config-driven) | ProModal + ElForm + useDrawerForm | `pageRef.value?.refresh()` (NOT invalidate) |
-| vue-vben | `vue-vben.md` | VxeGrid + proxyConfig | useVbenDrawer + useVbenForm | `gridApi.reload()` on drawer close |
+已有部署需重新生成内嵌 OpenAPI、重启 operator，并在管理页执行「接口同步」；新增菜单使用「菜单同步」。默认种子只影响全新数据库。
 
-**Critical:** each chapter file documents the *actual* project pattern, including places where the repo's `AGENTS.md` is aspirational/out-of-date. Trust the chapter file over the AGENTS.md when they disagree (e.g. vue-element uses ElForm `:rules`, not vee-validate+zod; vue-vben routes are grouped by functional domain in one file, not one file per module).
-
-## Step 4 — Completion checklist
-
-Before declaring done, verify cross-cutting concerns:
-
-- [ ] Backend compiles: `cd backend && make build` (do **not** use `make gen` as the check — `gen: ent api openapi` only regenerates code, it never compiles)
-- [ ] Swagger at `http://localhost:7788/docs` shows the new resource with correct routes
-- [ ] For each frontend: list loads, search filters, pagination works, create/edit form validates and persists, update actually changes fields, delete confirms and refreshes
-- [ ] No edits to any `generated/` directory (these are regenerated, not hand-edited); dependency wiring lives in `cmd/server/wiring_ent.go` (hand-written, no codegen)
-- [ ] `apiClient.<entity>Service` getter exists in the frontend generated index (proves proto round-trip worked)
-- [ ] i18n: no hardcoded Chinese/English in pages — everything goes through `$t`/`t` with keys in the locale JSONs
-- [ ] Update operations carry `updateMask` (frontend `useUpdateXxx` does this automatically via `makeUpdateMask`; do not hand-build the mask)
-- [ ] If the entity carries association ID lists (M2M/O2M edges): repo Update follows the snapshot + blacklist + Replace pattern from `backend.md` Step 6, and association edits round-trip in the UI (add / clear-all / re-add)
-- [ ] Api registry: on a **fresh** DB the Api table auto-syncs at first boot; on an **existing** deployment trigger 管理页「接口管理 → 接口同步」 after deploying — otherwise the tenant gate `(path, method)` check 403s the new routes (fail-closed)
-- [ ] Menu entries for the new module: on an existing deployment add them via the 菜单管理 admin page — editing `pkg/constants/default_data.go` (`DefaultMenus`) only affects empty-DB fresh installs (all seeds are `count == 0` guarded, see `backend.md` Step 11)
-
-## Optional — row printing for your module (print templates)
-
-Once your module's list page works, you can wire row printing in minutes using the platform's print-template engine (full design doc: [print_template.md](../print_template.md)). Users design templates in 系统管理 → 打印模板 (drag-drop canvas, bound fields like `{username}`, mm-precise layout), and your list rows render through any matching template.
-
-**Wiring (one action + one component per page):**
-
-1. **Bind templates to your resource**: templates carry a `resourceKey` — set it to your list's resource key (e.g. `system/user`, `biz.order`). Templates with an empty `resourceKey` are *generic* and match every resource as a fallback. Create one via the 打印模板 admin page (design on canvas, or 复制 an existing template and edit).
-
-2. **Add the row action** — printing is a high-frequency inline action (not folded into the "more" dropdown):
-
-   - react: `const { node, print } = usePrintTemplateDialog();` (`@/components/common/PrintTemplatePrint`), render `{ node }` next to your drawers, and add the action `{ key: 'print', label: t('printTemplate:print'), icon: <PrinterOutlined />, onClick: () => print('<your-resource-key>', record) }`. Reference implementation: `src/pages/app/opm/user/list/UserList.tsx`.
-   - vue-element: drop `PrintTemplatePrint.vue` (`@/components/PrintTemplatePrint.vue`) into the page with `ref="printRef"`, add a tool button `{ name: "print", label: $t("pages.printTemplate.print"), icon: "lucide:printer" }`, and handle it in `handleOperate`: `printRef.value?.print('<key>', data.row)`.
-   - vue-vben: same component idea (`#/components/PrintTemplatePrint.vue`, `defineExpose({ print })`), add a `TableAction` `{ key: 'print', label: $t('page.printTemplate.print'), icon: h(LucidePrinter), onClick: (row) => printRef.value?.print('<key>', row) }`.
-
-3. **Data contract**: the whole row object is the print data — design templates with field paths matching your row (`{customer.name}`, array paths `items[].sku` for detail tables). The designer's field panel derives from the same shape when authors use 示例数据.
-
-**Matching semantics** (same across all frontends): enabled templates with `resourceKey` exactly equal to the passed key win; otherwise generic templates (empty `resourceKey`) are offered; multiple matches render a template switcher with live preview; none → empty state linking to the print-template admin page. Rendering runs client-side through the print kernel's isomorphic pipeline (bind → paginate → HTML → iframe → browser print).
-
-**Batch printing**: pass an **array of rows** to the same entry (`print(key, selectedRows)`) — the kernel merges them into a single paginated document (copy-per-page). Wire a toolbar button to your grid's checked records (vxe `getCheckboxRecords()` / ProTable `rowSelection.onChange`). Server-side PDF of the same merged document: the print dialog's 「服务端 PDF」 button POSTs the HTML to `POST /admin/v1/print-templates:render-pdf` and downloads the result (requires Chromium/Edge + CJK fonts on the backend host — see print_template.md §6.1).
-
-**Gotcha**: the print kernel's canvas API differs by host — `getTemplateJson()` returns an **object** on the Vue canvas but a **string** on the react custom element. Normalize before putting it into the `payload` string column, or protojson rejects the create/update with `invalid value for string field payload`.
-
-## Step 5 — Cross-framework pitfalls (memorize these)
-
-These recur on every module regardless of framework. Read them once here, then the per-framework chapter adds framework-specific ones.
-
-1. **`PaginationQuery` must be instantiated with `new`.** All three frontends have a `PaginationQuery` class whose `.toRawParams()` depends on instance getters. Passing a plain object literal and calling `.toRawParams()` crashes. Always `new PaginationQuery({ paging, formValues })`.
-
-2. **Every Update call must carry `updateMask`.** The backend's `UpdateX` runs the DTO through `FilterByFieldMask` first, which **clears every field not listed in the mask** — only surviving fields reach the `SetNillable*` mapping and the SQL SET clause. An omitted/nil mask therefore means **no filtering at all: every populated field in the submitted DTO gets written**, so a stale or partial form round-trip silently corrupts untouched columns. All three frontends provide a `useUpdateXxx` mutation that calls `makeUpdateMask(Object.keys(values))` internally. Use it; do not call `apiClient.<entity>Service.Update` directly with a hand-built mask. If the entity carries association ID lists (M2M/O2M edges), the repo additionally needs the snapshot + blacklist + Replace pattern — see `backend.md` Step 6 before writing the repo.
-
-3. **Never hand-edit `generated/`.** Backend `api/gen/go/` and each frontend's `api/generated/` are produced by codegen. If a type or service is missing, the fix is to regenerate (fix the proto, rerun `make api` for Go / `make ts` for the frontend TypeScript), not to edit the generated file.
-
-4. **Backend error codes: Service layer uses `adminV1.ErrorXxx`.** Repo layer may use domain errors (`permissionV1.ErrorXxx`, `dictV1.ErrorXxx`), but the Service (BFF) layer standardizes on `adminV1.ErrorBadRequest` / `adminV1.ErrorInternalServerError` from `protos/admin/service/v1/admin_error.proto`. Don't use `errors.New`.
-
-5. **Refresh mechanism is framework-specific — do not mix them up.**
-   - react: `queryClient.invalidateQueries({ queryKey: ['listXxx'] })` (prefix match)
-   - vue-element: `pageRef.value?.refresh()` — invalidate does nothing here because the list uses `fetchQuery`, not a reactive `useQuery` subscription
-   - vue-vben: `gridApi.reload()` (typically wired into the drawer's `onOpenChange`)
-
-6. **i18n files auto-register via `import.meta.glob` — do not manually register them.** Adding a new locale JSON under the right folder is enough. But the *route menu title* lives in a separate file, and each end addresses it differently — copy the wrong style and the menu renders the raw key:
-   - react: `meta.title: 'routes:xxx'` — the colon is the i18next **namespace** separator; keys live in `src/locales/<lang>/_core/routes.json`.
-   - vue-element: `meta.title: 'routes.<group>.<page>'` — a plain vue-i18n dotted key (no namespace prefix, no `routes:` colon), resolved from `src/locales/zh-CN/routes.json`.
-   - vue-vben: `meta.title: $t('menu.<group>.<page>')` — translated eagerly with `$t` imported from `#/locales` in the route file, keys in `src/locales/langs/<lang>/menu.json`.
-
-7. **No error swallowing — in any framework.** Every `catch` must either log the **original error object** (`console.error(...)`/`console.warn(...)`) or rethrow it. A user-visible notification/Message is NOT logging (it carries only translated text; debugging needs the raw error in the console). Bare `catch {}` is acceptable only for pure local best-effort fallbacks, with a comment explaining why. The composables/mutation layer generated for a new module must not swallow mutation errors — surface them via notification + console, or rethrow.
-
-## When to read which chapter
-
-| Situation | Read |
-|---|---|
-| Any backend work | `backend.md` |
-| User chose react | `react.md` |
-| User chose vue-element | `vue-element.md` |
-| User chose vue-vben | `vue-vben.md` |
-| Tree / master-detail / tenant shape | The base chapter for that framework, plus inspect a real sample of that shape (e.g. `system/dict/` for master-detail, menu module for tree) |
+需要列表打印时使用 React 的 `usePrintTemplateDialog()`；资源匹配、批量打印和 PDF 部署依赖见 [打印模板](../print_template.md)。

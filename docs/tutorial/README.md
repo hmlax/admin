@@ -1,4 +1,6 @@
-# GoWind Admin 渐进教程
+# Go Admin 渐进教程
+
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](../crud_module_guide/backend.md) 与 [租户隔离](../tenant_isolation.md) 为准。
 
 面向"从零接手本项目"的开发者：按序读完，你会从一个空环境走到能独立开发业务模块、理解全部横切系统、并把系统安全部署上线。
 
@@ -10,9 +12,9 @@
 | 章 | 主题 | 前置 |
 |---|---|---|
 | [01 架构全景](./01-architecture-overview.md) | monorepo 布局、一次请求的完整路径、横切系统地图、生成物边界 | 无 |
-| [02 从零跑起来](./02-get-it-running.md) | 本地开发环境（依赖模式）到三端任选其一登录 | 01 |
+| [02 从零跑起来](./02-get-it-running.md) | 本地开发环境（依赖模式）到React 登录 | 01 |
 | [03 代码生成链路](./03-codegen-chain.md) | proto→Go/TS、schema→ent、两层 proto、buf 配置家族 | 02 |
-| [04 第一个业务模块](./04-first-crud-module.md) | 后端十步 + 三端前端 + 部署侧收尾的端到端实战 | 03 |
+| [04 第一个业务模块](./04-first-crud-module.md) | 后端实现 + React 前端 + 部署侧收尾的端到端实战 | 03 |
 | [05 权限模型](./05-permission-model.md) | 认证与令牌、authz 引擎、路由/按钮/字段可见性、生效时延 | 04 |
 | [06 多租户与行级隔离](./06-multi-tenant-isolation.md) | Api 表闸门、数据层租户谓词、数据范围五档、覆盖边界 | 05 |
 | [07 审计与等保](./07-audit-compliance.md) | 六类审计日志、留存归档、身份鉴别三件套、能力边界 | 01 |

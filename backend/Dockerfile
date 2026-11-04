@@ -1,74 +1,23 @@
-##################################
-# 第一阶段：构建GO可执行文件
-##################################
-
-# 使用官方的 Go 基础镜像作为构建环境
 ARG GO_VERSION=1.26.4
 FROM golang:${GO_VERSION}-alpine AS builder
-
 ARG SERVICE_NAME=admin
 ARG APP_VERSION=1.0.0
-
-# 设置工作目录
 WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    service_package="./${SERVICE_NAME}/cmd/server"; \
+    if [ "${SERVICE_NAME}" = "admin" ]; then service_package="./admin"; fi; \
+    CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION}" \
+    -o /out/server "${service_package}"
 
-# 复制项目源代码到工作目录
-COPY . /src
-
-# 下载依赖，国内代理链：首选 goproxy.cn，备选 direct（直接下载）
-# 增加 GOSUMDB 配置避免校验服务器访问失败
-RUN GOPROXY=https://goproxy.cn,direct GOSUMDB=off go mod download
-
-# 编译可执行文件（使用WORKDIR和相对路径，而不是cd）
-RUN CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64 \
-    go build -ldflags "-X main.version=$APP_VERSION" \
-    -o /src/bin/${SERVICE_NAME}-server ./app/${SERVICE_NAME}/service/cmd/server/
-
-# 复制配置文件到统一目录
-RUN mkdir -p /src/bin/configs && \
-    if [ -d "/src/app/${SERVICE_NAME}/service/configs" ]; then \
-      cp -r /src/app/${SERVICE_NAME}/service/configs/* /src/bin/configs/ 2>/dev/null || true; \
-    fi
-
-##################################
-# 第二阶段：创建最终的运行时镜像
-##################################
-
-# 使用 Alpine 作为基础镜像，因为它非常轻量级
-FROM docker.io/alpine:latest
-
-ARG SERVICE_NAME=app
-
-# 安装必要的证书（如果应用程序需要进行 HTTPS 请求）
-RUN apk --no-cache add ca-certificates
-
-# 打印模块服务端 PDF（可选）：WITH_PRINT_BROWSER=1 时安装 Chromium 与 CJK 字体。
-# 体积代价约 +400MB；不加时打印模块管理页可用，render-pdf 端点返回错误（日志提示装浏览器）。
-# 详见 docs/print_template.md §6.1。
+FROM alpine:3.22
+RUN apk --no-cache add ca-certificates tzdata && adduser -D appuser
 ARG WITH_PRINT_BROWSER=0
-RUN if [ "$WITH_PRINT_BROWSER" = "1" ]; then       apk --no-cache add chromium font-noto-cjk;     fi
-
-# Chromium 以非 root 用户运行时的可写目录（chromedp 默认 user-data-dir 在 /tmp）
-RUN mkdir -p /tmp/printrender && chown -R appuser:appuser /tmp 2>/dev/null || true
-
-# 设置工作目录
+RUN if [ "$WITH_PRINT_BROWSER" = "1" ]; then apk --no-cache add chromium font-noto-cjk; fi
 WORKDIR /app
-
-# 从第一阶段的构建结果中复制可执行文件到当前工作目录
-COPY --from=builder /src/bin/${SERVICE_NAME}-server /app/bin/server
-
-# 拷贝配置文件
-COPY --from=builder /src/bin/configs/ /app/configs/
-
-# 创建一个名为 appuser 的非 root 用户
-RUN adduser -D appuser
-
-# 切换到非特权用户
+COPY --from=builder /out/server /app/bin/server
+RUN mkdir -p /app/data /tmp/printrender && chown -R appuser:appuser /app /tmp/printrender
 USER appuser:appuser
-
-# 暴露服务端口，根据你的实际服务端口进行修改
-
-# 设置容器启动时执行的命令
-CMD ["/app/bin/server", "-c", "/app/configs"]
+ENTRYPOINT ["/app/bin/server"]

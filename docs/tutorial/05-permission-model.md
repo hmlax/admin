@@ -1,11 +1,13 @@
 # 05 · 权限模型：认证、授权与前端可见性
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](../crud_module_guide/backend.md) 与 [租户隔离](../tenant_isolation.md) 为准。
+
 > 前置：[04 章](./04-first-crud-module.md)（知道一次 CRUD 的样子）。读完你会理解"谁能看到什么、调到什么"的全部轴线，以及每条轴的**生效时延**——这是排查"改了权限怎么没生效/怎么还不生效"的钥匙。
 
 ## 1. 认证：从登录到令牌
 
 ```
-登录页 → 图形验证码（Redis gowind:captcha:<captchaId> 校验）
+登录页 → 图形验证码（Redis go-admin:captcha:<captchaId> 校验）
        → 口令 AES 应用层加密传输（前端 VITE_AES_KEY）
        → 服务端 bcrypt 比对（登录失败按 IP+用户名双维度 Redis 限流）
        → 签发 JWT：access token（仅内存）+ refresh token（HttpOnly Cookie）
@@ -32,10 +34,10 @@
 
 ## 3. authz 引擎（接口级）
 
-- 配置在 `app/admin/service/configs/auth.yaml` 的 `authz.type`（:68），实际可用的只有三个值：
+- 配置在 `operator/configs/auth.yaml` 的 `authz.type`（:68），实际可用的只有三个值：
   `noop`（默认，引擎全放行——**生产必须切 casbin 或 opa 才有接口级拦截**，注意 noop 下租户闸门与
   行级隔离仍然生效，别误以为"没开引擎=没权限"）、`casbin`、`opa`。
-  两个坑：① `zanzibar` **只有占位实现**（`pkg/authorizer/authorizer.go:190-193` 的
+  两个坑：① `zanzibar` **只有占位实现**（`platform/pkg/authorizer/authorizer.go:190-193` 的
   `newEngineZanzibar` 直接 `return nil`，而 `authz.type` 那行的注释仍把 zanzibar 列为可选值），
   选了它会在装配 REST 服务时 panic（`rest_server.go:266-269` → `ResetPolicies` 对 nil 引擎调
   `.Name()`，`authorizer.go:82`）；② 写错的类型名不报错——`newEngine` 的 `switch` 带
@@ -71,7 +73,7 @@
 | `backend` | 菜单树由后端下发（`adminPortalService.GetNavigation`，见 `frontend/admin/react/src/router/index.tsx:146`），前端据此挂载路由 | 权限复杂/动态的系统 |
 
 > 别去找 `ListRoute` 这个接口——它只是 `GetNavigation` 的**响应消息名**（`ListRouteResponse`，
-> `backend/api/protos/admin/service/v1/i_admin_portal.proto:13`）。RPC 名以 `Get` 开头。
+> `backend/platform/proto/operator/v1/admin_portal.proto:13`）。RPC 名以 `Get` 开头。
 
 **按钮权限**走**权限码**：登录后前端调 `GetMyPermissionCode`（同上 proto `:20`；别写成响应名
 `ListPermissionCodeResponse`）拿到该用户的权限码数组（如 `['AC_100100', ...]`），页面用

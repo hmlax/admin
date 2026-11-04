@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// BI 仪表盘表（设计器 schema JSON；租户隔离，内置禁删可复制，version 乐观锁）
+message BiDashboards {
+  option (operator.v1.model) = {
+    entity: "BiDashboard"
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID", (operator.v1.immutable) = true];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_bi_dashboards_created_at,priority:1;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt", (operator.v1.immutable) = true];
+
+  // 更新时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "gorm:\"column:updated_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:更新时间\" json:\"updated_at,omitempty\"", (operator.v1.go_name) = "UpdatedAt"];
+
+  // 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "gorm:\"column:deleted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:删除时间\" json:\"deleted_at,omitempty\"", (operator.v1.go_name) = "DeletedAt"];
+
+  // 创建者ID
+  optional uint32 created_by = 5 [(tagger.tags) = "gorm:\"column:created_by;type:bigint;comment:创建者ID\" json:\"created_by,omitempty\"", (operator.v1.go_name) = "CreatedBy"];
+
+  // 更新者ID
+  optional uint32 updated_by = 6 [(tagger.tags) = "gorm:\"column:updated_by;type:bigint;comment:更新者ID\" json:\"updated_by,omitempty\"", (operator.v1.go_name) = "UpdatedBy"];
+
+  // 删除者ID
+  optional uint32 deleted_by = 7 [(tagger.tags) = "gorm:\"column:deleted_by;type:bigint;comment:删除者ID\" json:\"deleted_by,omitempty\"", (operator.v1.go_name) = "DeletedBy"];
+
+  // 是否启用
+  optional bool is_enabled = 8 [(tagger.tags) = "gorm:\"column:is_enabled;type:boolean;default:true;comment:是否启用\" json:\"is_enabled,omitempty\"", (operator.v1.go_name) = "IsEnabled"];
+
+  // 排序值（越小越靠前）
+  optional uint32 sort_order = 9 [(tagger.tags) = "gorm:\"column:sort_order;type:bigint;default:0;comment:排序值（越小越靠前）\" json:\"sort_order,omitempty\"", (operator.v1.go_name) = "SortOrder"];
+
+  // 租户ID
+  optional uint32 tenant_id = 10 [(tagger.tags) = "gorm:\"column:tenant_id;type:bigint;default:0;uniqueIndex:uidx_bi_dashboards_code_tenant,priority:2;comment:租户ID\" json:\"tenant_id,omitempty\"", (operator.v1.go_name) = "TenantID", (operator.v1.immutable) = true];
+
+  // 名称（展示用）
+  optional string name = 11 [(tagger.tags) = "gorm:\"column:name;type:varchar(255);comment:名称（展示用）\" json:\"name,omitempty\"", (operator.v1.go_name) = "Name"];
+
+  // 编码，租户内唯一，业务侧按编码取仪表盘
+  optional string code = 12 [(tagger.tags) = "gorm:\"column:code;type:varchar(255);uniqueIndex:uidx_bi_dashboards_code_tenant,priority:1;comment:编码，租户内唯一，业务侧按编码取仪表盘\" json:\"code,omitempty\"", (operator.v1.go_name) = "Code"];
+
+  // 种类（DASHBOARD=仪表盘 SCREEN=大屏 TEMPLATE=可复用模板）
+  optional string kind = 13 [(tagger.tags) = "gorm:\"column:kind;type:varchar(255);default:DASHBOARD;index:idx_bi_dashboards_kind,priority:1;comment:种类（DASHBOARD=仪表盘 SCREEN=大屏 TEMPLATE=可复用模板）\" json:\"kind,omitempty\"", (operator.v1.go_name) = "Kind", (operator.v1.enum_values) = { name: "KindDASHBOARD" value: "DASHBOARD" }, (operator.v1.enum_values) = { name: "KindSCREEN" value: "SCREEN" }, (operator.v1.enum_values) = { name: "KindTEMPLATE" value: "TEMPLATE" }];
+
+  // 备注
+  optional string remark = 14 [(tagger.tags) = "gorm:\"column:remark;type:varchar(255);comment:备注\" json:\"remark,omitempty\"", (operator.v1.go_name) = "Remark"];
+
+  // 仪表盘 JSON（设计器 schema：数据集 + 图表布局 + 主题；服务端不解析只透传）
+  optional string payload = 15 [(tagger.tags) = "gorm:\"column:payload;type:jsonb;comment:仪表盘 JSON（设计器 schema：数据集 + 图表布局 + 主题；服务端不解析只透传）\" json:\"payload,omitempty\"", (operator.v1.go_name) = "Payload"];
+
+  // 图表数量冗余列（来自 payload.charts，列表页直显免解析 JSON）
+  optional uint32 chart_count = 16 [(tagger.tags) = "gorm:\"column:chart_count;type:bigint;default:0;comment:图表数量冗余列（来自 payload.charts，列表页直显免解析 JSON）\" json:\"chart_count,omitempty\"", (operator.v1.go_name) = "ChartCount"];
+
+  // 主题预设冗余列（来自 payload.theme.key）
+  optional string theme_key = 17 [(tagger.tags) = "gorm:\"column:theme_key;type:varchar(255);comment:主题预设冗余列（来自 payload.theme.key）\" json:\"theme_key,omitempty\"", (operator.v1.go_name) = "ThemeKey"];
+
+  // 缩略图 URL（设计器导出 PNG 后上传，列表页预览用）
+  optional string thumbnail = 18 [(tagger.tags) = "gorm:\"column:thumbnail;type:varchar(255);comment:缩略图 URL（设计器导出 PNG 后上传，列表页预览用）\" json:\"thumbnail,omitempty\"", (operator.v1.go_name) = "Thumbnail"];
+
+  // 是否系统内置（内置禁删，可复制派生）
+  optional bool is_built_in = 19 [(tagger.tags) = "gorm:\"column:is_built_in;type:boolean;default:false;comment:是否系统内置（内置禁删，可复制派生）\" json:\"is_built_in,omitempty\"", (operator.v1.go_name) = "IsBuiltIn"];
+
+  // 是否租户内共享（false 仅创建者可见）
+  optional bool is_public = 20 [(tagger.tags) = "gorm:\"column:is_public;type:boolean;default:false;comment:是否租户内共享（false 仅创建者可见）\" json:\"is_public,omitempty\"", (operator.v1.go_name) = "IsPublic"];
+
+  // 版本号（乐观锁：更新需回传读到的版本，成功后 +1）
+  optional uint32 version = 21 [(tagger.tags) = "gorm:\"column:version;type:bigint;default:1;comment:版本号（乐观锁：更新需回传读到的版本，成功后 +1）\" json:\"version,omitempty\"", (operator.v1.go_name) = "Version"];
+}

@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/dashboard_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 后台首页分析概览服务（只读聚合）
+service DashboardService {
+  // 获取概览统计（用户总数 / 角色总数 / 今日登录次数 / 今日操作审计条数）
+  rpc GetOverview(google.protobuf.Empty) returns (admin.v1.DashboardOverviewResponse) {
+    option (api.get) = "/admin/v1/dashboard/overview";
+  }
+
+  // 获取近 N 天每日登录次数趋势
+  rpc GetLoginTrend(admin.v1.GetLoginTrendRequest) returns (admin.v1.LoginTrendResponse) {
+    option (api.get) = "/admin/v1/dashboard/login-trend";
+  }
+
+  // 操作审计按 action 分布
+  rpc GetOperationActionDistribution(google.protobuf.Empty) returns (admin.v1.ActionDistributionResponse) {
+    option (api.get) = "/admin/v1/dashboard/operation-action-distribution";
+  }
+
+  // 登录审计按 status 分布
+  // AI 安全与异常洞察：审计明细行为模式挖掘（平台用户专属——数据会外发到模型端点）
+  rpc GetAiInsights(admin.v1.AiInsightsRequest) returns (admin.v1.AiInsightsResponse) {
+    option (api.post) = "/admin/v1/dashboard/ai-insights";
+    option (admin.http.body) = "*";
+  }
+
+  rpc GetLoginStatusDistribution(google.protobuf.Empty) returns (admin.v1.StatusDistributionResponse) {
+    option (api.get) = "/admin/v1/dashboard/login-status-distribution";
+  }
+}

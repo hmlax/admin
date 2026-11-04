@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/plan_types.proto";
+import "admin/v1/pagination_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 套餐管理服务
+service PlanService {
+  // 分页查询套餐列表
+  rpc List(admin.v1.PagingRequest) returns (admin.v1.ListPlanResponse) {
+    option (api.get) = "/admin/v1/plans";
+  }
+
+  // 查询套餐详情
+  rpc Get(admin.v1.GetPlanRequest) returns (admin.v1.Plan) {
+    option (api.get) = "/admin/v1/plans/:id";
+  }
+
+  // 创建套餐
+  rpc Create(admin.v1.CreatePlanRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/plans";
+    option (admin.http.body) = "*";
+  }
+
+  // 更新套餐
+  rpc Update(admin.v1.UpdatePlanRequest) returns (google.protobuf.Empty) {
+    option (api.put) = "/admin/v1/plans/:id";
+    option (admin.http.body) = "*";
+  }
+
+  // 删除套餐
+  rpc Delete(admin.v1.DeletePlanRequest) returns (google.protobuf.Empty) {
+    option (api.delete) = "/admin/v1/plans";
+  }
+}

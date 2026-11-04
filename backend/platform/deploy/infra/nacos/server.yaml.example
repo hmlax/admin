@@ -1,0 +1,41 @@
+server:
+  rest:
+    addr: ':7788'
+    timeout: 30s
+    enable_swagger: true
+    cors:
+      allow_credentials: true
+      origins: ['http://localhost:15888', 'http://127.0.0.1:15888']
+      methods: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+      headers: [X-Requested-With, X-Request-ID, Content-Type, Authorization, X-Captcha-Id, X-Captcha-Value]
+  grpc:
+    addr: ':7790'
+    timeout: 30s
+  asynq:
+    uri: 'REPLACE_ASYNQ_URI'
+    codec: json
+    concurrency: 10
+    shutdown_timeout: 10s
+    queues: {critical: 10, default: 5, low: 1}
+  sse:
+    addr: ':7789'
+    path: /events
+logger:
+  type: std
+authz:
+  type: casbin
+runtime:
+  operator_endpoint: '' # Empty selects Nacos discovery for operator.grpc.
+  audit_archive_dir: ./data/audit-archive
+  audit_retention_days: 180
+  backup_retention_days: 30
+  notification_delivery_stale_minutes: 15
+  allow_private_webhook: false
+  sso:
+    issuer: ''
+    client_id: ''
+    client_secret: ''
+    redirect_url: ''
+    scopes: openid email profile
+    auto_create: false
+    tenant_code: ''

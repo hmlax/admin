@@ -3,8 +3,7 @@
 > **定位**：react / vue-element / vue-vben 三端共享的视觉语言权威值表。
 > **唯一权威**：任何颜色、圆角、尺寸、动效的调整，先改本文档，再同步三端代码；禁止只改代码不改文档。
 > **参照实现**：vben 端的主题体系（preferences → CSS 变量 → 组件库 token 派生）是视觉基准与架构参照；react / vue-element 按第 3 章映射表落地。
-> **三选一口径**：三端是"三选一"（见 [adopt-one-frontend.md](./adopt-one-frontend.md)）——采用者只在自己选定的那一端设值、跑那一端的门禁；
-> "改本文档 + 同步三端"是**上游维护者**的义务，不是使用者的负担。
+> **当前分支**：只保留 React，视觉调整与验证在 React 完成；下文多端数值对照保留作设计沿革参考。
 > **现状**：第 3 章原为"现值 → 目标"迁移清单，2026-09-25 逐端复核后确认**规范值已落到三端代码里**，
 > 故该章改写为**落点索引**（要改哪个值去哪个文件），退役旧值只留在各节末的「沿革」里。
 
@@ -50,7 +49,7 @@ vben 任务页"启动全部任务"= `#FAFAFA` on `#57D188` **1.85:1**；react �
 （`#0B0F19` on `#FF3860` 5.46:1），用户实测裁决回退——暗墨坐在红色实底上观感刺眼，**亮/暗两态一律回
 各 UI 库原生白字**，3.51:1 的数值取舍让位观感（按钮文案是短动作词，不构成阅读障碍）。**同日第二批：
 徽标数字一并回退**——react（antd）/ele（EP）删除浅色徽标暗墨规则，恢复库原生白字；vben 本就无此规则。
-暗墨（`--gowind-solid-ink`）只剩开关轨道这类**非按钮**小字；success/warning 实底不受本条影响（白字在那两档上 1.87/1.74 真不可读）。
+暗墨（`--go-admin-solid-ink`）只剩开关轨道这类**非按钮**小字；success/warning 实底不受本条影响（白字在那两档上 1.87/1.74 真不可读）。
 
 **语义色当文字用（Tag 文字态、link/text/plain 按钮、页签激活态、查询区折叠按钮、链接）不许直接用基准色**：
 基准色在白底上是 destructive **3.51** / success **1.93** / warning **1.74**（primary 4.95 也只是勉强过），
@@ -65,7 +64,7 @@ vben 任务页"启动全部任务"= `#FAFAFA` on `#57D188` **1.85:1**；react �
 | destructive | 70% → `#B62C4B`（6.09） | 90% → `#FF4C70`（5.51） |
 
 比 2.1 基准色"更暗/更亮"是故意的：文字档只服务文字，实底按钮与徽标的前景看上一条。
-变量名三端统一 `--gowind-{primary,success,warning,danger}-text` + `--gowind-solid-ink`，落点见 §3。
+变量名三端统一 `--go-admin-{primary,success,warning,danger}-text` + `--go-admin-solid-ink`，落点见 §3。
 
 **两条踩过坑的结论，改样式前必读**：
 
@@ -95,7 +94,7 @@ vben 任务页"启动全部任务"= `#FAFAFA` on `#57D188` **1.85:1**；react �
 
 ### 2.2 中性色 · 浅色模式
 
-> **落地状态按端不同**（2026-09-25 复核，2026-09-29 补文字档一层，**2026-10-14 再订**）：vue-element ✓（页面画布**不是**由 `_element-plus.scss:34` 的 Sass map `$bg-color: ("page": #F1F3F6)` 落地的——它到不了运行时，实测 `--el-bg-color-page` 读回出厂值 `#F2F3F5`；生效档在该文件末尾的 `html:not(.dark)` 块里带 `!important`，同块补上浅色文字-主/常规两档 `#1F2937`/`#374151`；边框 `#E4E4E7` 那条 **2026-10-17 复测判定为从未落地**——`_element-plus.scss:55` 的 `$table: ("border-color": #E4E4E7)` 属于文件顶部那张 `@forward ... with (...)` map，而本端 EP 样式按**预编译 CSS** 引入（`bootstrap.ts:4` 的 `element-plus/dist/index.css` + unplugin 追加的单组件 css），map 值根本不参与编译，实测 `--el-border-color-lighter` 仍是出厂 `#EBEEF5`、预编译 `el-table.css` 里写的是 `--el-table-border-color: var(--el-border-color-lighter)`；卡片描边现由本端自建 `--gowind-card-border` 承担（见本节末"同一档在 vue-element 的落点"），**表格线仍差那一档，属待决**；原记行号 `:31`/`:52` 均已漂）、vue-vben ✓（`framework/base/design/design-tokens/default.css:10`
+> **落地状态按端不同**（2026-09-25 复核，2026-09-29 补文字档一层，**2026-10-14 再订**）：vue-element ✓（页面画布**不是**由 `_element-plus.scss:34` 的 Sass map `$bg-color: ("page": #F1F3F6)` 落地的——它到不了运行时，实测 `--el-bg-color-page` 读回出厂值 `#F2F3F5`；生效档在该文件末尾的 `html:not(.dark)` 块里带 `!important`，同块补上浅色文字-主/常规两档 `#1F2937`/`#374151`；边框 `#E4E4E7` 那条 **2026-10-17 复测判定为从未落地**——`_element-plus.scss:55` 的 `$table: ("border-color": #E4E4E7)` 属于文件顶部那张 `@forward ... with (...)` map，而本端 EP 样式按**预编译 CSS** 引入（`bootstrap.ts:4` 的 `element-plus/dist/index.css` + unplugin 追加的单组件 css），map 值根本不参与编译，实测 `--el-border-color-lighter` 仍是出厂 `#EBEEF5`、预编译 `el-table.css` 里写的是 `--el-table-border-color: var(--el-border-color-lighter)`；卡片描边现由本端自建 `--go-admin-card-border` 承担（见本节末"同一档在 vue-element 的落点"），**表格线仍差那一档，属待决**；原记行号 `:31`/`:52` 均已漂）、vue-vben ✓（`framework/base/design/design-tokens/default.css:10`
 > `--background-deep: 216 20.11% 95.47%` = `#F1F3F6`；浅色 `--foreground` 本日起为 `215 28% 17%` = `#1F2937`，原先的 shadcn 出厂 `#323639` 属漏迁）、**react ✓**（2026-10-16 起）——此前 react
 > 只有 `core/preferences/config/darkTheme.ts` 一套 token，**浅色全走 antd `defaultAlgorithm` 派生值**
 > （实测画布 `#F5F5F5`、卡片边框 `#F0F0F0`、卡片投影 `none`），与本表不严格相等；现已新增
@@ -143,16 +142,16 @@ vben 任务页"启动全部任务"= `#FAFAFA` on `#57D188` **1.85:1**；react �
 > 靠权重取胜而不是源码顺序）；字段名同时补 `aria-label`——着色救不了屏幕阅读器。
 > **浅色那一半被用户判回原值**：理由不是"白底 1.84:1 够读"，而是①这条豁免边界本就是浅色先定的（上面那段：
 > react 浅色 token **故意不含** `colorTextPlaceholder`，留 antd 更浅值），②用户这轮只点名暗色，"提一档、不改版式"
-> 的范围不该顺带扩到浅色。**教训**：用 `--gowind-secondary-text` 这类**两态都解析**的变量做"局部修复"，
+> 的范围不该顺带扩到浅色。**教训**：用 `--go-admin-secondary-text` 这类**两态都解析**的变量做"局部修复"，
 > 会把没被点名的那一态一起改掉——按主题收口的修复，选择器就要钉死在 `[data-theme]` / `.light-mode` 上。
 > **代价（暗色）**：与已输入值的分离度 4.39 → **2.94**，靠"登录表单一开始必空 + 聚焦后占位符消失"兜；
 > 这类字段一旦补上真 label，占位符就退回三级档。**ele / vben 的认证页同形问题待移植（暗色侧）。**
 
 灰阶统一走 Tailwind gray/slate 族（与暗色同一冷调体系），**次要档是唯一的例外**：`#676E7C` 不在 gray/slate
 的任一级上（gray-500 `#6B7280` 在淡底色上差 0.1~0.2，slate-500 `#64748B` 偏蓝过冷），按 2.1 的混色思路取冷灰。
-**这条例外要反过来读**：辅助说明/版权/状态副文案一类的次要文字一律取 `--gowind-secondary-text`，组件里不得写
+**这条例外要反过来读**：辅助说明/版权/状态副文案一类的次要文字一律取 `--go-admin-secondary-text`，组件里不得写
 Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-500` 在暗色卡片 `#111827` 上 3.71，全过不了 4.5）；
-坐在**浅底盒子**里的提示文字（如登录页验证码占位）连次要档都不够，按 2.1 取 `--gowind-solid-ink`。
+坐在**浅底盒子**里的提示文字（如登录页验证码占位）连次要档都不够，按 2.1 取 `--go-admin-solid-ink`。
 **ele 端另有一层坑**：EP 出厂 CSS 里 `@layer` 计数为 0，`.el-icon { color: var(--color) }` 属 unlayered，
 按层叠第一步就压过 Tailwind v4 的 `@layer utilities` ⇒ 写在 EP 组件根上的 `text-*` 颜色工具类**一律不生效**
 （现证：同一 `<i class="el-icon">` 裸=白、加 `text-gray-400`=仍白、加 `text-[color:var(--el-text-color-secondary)]`=仍白、
@@ -185,8 +184,8 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 > `ProPage/.pro-page__content`，加骨架镜像 `ProPage/TableSkeleton.vue` 的 `.ts-search` / `.ts-table-card`——原先吃
 > `--el-box-shadow-light`，运行时实测 `0 0 12px rgba(0,0,0,.12)`：**全向、无 Y 偏移，α 比 §2.2 的悬浮档还重**
 > （.12 > .08），静止态读起来"发一圈灰光飘着"，层级语言正好是反的。现统一走本端自建
-> `--gowind-card-shadow` / `--gowind-card-border`（定义在 `_element-plus.scss` 的 `:root` 与 `html.dark` 两块里，
-> 与 `--gowind-*-text` 同族：base.css 无同名项，不需要 `!important`）——亮 `0 1px 2px rgba(0,0,0,.05)` + `#E4E4E7`、
+> `--go-admin-card-shadow` / `--go-admin-card-border`（定义在 `_element-plus.scss` 的 `:root` 与 `html.dark` 两块里，
+> 与 `--go-admin-*-text` 同族：base.css 无同名项，不需要 `!important`）——亮 `0 1px 2px rgba(0,0,0,.05)` + `#E4E4E7`、
 > 暗 `0 1px 2px rgba(0,0,0,.36)` + 8% 白。三条支撑：
 > ① **不复用 `--el-box-shadow-light`**：改完之后它剩下的使用者**并非"全是浮层"——本条原稿把聊天页和 `.el-card`
 > 一起算成浮层，是错的**（2026-10-18 纠正）。逐处核过（读的是选择器与所在规则的上下文，不是量像素）：真浮层五处保持那圈 12px 晕不动
@@ -194,7 +193,7 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 > `NoticeDropdown/index.vue:165`、
 > `LayoutTagsView.vue:1128` 右键菜单、`LeftLayout.vue:118` hover 展开的侧栏覆盖层）；**页面卡两处**——
 > `pages/app/ai/chat/index.vue` 的 `.chat-card` 与 `_element-plus.scss:282` 的 `.el-card`。
-> **`.chat-card` 已于 2026-10-18 改走 `--gowind-card-shadow` / `--gowind-card-border`**（明暗两态实测：
+> **`.chat-card` 已于 2026-10-18 改走 `--go-admin-card-shadow` / `--go-admin-card-border`**（明暗两态实测：
 > 亮 `0 1px 2px .05` + `#E4E4E7`、暗 `0 1px 2px .36` + 8% 白）。它原先暗色实测是 `0 0 12px rgba(0,0,0,.72)`
 > （EP 暗色把 `--el-box-shadow-light` 覆成 `#000000b8`），正是 ②里 `.el-card` 那一版点名"会在窄间距卡片间叠出黑缝"
 > 的同一档，而会话列表卡与对话卡之间正是窄间距。**`.el-card` 亮色仍是那圈 12px 晕**（暗色已被 `_dark-mode.scss:110`
@@ -438,7 +437,7 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 
 - 本项目 override 仅 `app.name` / `app.accessMode` / `app.defaultAvatar`（`src/preferences.ts`，2026-10-17 复核；
   头像是为了与 react/ele 用同一张 `/default-avatar.png`，与视觉规范无关），默认主题即本规范基准，**无强制迁移项**。
-- 2.1 的语义色文字档 + 2.2/2.3 的次要档落点：`framework/styles/antd/index.css` 末尾的 `--gowind-*-text` 段
+- 2.1 的语义色文字档 + 2.2/2.3 的次要档落点：`framework/styles/antd/index.css` 末尾的 `--go-admin-*-text` 段
   （变量由 `hsl(var(--primary|success|warning|destructive))` 混色，跟随主题预设；规则带 `!important`，理由见 2.1 第 2 条）。
   **这一层是纯 CSS 且经 postcss 处理，注释只能写 `/* */`，写 `//` 会在 dev 直接 500（`Unknown word …`）。**
 - 曾经的"唯一开放项"已关闭：2.3 的 react 系暗色已被采纳——`framework/base/design/design-tokens/dark.css:4-11`
@@ -457,8 +456,8 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 | 主色 α（暗色） | `config/darkTheme.ts:91,107,108,109` | `activeShadow …0.12`、`rowHoverBg …0.08`、`rowSelectedBg …0.15`、`rowSelectedHoverBg …0.2`，全为 `rgba(0, 107, 230, …)` |
 | 顶栏 50 | `src/layouts/MainLayout/index.tsx:301` | `height: 50` |
 | 折叠 48 / 展开 224 | `src/layouts/MainLayout/components/SiderMenu/index.tsx:115` | `isCollapsed ? 48 : (sidebarConfig?.width ?? 224)` |
-| 语义色文字档 2.1 + 次要档 2.2 | `src/styles/semantic-text.css`（由 `main.tsx` 引入） | `--gowind-*-text` = `color-mix(...)`，规则一律带 `!important`（2.1 第 2 条）；浅/暗两态各一组变量，深墨类规则只在 `html[data-theme='light']` 下生效 |
-| 页签激活态文字 | `src/layouts/MainLayout/components/TabsBar/tabsbar.css` | 浅色走 `--gowind-primary-text`；暗色的 chrome/card 形态保持 `var(--ant-color-text)`（本地规则同样带 `!important`，否则被 2.1 那层的新页签规则盖掉） |
+| 语义色文字档 2.1 + 次要档 2.2 | `src/styles/semantic-text.css`（由 `main.tsx` 引入） | `--go-admin-*-text` = `color-mix(...)`，规则一律带 `!important`（2.1 第 2 条）；浅/暗两态各一组变量，深墨类规则只在 `html[data-theme='light']` 下生效 |
+| 页签激活态文字 | `src/layouts/MainLayout/components/TabsBar/tabsbar.css` | 浅色走 `--go-admin-primary-text`；暗色的 chrome/card 形态保持 `var(--ant-color-text)`（本地规则同样带 `!important`，否则被 2.1 那层的新页签规则盖掉） |
 
 > **一处与 2.3 有意的偏差**：react 不覆写表头色——`darkTheme.ts:105` 注释说明
 > `colorHeaderBg` 不是合法 antd Token（原值 `'#1F2937'` 已移除），表头由 `colorBgContainer/colorFillAlter`
@@ -478,7 +477,7 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 > **不参与任何编译、到不了运行时**：实测 `--el-box-shadow-light` = 出厂 `0px 0px 12px #0000001f`（map 写的是
 > `0 2px 8px .06`）、`--el-fill-color-light` = 出厂 `#f5f7fa`（map 写 `#F2F3F5`）、`--el-bg-color-page` 在该文件
 :553 那条 `html:not(.dark) … !important` 补上之前也读回出厂 `#F2F3F5`（map 写 `#F1F3F6`，2026-10-14 实测）。**只有该文件里显式写进 `:root` / `html:not(.dark)` / `html.dark` 的自定义属性才生效**，
-> 且因 base.css 追加在本文件之后、要压过它得带 `!important`（自建 `--gowind-*` 名字除外）。改 EP 出厂值前先想清这条，
+> 且因 base.css 追加在本文件之后、要压过它得带 `!important`（自建 `--go-admin-*` 名字除外）。改 EP 出厂值前先想清这条，
 > 改 map 是空转。
 
 | 本规范 | 落点文件:行（2026-10-17 复核） | 现值（= 规范值） |
@@ -486,15 +485,15 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
 | 主色 2.1 | `src/core/preferences/config/default.ts:91` + `constants.ts:12` + `styles/vendors/_element-plus.scss:13` | `hsl(212 100% 45%)` / SCSS `#006BE6`（`info` 亦同值，见 `_element-plus.scss:29-31`） |
 | 语义色 2.1 | `default.ts:92,93,90`（运行时注入） | success/warning/destructive 三个 HSL 与本表逐字一致 |
 | 暗色 2.3 | `src/styles/_dark-mode.scss:33-36,42-45,54,72` | 大底 `#0B0F19`、表面/输入/抽屉 `#111827`、表头 `#1F2937`、浮层 `#1C2128`——旧 Arco 灰（`#0C0E13/#14171C/#14161a/#1e2026/#1f2329/#2e3440/#0D0F14`）已全部清除 |
-| 浅色 canvas 2.2 | `_element-plus.scss:553`（`html:not(.dark)` 块，带 `!important`） | `#F1F3F6`。**不是** `:34` 的 Sass map——见上面那条注；浅色**边框** `#E4E4E7` 同理从未由 `:55` 落地，卡片描边现走 `--gowind-card-border`，表格线仍是出厂 `#EBEEF5`（待决） |
+| 浅色 canvas 2.2 | `_element-plus.scss:553`（`html:not(.dark)` 块，带 `!important`） | `#F1F3F6`。**不是** `:34` 的 Sass map——见上面那条注；浅色**边框** `#E4E4E7` 同理从未由 `:55` 落地，卡片描边现走 `--go-admin-card-border`，表格线仍是出厂 `#EBEEF5`（待决） |
 | 圆角 2.4 | `_element-plus.scss` + `--radius`（`default.ts:95` 为 `"0.5"` = 8px） | base 8px |
 | 字重 2.5 | `src/styles/index.scss:46` | `--el-font-weight-primary: 400` |
 | 顶栏 / 折叠 / 边距 2.6 | `_variables.scss:16`（50px）/ `src/layouts/LeftLayout.vue:57`、`src/layouts/MixLayout.vue:123`（48）/ `_layouts.scss:9-10`（16px） | 与 2.6 一致 |
 | 搜索卡内缩 / 卡间距 / 表格→分页 2.6（2026-10-17 跟齐 react） | `src/components/Pro/ProSearch/index.vue`（`padding: 20px`）、`Pro/ProPage/index.vue`（`gap: 16px` + `__content { padding: 20px }`）、`Pro/ProPagination/index.vue`（`padding: 16px 0 0`，暗色副本在 `_dark-mode.scss:763` 的 `!important`，两处必须一起改） | 实测字段/工具条/表头同落 21px；间距来源**还有一条藏在 JS**：`Pro/ProTable/index.vue` 的高度计算原先 `offsetHeight + 20` 与 CSS padding 叠成 36px，现只减 `offsetHeight`（详见 §2.6 该条注） |
 | vxe 暗色 | `styles/vendors/_vxe-table.scss:180,183,185,187` | 表头 `#1F2937`、表体/布局底 `#111827`、斑马纹 `rgba(255,255,255,.03)` |
 | 卡片圆角 2.4（2026-10-17 由 8 抬到 12，明暗两态实测） | `ProSearch/index.vue`、`ProPage/index.vue` 的 `__content`；骨架镜像 `ProPage/TableSkeleton.vue` 的 `.ts-search` / `.ts-table-card` | 12px（控件仍 8、内层表格面按 `proTableConfig.ts:13` 的 6px；实测外 12 > 输入 8 > 按钮 6 > 表格面 6） |
-| 卡片静止档投影 + 描边 2.2 / 2.3（2026-10-17 落地，明暗两态 + 骨架态实测） | 变量定义 `_element-plus.scss` 的 `:root`（亮）与 `html.dark`（暗）里那两条 `--gowind-card-*`；使用者同上四张卡（`ProSearch/.pro-search`、`ProPage/.pro-page__content`、`TableSkeleton/.ts-search`、`.ts-table-card`） | 亮 `0 1px 2px rgba(0,0,0,.05)` + `#E4E4E7`、暗 `0 1px 2px rgba(0,0,0,.36)` + `rgba(255,255,255,.08)`。**不再吃 `--el-box-shadow-light`**（出厂 12px 全向晕，α 比悬浮档还重），改后它剩下的 7 处使用者全是浮层；`.el-card` 亮侧仍走那条晕，待决。理由与"暗色两端不同档是有意的"见 §2.2 末注 |
-| 语义色文字档 2.1 + 次要档 2.2 | `styles/vendors/_element-plus.scss` 的 `--gowind-*-text` 段 | 把 EP 的 `--el-button-text-color` / `--el-tag-text-color` 指到文字档（`.el-button--{type}` 的 `is-link/is-text/is-plain` 三变体 + `.el-tag--{type}`），带 `!important`——unplugin-element-plus 把组件 CSS 追加在本文件之后，不带就输；次要档 `--el-text-color-secondary: #676E7C` |
+| 卡片静止档投影 + 描边 2.2 / 2.3（2026-10-17 落地，明暗两态 + 骨架态实测） | 变量定义 `_element-plus.scss` 的 `:root`（亮）与 `html.dark`（暗）里那两条 `--go-admin-card-*`；使用者同上四张卡（`ProSearch/.pro-search`、`ProPage/.pro-page__content`、`TableSkeleton/.ts-search`、`.ts-table-card`） | 亮 `0 1px 2px rgba(0,0,0,.05)` + `#E4E4E7`、暗 `0 1px 2px rgba(0,0,0,.36)` + `rgba(255,255,255,.08)`。**不再吃 `--el-box-shadow-light`**（出厂 12px 全向晕，α 比悬浮档还重），改后它剩下的 7 处使用者全是浮层；`.el-card` 亮侧仍走那条晕，待决。理由与"暗色两端不同档是有意的"见 §2.2 末注 |
+| 语义色文字档 2.1 + 次要档 2.2 | `styles/vendors/_element-plus.scss` 的 `--go-admin-*-text` 段 | 把 EP 的 `--el-button-text-color` / `--el-tag-text-color` 指到文字档（`.el-button--{type}` 的 `is-link/is-text/is-plain` 三变体 + `.el-tag--{type}`），带 `!important`——unplugin-element-plus 把组件 CSS 追加在本文件之后，不带就输；次要档 `--el-text-color-secondary: #676E7C` |
 
 **沿革（退役旧值）**：主色 `hsl(220 100% 55%)` / `#165DFF`、浅色 canvas `#F7F8FA`、浅色边框 `#E5E6EB`、
 字重 500、折叠 54、`app-container` 15px，以及上面括号里那一整列 Arco 暗色灰。
@@ -554,7 +553,7 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
     **1.24**（原 1.14）；描边退回 `transparent`（底色已是标记通道，灰圈压淡蓝底只会再叠一层脏）；card 的字重 500 一并收平
     （暗色那档早已覆成 400，留着会让同一风格两态字重不同，且本条明令禁用字重加粗）。**暗色零改动**：文件下方那组
     `[data-theme='dark']` 的 `!important` 仍胜出，实测 #262D3A + 8% 白描边 + 字重 400 逐值与改前一致。
-    **一条要记住的代价**：淡蓝底把主色文字档 `--gowind-primary-text` 从灰底上的 5.00:1 压到 **4.63:1**——仍过 §2.1 的
+    **一条要记住的代价**：淡蓝底把主色文字档 `--go-admin-primary-text` 从灰底上的 5.00:1 压到 **4.63:1**——仍过 §2.1 的
     4.5 底线，但只剩 0.13 余量 ⇒ **别再往上调淡底的比例**（20% 即破线）；要更强的标记，走文字/图标档，不要走底。
 - **默认头像**（2026-09-16 统一）：三端统一使用橘猫插画 `default-avatar.png`（react/ele public 同文件，vben 经 `src/preferences.ts` 覆盖框架默认的 webp——带 Vben 品牌字样已弃用）；用于导航栏当前用户、通知、锁屏等无头像兜底；用户列表/详情的"姓名首字 + 底色"兜底保留（承载身份信息）。
 - **侧边栏菜单交互态（2026-09-16 定稿，基准 = react antd Menu）**：悬停 = 中性灰遮罩（浅 `#F5F7FA` 系 / 暗 `rgba(255,255,255,.05~.08)`，8px 圆角）；选中 = 主色实底 + 白字（`--primary-foreground`）+ 8px 圆角药丸，不得用左侧竖条 / 淡色底 / 字重加粗来区分选中（vben 旧"选中与悬停同灰"、ele 旧"inset 蓝条 + light-9 淡底"均废弃）；父级展开链路只做文字/图标提亮，不铺底色。折叠后的弹出子菜单选中态同规则。横向顶部菜单暂不约束。
@@ -590,7 +589,7 @@ Tailwind 灰阶（`slate-400` 在白底 2.60、在 `#F5F5F5` 上 2.38，`zinc-50
   （把淡底加浓到文字对比仍 ≥4.5 的上限 ≈14% 主色：浅 4.67 / 暗 5.16，底色与面板差也只有 1.22:1 / 1.14:1）。
 - **图表**：数据色板 = 主色阶梯（-300~-700）+ 语义色；枚举分类名本地化复用既有 i18n 命名空间，不新增同义 key。
 - **空态**：文字性空态，不引入插画资源。
-- **错误/兜底页（401/403/404/500/offline/coming-soon）**（2026-09-16 定稿）：插画填色一律走 `--fb-*` 插画语义变量（`primary/ink/paper/mist/mist-2/line/navy/navy-deep/skin/skin-light` + 暖色件 `coral/flame/flame-core/star`，2026-10-13 补），SVG 内禁用裸色值。亮色为"纸墨日光"原色；暗色为"月夜"版——装饰件压暗至画布上方一档（mist `#182136` / mist-2 `#22304a` / line `#33405e`）、藏青物件提亮保形（navy `#46547a` / navy-deep `#38456a`）、主色提亮一档（`color-mix(in srgb, 主色 78%, white)`）；暖色四枚按 `paper`/`skin` 先例**两态同值**（`coral #FF6B6B` / `flame #FF9800` / `flame-core #FFEB3B` / `star #FFD700`，暗色块不覆写），暗色是否随"月夜"压暗另属 §5.1 决议。主色锚点接线：react 由 ThemeProvider 写 `--app-color-primary` 到 `<html>`，ele 复用 `--primary-hsl`。**插画里的 `<text>` 属"文字"，取 `--fb-ink`（两态各自取值，正逢其"线稿/数字 = 文字主色"的定义）或 `--gowind-*-text`，不得取 `--fb-navy`/`--fb-coral` 这类物件色**——2026-10-13 实读：`--fb-coral` 作离线页 `×` 在亮色只有 2.55（暗色 6.9），`--fb-navy` 作 Coming Soon 标题在暗色只有 2.56（亮色 9.57），两处都低于 §2.2 的大号/非文字 3.0 档；改墨色后 `×` = 亮 5.6 / 暗 5.94，标题 = 亮 13.46 / 暗 18.3。暖色四枚的两态同值决议（§5.1）不受影响，它们继续只管形状。插画后方垫主色柔光晕（radial-gradient `--fb-glow`，暗色更明显）；进场 fade+上浮 450ms 依次错峰 + 插画 6s 悬浮呼吸，动效尊重 `preferences.transition.enable` 与 `prefers-reduced-motion`。
+- **错误/兜底页（401/403/404/500/offline/coming-soon）**（2026-09-16 定稿）：插画填色一律走 `--fb-*` 插画语义变量（`primary/ink/paper/mist/mist-2/line/navy/navy-deep/skin/skin-light` + 暖色件 `coral/flame/flame-core/star`，2026-10-13 补），SVG 内禁用裸色值。亮色为"纸墨日光"原色；暗色为"月夜"版——装饰件压暗至画布上方一档（mist `#182136` / mist-2 `#22304a` / line `#33405e`）、藏青物件提亮保形（navy `#46547a` / navy-deep `#38456a`）、主色提亮一档（`color-mix(in srgb, 主色 78%, white)`）；暖色四枚按 `paper`/`skin` 先例**两态同值**（`coral #FF6B6B` / `flame #FF9800` / `flame-core #FFEB3B` / `star #FFD700`，暗色块不覆写），暗色是否随"月夜"压暗另属 §5.1 决议。主色锚点接线：react 由 ThemeProvider 写 `--app-color-primary` 到 `<html>`，ele 复用 `--primary-hsl`。**插画里的 `<text>` 属"文字"，取 `--fb-ink`（两态各自取值，正逢其"线稿/数字 = 文字主色"的定义）或 `--go-admin-*-text`，不得取 `--fb-navy`/`--fb-coral` 这类物件色**——2026-10-13 实读：`--fb-coral` 作离线页 `×` 在亮色只有 2.55（暗色 6.9），`--fb-navy` 作 Coming Soon 标题在暗色只有 2.56（亮色 9.57），两处都低于 §2.2 的大号/非文字 3.0 档；改墨色后 `×` = 亮 5.6 / 暗 5.94，标题 = 亮 13.46 / 暗 18.3。暖色四枚的两态同值决议（§5.1）不受影响，它们继续只管形状。插画后方垫主色柔光晕（radial-gradient `--fb-glow`，暗色更明显）；进场 fade+上浮 450ms 依次错峰 + 插画 6s 悬浮呼吸，动效尊重 `preferences.transition.enable` 与 `prefers-reduced-motion`。
 - **全局搜索面板（2026-10-02 定稿，基准 = vben SearchPanel/global-search）**：三端同形——
   - **容器**：居中模态 600px（非 popover/抽屉）；头部 = 搜索图标 + 无边框大输入（同一 baseline，底部 1px 分隔线）；结果区限高 ~450px 内滚；底部键位提示条（`↵` 选择 · `↑↓` 切换 · `ESC` 关闭，muted 小字）与正文 1px 分隔。触发 = 顶栏胶囊条（放大镜 + "搜索" + `Ctrl K` kbd 徽标）与 Ctrl/Cmd+K，三端一致。
   - **结果行**：图标 + 标题一行为一项（路径不入行文，行紧凑、圆角 6px）；键盘/悬停选中 = **主色实底 + 白字**（同"侧栏菜单选中"惯例，禁止淡底 + 主色文字——暗色淡底与面板差仅 ~1:1 铺不出选中块）；行尾可带删除按钮（仅历史行）。
@@ -662,11 +661,11 @@ delivery/rule 两页的 `listAction` 自 catch 一并剥掉；`locales/{en-US,zh
 ② `init()` 原先先 `reload` 后包 `query`，首屏那一次绕过包装函数 ⇒ `hasLoaded` 永为 false，一次冷加载出两段加载态。
 2026-10-13 更正 §4「react/ele 已迁移」那句的覆盖面：react `Icon401/IconComingSoon/IconOffline` 与 ele `icon-401.vue` 当时各留了暖色裸 hex（react 14 处、ele 1 处），本次具名化为 `--fb-coral/flame/flame-core/star` 并按 `paper`/`skin` 先例取**两态同值**（暗色块不覆写 ⇒ 亮/暗渲染逐字节不变，"暗色要不要压暗"仍留作 §5.1 决议）。react 侧 `/coming-soon`、`/401`、`/offline` 暗态实读：SVG 节点 `var(--fb-*)` 引用 15/15、14/15、12/13，暖色件命中 10、1、3 枚与源码逐一对应，未解析计数 0（检测器以"插一枚不存在的令牌必读回 `rgb(0, 0, 0)`"验活）；`npm run typecheck` 退出码 0。ele 侧那 1 处同构替换**未过门禁**——本机 `frontend/admin/vue-element` 无 `node_modules`，`vue-tsc` 跑不起来。
 
-2026-10-13 同日第二笔：把 react 端「次要文字写成 Tailwind 灰阶」的六处收进 §2.2 的次要档与 §2.1 的实底暗墨（`AuthLayout:106,120`、`UserLayout:143`、`login:174`、`MainLayout/Footer:9,16`、`common/Loading:67,73,114` 与文字色新增的 `textColor`）。量法：页面内把计算色（Chrome 对 Tailwind v4 灰阶报 `oklch(...)` 而非 hex）转 sRGB 再算 WCAG 比值，读色前先 `transition:none` + 强制回流（后台标签页没有绘制帧，否则读到切换前的旧值）；量具两点验活 `白/黑=21.00`、`#FF3860/白=3.51`，第一版量具漏了 gamma 编码那一步、把 `slate-400` 报成 `#4D5B7C`，正是这两点把它照出来。实测（浅/暗两态，逐元素取实际落底）：`/auth/forgot-password` 品牌副标 2.38→4.70（落 `#F5F5F5`）、表单描述 2.60→5.12（白底）——这两处**原本不合格**；暗色同两处 7.36→6.23、6.82→5.77（原本达标，本次只改归档）；auth 页版权行暗色 3.71→5.77（`zinc-500` 落 `#111827`）、浅色 5.74→5.12；登录页验证码占位文案坐在**浅底盒子**里（暗色 `bg-white`、浅色 `bg-black/[0.03]` 合成 `#F7F7F7`），次要档在浅底上仍只有 2.43/2.60，故取 `--gowind-solid-ink`：2.43→17.88、2.60→19.15。**两处按构造改、未实测**：① `Footer.tsx` 的版权行只在偏好里填了 ICP 才渲染（`config/default.ts:39` 默认 `icp:""`），同处 `hover:text-blue-600` 与本日 §4 那条同因——工具类在 `@layer utilities`、antd 的 `:where(…) a{color:…}` 不属任何 layer，层叠第一步就输，hover 从不生效，换成 `hover:opacity-80`；② `Loading.tsx` 是冷启动全屏遮罩，只在路由包懒加载的那几百毫秒存在，轮询探针没抓到，而本机在跑的 :7788 二进制早于 captcha RPC（`GET /admin/v1/captcha` 实测 404），验证码取不到 ⇒ 走不进登录后的页面。Loading 的数字用**实测到的 CSS 变量值 + 组件自己声明的遮罩 alpha**算（暗色 `rgba(0,0,0,.85)` 叠实测 `#111827`、浅色 `bg-container/95` 叠实测 `#F5F7FA`）：主文案 暗 3.71→6.11、浅 4.93→5.71，副文案 浅 2.53→5.11、暗 7.23→5.97。`npm run typecheck` 退出码 0。**同一条 §2.2 规则在另两端尚未落**：vben 尚有 3 处（`ai/provider/ai-provider-drawer.vue:183` `text-gray-400`、`system/script/index.vue:271` `text-neutral-400`、`:317` `text-neutral-500`），全在登录后的页面上，本机同样量不到，按"react 先行、其余移植"记为待移植；ele 无 Tailwind 灰阶写法（0 处），其硬编码 `#909399` 一类走 `_element-plus.scss` 那条已有档。
+2026-10-13 同日第二笔：把 react 端「次要文字写成 Tailwind 灰阶」的六处收进 §2.2 的次要档与 §2.1 的实底暗墨（`AuthLayout:106,120`、`UserLayout:143`、`login:174`、`MainLayout/Footer:9,16`、`common/Loading:67,73,114` 与文字色新增的 `textColor`）。量法：页面内把计算色（Chrome 对 Tailwind v4 灰阶报 `oklch(...)` 而非 hex）转 sRGB 再算 WCAG 比值，读色前先 `transition:none` + 强制回流（后台标签页没有绘制帧，否则读到切换前的旧值）；量具两点验活 `白/黑=21.00`、`#FF3860/白=3.51`，第一版量具漏了 gamma 编码那一步、把 `slate-400` 报成 `#4D5B7C`，正是这两点把它照出来。实测（浅/暗两态，逐元素取实际落底）：`/auth/forgot-password` 品牌副标 2.38→4.70（落 `#F5F5F5`）、表单描述 2.60→5.12（白底）——这两处**原本不合格**；暗色同两处 7.36→6.23、6.82→5.77（原本达标，本次只改归档）；auth 页版权行暗色 3.71→5.77（`zinc-500` 落 `#111827`）、浅色 5.74→5.12；登录页验证码占位文案坐在**浅底盒子**里（暗色 `bg-white`、浅色 `bg-black/[0.03]` 合成 `#F7F7F7`），次要档在浅底上仍只有 2.43/2.60，故取 `--go-admin-solid-ink`：2.43→17.88、2.60→19.15。**两处按构造改、未实测**：① `Footer.tsx` 的版权行只在偏好里填了 ICP 才渲染（`config/default.ts:39` 默认 `icp:""`），同处 `hover:text-blue-600` 与本日 §4 那条同因——工具类在 `@layer utilities`、antd 的 `:where(…) a{color:…}` 不属任何 layer，层叠第一步就输，hover 从不生效，换成 `hover:opacity-80`；② `Loading.tsx` 是冷启动全屏遮罩，只在路由包懒加载的那几百毫秒存在，轮询探针没抓到，而本机在跑的 :7788 二进制早于 captcha RPC（`GET /admin/v1/captcha` 实测 404），验证码取不到 ⇒ 走不进登录后的页面。Loading 的数字用**实测到的 CSS 变量值 + 组件自己声明的遮罩 alpha**算（暗色 `rgba(0,0,0,.85)` 叠实测 `#111827`、浅色 `bg-container/95` 叠实测 `#F5F7FA`）：主文案 暗 3.71→6.11、浅 4.93→5.71，副文案 浅 2.53→5.11、暗 7.23→5.97。`npm run typecheck` 退出码 0。**同一条 §2.2 规则在另两端尚未落**：vben 尚有 3 处（`ai/provider/ai-provider-drawer.vue:183` `text-gray-400`、`system/script/index.vue:271` `text-neutral-400`、`:317` `text-neutral-500`），全在登录后的页面上，本机同样量不到，按"react 先行、其余移植"记为待移植；ele 无 Tailwind 灰阶写法（0 处），其硬编码 `#909399` 一类走 `_element-plus.scss` 那条已有档。
 
 2026-10-13 同日第三笔（整页扫描器 + 两处真不合格）：**先纠正上一笔留下的一个假绿面**——那轮写的"整页对比扫描 0 失败"是量具盲区造成的：兜底页文字带 450ms 入场动画，而后台标签页没有绘制帧 ⇒ 动画永远停在起点，`getComputedStyle().opacity` 读到 0，扫描器按"不可见"把它们全部跳过（`/401` 那页报 `scanned:1` 而真实文字有 3 条）。补法是读前 `document.getAnimations().forEach(a => a.finish())`（另加全局 `transition:none`），A/B 现证：导航后 120ms `.fallback-title` opacity=0、`finish()` 后 =1。无限循环的那枚 6s 呼吸动画 `finish()` 不生效（规范对无限时长抛错），但它不动 opacity，无影响。转换器重播时又被两道对照各照出一个 bug：① 6 位 hex 用了 8 位的位移解法（`#ffffff` 读成纯蓝，白/黑从 21.00 变 16.75）；② gamma 方向写反（hex/rgb 分支把已编码值再套一次 `1.055·c^(1/2.4)−0.055`，`slate-400` 报成 `#465C7B`；`oklch` 分支则相反地少了这一步）。修完后按六个外部已知值验：白/黑 21.00、`#777777`/白 4.48、`#767676`/白 4.54、`#FF0000`/白 4.00、`#0000FF`/白 8.59、`oklch(70.4% .04 253.3)`→`#8FA2B9`/白 2.63。**扫描器本身也必须能红**：注入 `#777777`/白 的 div 报 4.48、SVG `<text fill="#888888">` 报 3.25、插一枚 `fill="#123456"` 属性被点到——三条对照都到位后才采信其"0 失败"。裸色检测踩的坑值得记：`getComputedStyle(svg).fill` 把 `#123456` 序列化成 `rgb(18,52,86)`，所以对 computed 值写 `#hex` 正则是**结构性死闸**（报 0 且永远不红），必须按**书写值**（属性 / 内联 style）判定。
 
-本轮改的三处（都属"文字误取了别的档的色"，未动任何权威取值）：① `pages/core/auth/login/index.tsx:199,208` 的登录页副标写的是 `text-[color:var(--ant-color-text-tertiary)]`，暗色解析为 `#6E7681` 落在 `#111827` 面板上只有 **3.86 < 4.5**（这一处上一笔漏了：只改到 `:174` 的验证码文案，同文件这两行没进清单）→ 换成 `--gowind-secondary-text`（暗 `#8B949E`）= **5.77**；归属用双向换类现证（回退旧类 → 3.86，恢复新类 → 5.77）。② `IconOffline` 的 `<text>×</text>` 取插画物件色 `--fb-coral`：亮色 **2.55 < 3.0**（暗色 6.9 本来就好）→ 取 `--gowind-danger-text`（它本来就是"错误标记"的语义）= 亮 **5.6** / 暗 **5.94**。③ `IconComingSoon` 的 `<text>Coming Soon</text>` 取 `--fb-navy`：暗色 **2.56 < 3.0**（亮色 9.57）→ 取同色板里管文字的 `--fb-ink` = 亮 **13.46** / 暗 **18.3**。
+本轮改的三处（都属"文字误取了别的档的色"，未动任何权威取值）：① `pages/core/auth/login/index.tsx:199,208` 的登录页副标写的是 `text-[color:var(--ant-color-text-tertiary)]`，暗色解析为 `#6E7681` 落在 `#111827` 面板上只有 **3.86 < 4.5**（这一处上一笔漏了：只改到 `:174` 的验证码文案，同文件这两行没进清单）→ 换成 `--go-admin-secondary-text`（暗 `#8B949E`）= **5.77**；归属用双向换类现证（回退旧类 → 3.86，恢复新类 → 5.77）。② `IconOffline` 的 `<text>×</text>` 取插画物件色 `--fb-coral`：亮色 **2.55 < 3.0**（暗色 6.9 本来就好）→ 取 `--go-admin-danger-text`（它本来就是"错误标记"的语义）= 亮 **5.6** / 暗 **5.94**。③ `IconComingSoon` 的 `<text>Coming Soon</text>` 取 `--fb-navy`：暗色 **2.56 < 3.0**（亮色 9.57）→ 取同色板里管文字的 `--fb-ink` = 亮 **13.46** / 暗 **18.3**。
 
 覆盖面（现量、带分母）：公开路由从 7 条补到 **9 条**（新增 `/auth/mfa-challenge`、`/auth/sso/callback`——枚举取自 `src/router/config/{auth,error-routes}.tsx`，上一轮的 7 条是自己数的、不是从路由拿的），亮/暗两态各扫一遍，失败 0；逐页文字分母 亮=暗：登录 11、忘记密码 11、MFA 8、SSO 回调 7、401/403/500/offline 各 3、coming-soon 1 + SVG 文字 1；`skip` 里 opacity/hidden/unparsable 全为 0（这三个桶先前非 0 就是漏读的位置）。**SVG 里的形状与 `<path>` 数字不在判据内**（只判 `<text>/<tspan>`），401/403/500 三页的 `svgt` 计数为 0 即因此——它们的"401"是描出来的形状，不是文字。裸 hex 归属也纠正一次：先前看到"每页 62 处 `#FFF×30` 等"以为是本仓插画，实为**兔小巢第三方组件**（`button.tsqd-open-btn` 内两份 31 枚拷贝）；排除第三方后 react 登录页自有 10 枚（`#0D74F2`×8 + `#3B82F6` + `#70B3FF`，登录页插画的具名化还没做），401/403/500/offline/coming-soon 五页自有裸 hex **0 枚**、`var(--fb-*)` 引用分别 14/32/45/12/15。`npm run typecheck` 退出码 0，并给它补了阳性对照（往 `IconComingSoon.tsx` 塞一行 `const x: number = 's'` ⇒ 报 3 条、其中 2 条指向该文件），证明这 0 是"看得见这些文件"的 0，对照行已撤。**移植面**：ele/vben 的错误页插画里没有 `<text>` 节点（按名 grep，两端 `pages/core/error` 与 `framework/**/fallback/icons` 各 0 命中），所以本轮这条"文字取墨不取物件色"的规则在另两端**没有可移植的具体目标**，但规则本身已写进上面 §4 那条，三端新画插画时按它走；vben 的 3 处 §2.2 灰阶与 ele 的门禁不可跑，仍按上一笔记录挂着。
 
@@ -683,7 +682,7 @@ delivery/rule 两页的 `listAction` 自 catch 一并剥掉；`locales/{en-US,zh
 
 四处"写在代码里但没画出来 / 画出来但脱离色板"的实测缺陷：① vben `design-tokens/default.css` 的 `accent-color: var(--primary)` 是**整条无效**——`--primary` 存的是不带 `hsl()` 的三元组，登录页实测 `getComputedStyle(html).accentColor === 'auto'`；新增 `--brand-primary: hsl(var(--primary))` 后取它，实测 `rgb(0, 107, 230)`（亮/暗两态同）。② vben `authentication.vue:78` 用 `dark:bg-[#070709]`（rgb(7,7,9)）盖在 `bg-background-deep` 上，而 §2.3 L0 是 `#0B0F19`；同一文件的 `.login-background` 渐变两端也写死 `#07070915`。改法是删掉那条 dark 覆写（token 本身随主题切）+ 两端写 `hsl(var(--background-deep) / 8.2%)`（0x15/255）。实测暗态品牌列底色 `rgb(7,7,9)`→**`rgb(11, 15, 25)`**，渐变两端与底色逐通道相等；顺带消掉亮态一圈无意识的暗角（原先两端是叠在 `#F1F3F6` 上的 8.2% 近黑）。③ vben 浅色 `--foreground: 210 6% 21%`（`#323639`，shadcn 出厂 zinc）vs §2.2 定稿 `#1F2937`——暗色侧早已按 §2.3 落 `#F8FAFC`，浅色侧一直漏迁；改 `215 28% 17%` 后登录页实测标题 **12.19→14.68**、验证码文案（落 `#E4E4E7`）**9.61→11.57**。口径边界：其余 12 个内置配色预设（violet/pink/…）各带一套中性色，不在本条覆盖内；`bg-foreground` 5 处（3 文件）随之同色相。④ ele 浅色实测 paints EP 出厂值：文字-主 `#303133`、常规 `#606266`、画布 `--el-bg-color-page` `#F2F3F5`。前两项的目标值 `index.scss:48-50` 早就写过，但被后注入的 base.css 顶掉（本轮现证读回出厂值），生效档补进 `vendors/_element-plus.scss` 的 `:root` 带 `!important`，那三行原地标注为死声明。**画布这条同一个坑，但选择器必须收窄到 `html:not(.dark)`**：`_dark-mode.scss:71` 的暗色档不带 `!important`，把 `!important` 写进 `:root` 会压掉它、`LayoutMain`（`:132` 用 `var(--el-bg-color-page)`）整片刷成浅色——**这条回归是改完立刻复测暗态时抓到的**（读回 `#f1f3f6`），收窄后两态现证：暗 `--el-bg-color-page=#0B0F19`/`--el-bg-color=#111827`、文字 `#F8FAFC`/`#DCE3ED`/`#8B949E`；浅 `#f1f3f6`/`#fff`、文字 `#1f2937`/`#374151`/`#676e7c`，逐条对上 §2.2/§2.3，且换回暗态读数与改前一致（幂等）。
 
-两处新落的规则面：**react 登录页无响应式断点**——`UserLayout.style.less` 的表单列 `min-width:500px` 与品牌列 `flex:1` 在 ≤768px 把内容顶出可视区（实测不可达），补 `@media (max-width:1023px)` 收品牌列、表单列转整宽；同文件另一处幽灵变量 `var(--login-page-bg, #0B0F19)`（全仓只有这一处出现该名字，fallback 才是实际生效值）改直写。**react 文字层次补齐**——`semantic-text.css` 新增 §2.2/§2.3 的主档与常规档（`--gowind-text-primary` `#1F2937`/`#F8FAFC`、`--gowind-text-regular` `#374151`/`#DCE3ED`）；过程中**自己造了一处回归又抓回**：品牌副标改取次要档 `#676E7C` 后，落在渐变最深那档 `#D5E0ED` 上实测只有 **3.83 < 4.5**（canvas 仲裁），退回常规档 = **7.71**，"渐变底按最深档算"这条判据已写进该文件注释。**ele 兜底页整条祖先链无底色**——`/offline`（同 `--fb-*` 家族还有 401/403/500/coming-soon）从 `html`/`body`/`#app` 到 `.fallback-container` 全为 `rgba(0, 0, 0, 0)`，暗态实际由 `color-scheme: dark` 的浏览器默认画布兜底，底色不归设计语言管；给容器加 `background: var(--el-bg-color-page)` 后实测两态落底 `rgb(11, 15, 25)`/`rgb(241, 243, 246)`，两态各 3 节点失败 0。**改前那轮读数是量具兜底值**：扫描器找不到底色时落成 `#000`，于是报出 20.07/6.83 的"达标"——不是真实落底，记为量具盲区一处。
+两处新落的规则面：**react 登录页无响应式断点**——`UserLayout.style.less` 的表单列 `min-width:500px` 与品牌列 `flex:1` 在 ≤768px 把内容顶出可视区（实测不可达），补 `@media (max-width:1023px)` 收品牌列、表单列转整宽；同文件另一处幽灵变量 `var(--login-page-bg, #0B0F19)`（全仓只有这一处出现该名字，fallback 才是实际生效值）改直写。**react 文字层次补齐**——`semantic-text.css` 新增 §2.2/§2.3 的主档与常规档（`--go-admin-text-primary` `#1F2937`/`#F8FAFC`、`--go-admin-text-regular` `#374151`/`#DCE3ED`）；过程中**自己造了一处回归又抓回**：品牌副标改取次要档 `#676E7C` 后，落在渐变最深那档 `#D5E0ED` 上实测只有 **3.83 < 4.5**（canvas 仲裁），退回常规档 = **7.71**，"渐变底按最深档算"这条判据已写进该文件注释。**ele 兜底页整条祖先链无底色**——`/offline`（同 `--fb-*` 家族还有 401/403/500/coming-soon）从 `html`/`body`/`#app` 到 `.fallback-container` 全为 `rgba(0, 0, 0, 0)`，暗态实际由 `color-scheme: dark` 的浏览器默认画布兜底，底色不归设计语言管；给容器加 `background: var(--el-bg-color-page)` 后实测两态落底 `rgb(11, 15, 25)`/`rgb(241, 243, 246)`，两态各 3 节点失败 0。**改前那轮读数是量具兜底值**：扫描器找不到底色时落成 `#000`，于是报出 20.07/6.83 的"达标"——不是真实落底，记为量具盲区一处。
 
 覆盖面（现量、带分母）：vben 公开路由**首次**扫测 `/auth/login` 浅 7 / 暗 9 节点、`/auth/mfa-challenge` 暗 8、`/auth/sso/callback` 暗 7（含失败态：danger 文字档在 L0 上 **5.94**、返回按钮白字落实测 `#035EC7` **6.12**，两条都正逢 §2.1「暗色语义色另算」那条），失败均 0、SVG 裸 hex 0、未解析 `var()` 引用 0；ele `/login` 浅 7 / 暗 7、`/offline` 浅 3 / 暗 3，失败 0；react `/auth/login` 浅+暗失败 0（标题 10.98 浅 / 16.96 暗、副标 7.71 / 5.77）、`/auth/forgot-password` 10 节点失败 0。三端 slogan 插画具名化各 15/15 处按 pattern 逐条计数替换，实测 33 节点 / 25 枚涂色属性 / 15 处 `var()` 引用 / 裸 hex 0 / 未解析 0。量具本轮新增三档闸门模式并在每次读数里自报 `geometryGate`，注入文本一律按 `chars=13589 / djb2=1d970e3b` 校验，不符直接返回 `INSTRUMENT MISMATCH`。**两条披露**：① vben/ele 的品牌列在 724px 合成视口下 `display:none`——vben 那两行是用注入样式强制显示后测的（颜色不随断点变，比值可用，但**没有真实绘制**），ele 品牌两行只按 computed color + 祖先底色读、未强制显示；② vben 的 404 兜底页进不去，未登录时守卫直接跳 `#/auth/login?redirect=…`（实测 `location.hash`），登录后页面（含 ele 固定列那条待移植项）本轮一律未实测。
 
@@ -705,11 +704,11 @@ delivery/rule 两页的 `listAction` 自 catch 一并剥掉；`locales/{en-US,zh
 
 **未动、需点头**：ele 暗色 vxe 固定列与 35 处 `fixed: 'right'` 的同构漏字（react `10637946` 先例）——本机在跑的 :7788 二进制取不到 captcha、登录后页面进不去，按构造改的风险大于收益；vben `icon-500.vue` 其余物件色（`#2f2e41` 15 枚 / `#3f3d56` 8 枚 / `#f2f2f2` 4 枚 / `#a8a8a8` 1 枚，插画形状而非主题 chrome）保留。剩余死文件候选（已现量引用面，删不删待点名）：react `layouts/UserLayout/components/{Background.tsx,background.less}`（95 + 194 行、0 importer）、ele `src/assets/images/401.svg`（34510 B）与 `404.svg`（26633 B）——该目录只有 `logo.png`/`default-avatar.png` 被 import，两枚 `.svg` 全仓 0 引用（含 `assets/images` 路径式与模板串写法都查过）。react `public/icons.svg`（5031 B）**不属这一口径**：public 目录无条件拷进 `dist`，静态 grep 0 命中不足以判死。
 
-2026-10-15 用户裁决回退一条（§2.1「危险实底按钮的沿革」）：亮色 danger 实底按钮的前景从暗墨 `#0B0F19` 改回各 UI 库原生白字，亮/暗两态一致——用户原话场景是「同步 API」按钮亮色下黑字坐在红底上刺眼。落点：react `semantic-text.css` 删 `html[data-theme='light'] .ant-btn-color-dangerous.ant-btn-variant-solid` 那条、vben `framework/styles/antd/index.css` 删 `html:not(.dark) .ant-btn-primary.ant-btn-dangerous` 那条（ele 本就无此规则，EP 原生白字）。`--gowind-solid-ink` 的适用面随之收窄为徽标数字/开关轨道这类非按钮小字；success/warning 实底按钮的暗墨不受影响。
-同日第二批（徽标）：通知铃铛角标数字在 react/ele 两端同为暗墨坐红底，用户裁决一并回白字。落点：react `semantic-text.css` 删 `html[data-theme='light'] .ant-badge-count.ant-scroll-number` 那条（antd 原生白字，暗色本就未覆盖）、ele `_element-plus.scss` 删 `.el-badge__content--{danger,primary,success,warning}` 那条（EP 原生 `--el-color-white`，该规则不带主题作用域、暗色也一并恢复白字）；vben 无徽标规则未动。`--gowind-solid-ink` 适用面再收窄为仅开关轨道（ele 侧登录页验证码占位文案另有使用）。
+2026-10-15 用户裁决回退一条（§2.1「危险实底按钮的沿革」）：亮色 danger 实底按钮的前景从暗墨 `#0B0F19` 改回各 UI 库原生白字，亮/暗两态一致——用户原话场景是「同步 API」按钮亮色下黑字坐在红底上刺眼。落点：react `semantic-text.css` 删 `html[data-theme='light'] .ant-btn-color-dangerous.ant-btn-variant-solid` 那条、vben `framework/styles/antd/index.css` 删 `html:not(.dark) .ant-btn-primary.ant-btn-dangerous` 那条（ele 本就无此规则，EP 原生白字）。`--go-admin-solid-ink` 的适用面随之收窄为徽标数字/开关轨道这类非按钮小字；success/warning 实底按钮的暗墨不受影响。
+同日第二批（徽标）：通知铃铛角标数字在 react/ele 两端同为暗墨坐红底，用户裁决一并回白字。落点：react `semantic-text.css` 删 `html[data-theme='light'] .ant-badge-count.ant-scroll-number` 那条（antd 原生白字，暗色本就未覆盖）、ele `_element-plus.scss` 删 `.el-badge__content--{danger,primary,success,warning}` 那条（EP 原生 `--el-color-white`，该规则不带主题作用域、暗色也一并恢复白字）；vben 无徽标规则未动。`--go-admin-solid-ink` 适用面再收窄为仅开关轨道（ele 侧登录页验证码占位文案另有使用）。
 
 2026-10-16（react 端样式修整一轮，用户口径「整体、亮暗两态都看」）：**暗色 placeholder 下调一档**，判据见 §2.2 末注的暗色补充——落点三处：`core/preferences/config/darkTheme.ts`（`colorTextPlaceholder` + `DARK_PALETTE.placeholder` 都改指 `#6E7681`，token 是 Select/Picker/AutoComplete 这些没进 CSS 覆写的控件的唯一来源）、`styles/pro-components-dark.css`（`!important` 那块跟着换 hex，并把它里面那条 **v5 死选择器** `.ant-select-selection-placeholder` 改成 v6 现名 `.ant-select-placeholder`：同页现数 旧名命中 0 / 新名命中 2，同族的 `.ant-select-selection-item`  同样命中 0，值色目前靠 token 兜着所以没露馅）、`components/common/Editor/src/tiptap-editor.css`（暗态空态提示原取 `--tte-text-secondary` `#8B949E`，比改后的表单 placeholder 还亮，一并降到 `--tte-text-muted`）。实测（`:opm/users`，同源页读 `::placeholder` 计算色）：暗态 input 与 select 全部 `rgb(110,118,129)` 落 `rgb(17,24,39)`，亮态仍为 antd 派生 `rgba(0,0,0,.25)` 未受影响。
-同轮另四处同类瑕疵（都是"暗色优先写法在亮色下失效"，不动权威取值）：① dashboard `StatsCard`/`AiInsightsCard` 的图标块用 Tailwind `-400`（为深底校准的档）坐白卡，实测 1.61~2.98 连图形 3:1 都不够 → 补亮色档 `-600/-700`（cyan/emerald 试 `-600` 仍贴线 2.98/3.01，提到 `-700` 才 4.35/4.42），暗色侧保持 `-400`；卡片边框与内层小盒从 `border-white/N`、`bg-white/5` 改吃 `--ant-color-border-secondary`/`--ant-color-fill-quaternary`（同类还涉及 `RoleDrawer`、`ScriptDrawer`、`InboxDetailDrawer`）。② AI Agent 画布节点写死的 `#52c41a/#1677ff/#8c8c8c` 是**填充档**当图标文字用（暗色 2~3:1），且 `#1677ff` 是已退役旧主色 → `semantic-text.css` 新增 `--gowind-node-*` 两态档（暗取 -5、亮取 -7）。③ tiptap 编辑器自带一套 slate 暗色板（`#0f172a/#1e293b/#334155`）与全站蓝黑板并存，页面上是"两种暗色" → 12 个变量对齐 §2.3 的 L0/L1/L2/L3。④ `ai/query` 的 SQL 块 `bg-gray-900 text-gray-100` 不跟主题 → 改 `--ant-color-fill-tertiary`/`--ant-color-text`。
+同轮另四处同类瑕疵（都是"暗色优先写法在亮色下失效"，不动权威取值）：① dashboard `StatsCard`/`AiInsightsCard` 的图标块用 Tailwind `-400`（为深底校准的档）坐白卡，实测 1.61~2.98 连图形 3:1 都不够 → 补亮色档 `-600/-700`（cyan/emerald 试 `-600` 仍贴线 2.98/3.01，提到 `-700` 才 4.35/4.42），暗色侧保持 `-400`；卡片边框与内层小盒从 `border-white/N`、`bg-white/5` 改吃 `--ant-color-border-secondary`/`--ant-color-fill-quaternary`（同类还涉及 `RoleDrawer`、`ScriptDrawer`、`InboxDetailDrawer`）。② AI Agent 画布节点写死的 `#52c41a/#1677ff/#8c8c8c` 是**填充档**当图标文字用（暗色 2~3:1），且 `#1677ff` 是已退役旧主色 → `semantic-text.css` 新增 `--go-admin-node-*` 两态档（暗取 -5、亮取 -7）。③ tiptap 编辑器自带一套 slate 暗色板（`#0f172a/#1e293b/#334155`）与全站蓝黑板并存，页面上是"两种暗色" → 12 个变量对齐 §2.3 的 L0/L1/L2/L3。④ `ai/query` 的 SQL 块 `bg-gray-900 text-gray-100` 不跟主题 → 改 `--ant-color-fill-tertiary`/`--ant-color-text`。
 标签栏暗色选中态同轮调整（`.tabsbar-chrome/.tabsbar-card`）：选中底由 14% 白降到已有的 `--ant-color-fill-secondary`（9% 白，与亮色档的减重比例 1.52→1.28 对齐亮色实测 1.14），并补 `--ant-color-border-secondary` 描边、未选中文字降 `--ant-color-text-secondary`（L1 上 5.77）hover 回主档——**减重的前提是同时把"哪页是选中"这件事交给文字通道承担**，否则单纯压低底色会让选中/未选中糊成一片。
 **未动、需点头**：暗色主色实底按钮仍走 antd darkAlgorithm 派生 `#035EC7`（白字 6.12 达标），是否统一成品牌蓝 `#006BE6` 未定；`tabsbar.css` 里标着"暗色模式适配"的 `.tabsbar-chrome`/`.tabsbar-card` 嵌套块是死代码（被 `.ant-tabs-nav .ant-tabs-tab` 的 4 类权重压过，两态都不生效，暗色 hover 底实际一直吃亮色档 `rgba(128,128,128,.08)`）。
 **ele/vben 待同步**：`vue-element/src/styles/_dark-mode.scss:26,59` 与 `vendors/_element-plus.scss:526` 的 `--el-text-color-placeholder` 仍是 `#9CA3AF`（暗色 6.99，本轮同一判据下也该降；EP 侧另有 `--dark-text-placeholder` 这个名字被时间戳/辅助说明共用，同步时要先拆开再动，否则会把非占位的三级文字一起压暗）；vben 的暗色 `--muted-foreground` 承担同类角色，需按同判据复测。
@@ -727,7 +726,7 @@ delivery/rule 两页的 `listAction` 自 catch 一并剥掉；`locales/{en-US,zh
 ① **新增 `core/preferences/config/lightTheme.ts`**（§2.2 的浅色 token，本文件此前不存在，`ThemeProvider` 的浅色分支一直是"保持 antd 默认"）。落 `colorBgLayout #F1F3F6` / `colorBgContainer #FFF` / `colorBorderSecondary #E4E4E7` / `borderRadiusLG 12`，另在 `styles/global.css` 补浅色卡片静止 `0 1px 2px rgba(0,0,0,.05)`、悬浮 `0 4px 12px rgba(0,0,0,.08)` 与 `transition: border-color, box-shadow .2s`。判据现量：改前白卡压 `#F5F5F5` 分离 **1.049**、卡片描边 `#F0F0F0` 对白底 **1.045**（≈隐形）且投影 `none`，即浅色全靠一条看不见的线撑层次；改后画布 `#F1F3F6`(1.062)、描边 `#E4E4E7`(1.269) + 1px 贴身投影。antd 不给"带边框卡片静止投影"任何可覆写 token（`es/card/style/index.js` 只把 `boxShadowTertiary` 给 `:not(-bordered)`、`boxShadowCard` 只服务 hoverable 的 hover，且 `boxShadowCard` 不在 `AliasToken` 上，写进 `ThemeConfig.token` 被 TS 挡回 TS2561），所以两档只能落 CSS——这一点也订正了 `global.css` 原注释里"亮色卡片自带边框层次无需加"的错误假设。
 ② **连带白捡一条既有缺口**：`es/theme/util/alias.js:51` 的 `colorSplit = getAlphaColor(colorBorderSecondary, colorBgContainer)`，于是抬 `colorBorderSecondary` 同时把浅色分隔线从 `rgba(5,5,5,.06)`（合成 `#F0F0F0`，1.140）抬到 `rgba(10,10,37,.11)`（合成 `#E4E4E7`，**1.269**）——上一轮抽屉那节"未动、需点头"的第 ① 条（浅色抽屉两条线只有 1.140、低于权威 1.269）就此按权威档解决，无需单独裁决。
 ③ **重新打开点击波纹**：`ThemeProvider` 原带 `wave={{ disabled: true }}`（注释写"提升 Admin 操作手感"），三端里只有 react 关它。删除后实测 `MutationObserver` 抓到 `DIV.ant-wave` 随点击入树。⚠️ 排障坑：改 `ConfigProvider` 的这层 props 后 **HMR 不会重建 provider**，量具会在 `waveNodes=0` 上连续假阴性——必须整页 reload 再测。
-④ **接上路由入场动效**：`MainLayout` 此前是裸 `<Outlet key={refreshTrigger}/>`，实测内容区 `transition: all/0s`、切页 opacity 恒 1 ⇒ 硬切；而 `preferences.transition.{enable,name}`（四档 fade/fade-down/fade-slide/fade-up + 偏好面板里的选择器）在路由层**从未被消费**，只有错误页 `Fallback` 读它——UI 上是个显示"已生效"的死开关。现按 key 挪到包裹 div 上（保住 `flex:1 + min-height:0` 高度链，列表页表格依赖它）、按 `transition.name` 挂 `.transition-*`、`enable=false` 挂 `.transition-disabled`，并加 `@media (prefers-reduced-motion: reduce)`（§2.7 无障碍那条要求）。规格按 §2.7 取 240ms `ease-in-out`、位移 **8px**（预览卡片里的 `-20px` 是 36px 小方块的尺度，整屏用会像滚动跳帧）；**只做起不做落**——ProLayout 的 Outlet 没有可挂的退出相位。验证走 `document.getAnimations()`：切页后读到 `gowind-page-fade-slide` 且 `playState=finished, currentTime=240`，加 `.transition-disabled` 后 `animationName` 转 `none`。
+④ **接上路由入场动效**：`MainLayout` 此前是裸 `<Outlet key={refreshTrigger}/>`，实测内容区 `transition: all/0s`、切页 opacity 恒 1 ⇒ 硬切；而 `preferences.transition.{enable,name}`（四档 fade/fade-down/fade-slide/fade-up + 偏好面板里的选择器）在路由层**从未被消费**，只有错误页 `Fallback` 读它——UI 上是个显示"已生效"的死开关。现按 key 挪到包裹 div 上（保住 `flex:1 + min-height:0` 高度链，列表页表格依赖它）、按 `transition.name` 挂 `.transition-*`、`enable=false` 挂 `.transition-disabled`，并加 `@media (prefers-reduced-motion: reduce)`（§2.7 无障碍那条要求）。规格按 §2.7 取 240ms `ease-in-out`、位移 **8px**（预览卡片里的 `-20px` 是 36px 小方块的尺度，整屏用会像滚动跳帧）；**只做起不做落**——ProLayout 的 Outlet 没有可挂的退出相位。验证走 `document.getAnimations()`：切页后读到 `go-admin-page-fade-slide` 且 `playState=finished, currentTime=240`，加 `.transition-disabled` 后 `animationName` 转 `none`。
 ⑤ **一条自我订正**：上一轮报给用户的"表格行 hover 硬切（`.ant-table-row` transition `all/0s`）"**不成立**——行 hover 底色画在 `td` 上（`pro-components-dark.css:22-24` 的 `> tr:hover > td`），而 `td` 自带 `transition: background-color, border-color / 0.2s`（两态实测一致），`tr` 上量错了元素。遗留的小不一致：固定列的高亮叠在 `background-image` 渐变上（为防 sticky 底下透字而设计），渐变不可插值 ⇒ 固定列仍瞬变，主体行 0.2s 渐显，本轮不动。
 两态复测：浅色 `/dashboard/workspace` 卡片实读 `shadow rgba(0,0,0,.05) 0 1px 2px`、`border 0.667px #E4E4E7`、`radius 12px`，`--ant-color-bg-layout #F1F3F6`、根背景同值（原 `ThemeProvider` 里硬编码的 `#f5f5f5` 已改读 `LIGHT_PALETTE.bgLayout`）；暗色零回归（画布 `#0B0F19`、卡片 L1 `#111827`、边框/split 8% 白、投影 `none`、圆角 12、placeholder `#6E7681`）。门禁 `npm run typecheck` 0 错误。
 **已知不一致，未动**：浅色列表页的搜索卡片是 `.ant-pro-card`，它自带 `0 4px 6px -1px rgba(0,0,0,.1)` + 边框 `#E5E7EB`（Tailwind `shadow-md`/`gray-200` 档），与 §2.2 的卡片档（`0 1px 2px`/`#E4E4E7`）并存——两套卡片系统两种投影，ProTable 系页面看着比 dashboard 更"高"，是否统一到 §2.2 待裁决。

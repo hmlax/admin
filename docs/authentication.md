@@ -1,5 +1,7 @@
 # 认证与令牌链路（Authentication & Tokens）参考文档
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **定位**：本仓认证机制的唯一权威说明——登录链路全流程、令牌结构与配置、刷新轮换与 Cookie、
 > 机器令牌（AK/SK）、MFA、限流/策略/验证码等辅助闸门、会话管理与吊销、白名单端点、运维与已知问题。
 > 前端权限消费侧（路由/按钮/字段黑名单）见 [frontend_authority.md](./frontend_authority.md)；
@@ -21,7 +23,7 @@
   ├─ internal/service/access_key_service.go —— AK/SK 机器令牌交换
   ├─ internal/data/login_rate_limiter.go —— Redis 双维度失败计数限流
   ├─ internal/data/login_policy_checker.go —— 登录策略匹配（纯函数+单测）
-  └─ pkg/middleware/auth/auth.go —— 每请求认证（验签+缓存核对）+ ViewerContext/Operator 注入
+  └─ platform/pkg/middleware/auth/auth.go —— 每请求认证（验签+缓存核对）+ ViewerContext/Operator 注入
 ```
 
 ## 2. 登录链路（`doGrantTypePassword`，按代码顺序）
@@ -114,7 +116,7 @@ USER_NOT_FOUND / USER_FREEZE / INVALID_PASSWORD 归并为同文案；租户编�
 
 - `CreateUserToken`：jti → access + refresh 双 JWT → `userTokenCache.AddTokenPair`
   （Redis，键含 clientType+uid+jti，TTL 各按配置）；
-- **每请求校验**（`Authenticate`，被 `pkg/middleware/auth` 的 accessTokenChecker 调用）：
+- **每请求校验**（`Authenticate`，被 `platform/pkg/middleware/auth` 的 accessTokenChecker 调用）：
   JWT 验签 → 过期检查 → **Redis 缓存核对**（`IsValidAccessToken`）——
   令牌不在缓存（已吊销/未入缓存）即拒。因此**吊销即时生效**（删缓存键），
   密钥轮换 + 吊销 = 全量下线；
@@ -195,7 +197,7 @@ SameSite=Lax 按站点判断——localhost 不同端口同站，dev 直连后�
 ### 7.1 图形验证码（`captchaClient`，go-utils 封装）
 
 - `Generate` → id + base64 图 + answer；**必须显式 `Save` 进 Redis**（键
-  `gowind:captcha:<captchaId>`）——漏 Save 则 Verify 永远失败；
+  `go-admin:captcha:<captchaId>`）——漏 Save 则 Verify 永远失败；
 - `Verify` 为 verify-and-delete（单次有效）；登录侧经 `X-Captcha-Id`/`X-Captcha-Value`
   Header 传递（避免改动 proto 与三端生成代码）；
 - `CaptchaEnabled` 常量当前 true；未配置 captchaClient 时 fail-open（可用性优先）。
@@ -203,7 +205,7 @@ SameSite=Lax 按站点判断——localhost 不同端口同站，dev 直连后�
 
 ### 7.2 登录限流（`login_rate_limiter.go`）
 
-- 双维度键：`gowind:login:fail:ip:<ip>` / `gowind:login:fail:user:<username>`（机器令牌交换复用，user 维度=AK）；
+- 双维度键：`go-admin:login:fail:ip:<ip>` / `go-admin:login:fail:user:<username>`（机器令牌交换复用，user 维度=AK）；
 - 阈值 5 次 / 锁定窗口 15 分钟 / 计数 TTL=锁定窗口（**固定窗口，不是滑动**：Lua 只在 `INCR` 结果为 1 时
   `EXPIRE`，`login_rate_limiter.go:46-49`，所以 TTL 从**首次失败**起算、后续失败不续期——该文件 `:19-20`
   的注释写成"滑动窗口"是错的）；`CheckAndIncr` 为 Lua 原子
@@ -256,7 +258,7 @@ SameSite=Lax 按站点判断——localhost 不同端口同站，dev 直连后�
 | AccessKeyService.IssueToken | AK/SK 恒定时间比对 + 限流 + 机器 token 最小面 |
 
 白名单**跳过的是整个 `auth.Server` 中间件**——租户闸门就在这个中间件内部
-（`pkg/middleware/auth/auth.go:120-132` 的 `CheckTenantAccess`），而 selector 的语义是
+（`platform/pkg/middleware/auth/auth.go:120-132` 的 `CheckTenantAccess`），而 selector 的语义是
 "命中白名单 ⇒ 返回 false ⇒ 不执行该中间件"（`kratos-bootstrap/rpc v0.1.3` 的
 `whitelist.go:132-144`，装配点 `rest_server.go:110`）。所以**白名单端点不过租户闸门**，
 机器 token（tid>0）在该类端点上也不例外——它后续访问的业务端点才过。
@@ -269,7 +271,7 @@ SameSite=Lax 按站点判断——localhost 不同端口同站，dev 直连后�
 |---|---|
 | 生产密钥 | `GWA_AUTH_JWT_*` 环境变量注入（yaml 是开发密钥）；轮换=换钥+吊销全量（缓存核对保证即时失效） |
 | TTL 调整 | auth.yaml 两字段（Duration 串）；生效于新签发，存量按旧 TTL |
-| 自动化登录 | 直读 Redis `gowind:captcha:<captchaId>` 取答案（或临时置 CaptchaEnabled=false 后编译） |
+| 自动化登录 | 直读 Redis `go-admin:captcha:<captchaId>` 取答案（或临时置 CaptchaEnabled=false 后编译） |
 | 限流排查 | Redis 双维度键计数；误锁清理直接删键 |
 | 策略调整 | 登录策略管理页（租户级）；匹配语义见 7.3，改动跑 login_policy_checker_test |
 | 审计 | 全部登录尝试落 `sys_login_audit_logs`（成败/原因/归属地），见 audit-log-producer-design |

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "admin/http.proto";
+import "hertz/api.proto";
+import "google/protobuf/empty.proto";
+import "admin/v1/notification_channel_types.proto";
+import "admin/v1/pagination_types.proto";
+
+option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
+
+// 通知渠道管理服务（平台级配置）
+service NotificationChannelService {
+  // 查询通知渠道列表
+  rpc ListNotificationChannel(admin.v1.PagingRequest) returns (admin.v1.ListNotificationChannelResponse) {
+    option (api.get) = "/admin/v1/notification-channels";
+  }
+
+  // 查询通知渠道详情
+  rpc GetNotificationChannel(admin.v1.GetNotificationChannelRequest) returns (admin.v1.NotificationChannel) {
+    option (api.get) = "/admin/v1/notification-channels/:id";
+  }
+
+  // 创建通知渠道
+  rpc CreateNotificationChannel(admin.v1.CreateNotificationChannelRequest) returns (admin.v1.NotificationChannel) {
+    option (api.post) = "/admin/v1/notification-channels";
+    option (admin.http.body) = "*";
+  }
+
+  // 更新通知渠道
+  rpc UpdateNotificationChannel(admin.v1.UpdateNotificationChannelRequest) returns (google.protobuf.Empty) {
+    option (api.put) = "/admin/v1/notification-channels/:id";
+    option (admin.http.body) = "*";
+  }
+
+  // 删除通知渠道
+  rpc DeleteNotificationChannel(admin.v1.DeleteNotificationChannelRequest) returns (google.protobuf.Empty) {
+    option (api.delete) = "/admin/v1/notification-channels/:id";
+  }
+
+  // 发送测试邮件（验证渠道配置）
+  rpc SendTestEmail(admin.v1.SendTestEmailRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/notification-channels/:id/send-test-email";
+    option (admin.http.body) = "*";
+  }
+
+  // 发送测试消息（按渠道类型分派：EMAIL 走邮件，SMS 发测试验证码）
+  rpc SendTest(admin.v1.SendTestRequest) returns (google.protobuf.Empty) {
+    option (api.post) = "/admin/v1/notification-channels/:id/send-test";
+    option (admin.http.body) = "*";
+  }
+
+  // 全量扩展渠道 schema（独立集合路径，避免与 /{id} 参数路由抢配）
+  rpc ListChannelSchemas(google.protobuf.Empty) returns (admin.v1.ListChannelSchemasResponse) {
+    option (api.get) = "/admin/v1/notification-channel-schemas";
+  }
+}

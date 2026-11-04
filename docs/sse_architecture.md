@@ -72,7 +72,7 @@ SSE 连接不走 REST 的 auth 中间件链——transport 自带鉴权钩子，
   `Event` 字段即前端的事件名（三端 `on('notification', …)`）；
 - **`Data` 的编码是三端的解析契约，不是可"顺手换一个"的细节**：必须是
   `protojson.Marshal(收件记录 DTO)`。换回 `encoding/json` 会一次坏掉三处
-  （2026-09-25 同一条消息两跑对照，见 `pkg/sseevent/sseevent.go` 注释）：
+  （2026-09-25 同一条消息两跑对照，见 `platform/pkg/sseevent/sseevent.go` 注释）：
 
   | | 帧样例 |
   |---|---|
@@ -93,7 +93,7 @@ SSE 连接不走 REST 的 auth 中间件链——transport 自带鉴权钩子，
 **新增事件类型**的生产端落点：持有 publisher 的 service 内调用
 `TryPublish(StreamID(userId), &sse.Event{Event: []byte("<类型名>"), …})`；
 消费端在页面 `globalSSEClient.on('<类型名>', handler)` 注册。类型名自 P1 起有注册表：
-后端 `pkg/sseevent`（常量值即线协议，注释钉死"不可改"）+ 三端各一个 `transport/sse/event.ts`
+后端 `platform/pkg/sseevent`（常量值即线协议，注释钉死"不可改"）+ 三端各一个 `transport/sse/event.ts`
 （`SSE_EVENT.<Name>`），新增类型四处一起加，不要在任何一端再写裸字符串。
 
 ## 5. 前端消费（三端）
@@ -132,7 +132,7 @@ TLS 由外层负载均衡终止（与静态前端一致），网关仅监听 HTT
 
 | 项 | 现状 |
 |---|---|
-| 事件类型 | 仅 `notification`（站内信）；注册表见第 4 节末（`pkg/sseevent` + 三端 `SSE_EVENT`），但**注册表是常量约定、不是运行时校验**，漏加一端仍然静默失效 |
+| 事件类型 | 仅 `notification`（站内信）；注册表见第 4 节末（`platform/pkg/sseevent` + 三端 `SSE_EVENT`），但**注册表是常量约定、不是运行时校验**，漏加一端仍然静默失效 |
 | 推送可靠性 | 设计即 best-effort：无重放、无 ack、离线不积压（补取靠收件箱） |
 | 慢消费者 | `TryPublish` 缓冲满即丢（debug 日志），不阻塞生产方；无背压 |
 | 观测 | 连接建立/断开（HandleSubscribe/日志）与跳过（debug 级）可查，无投递指标面板 |

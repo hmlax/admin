@@ -1,5 +1,7 @@
 # 套餐与计费管控（Plan / Billing）参考文档
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 > **定位**：本仓套餐体系（套餐目录 / 模块白名单 / 配额）与租户订阅到期处置的唯一权威说明——
 > 数据模型、管理面、到期执行全链路、配额与用量计量、租户数据清理、运维清单。
 > 套餐与租户闸门（HTTP 层）的联动细节见 [tenant_isolation.md](./tenant_isolation.md) 第 4 节；
@@ -91,7 +93,7 @@ STORAGE（上传入口）、API_CALL（租户闸门）见第 7.2 节；AI_TOKENS
 - **配额管理**（同页/子页）：按套餐维护三类配额值。
 - **租户管理**：租户 CRUD、`CreateTenantWithAdminUser`（建租户 + 租户管理员一步完成）、
   套餐绑定与 `expired_at` 维护、到期状态展示。
-- 这一组服务的端点应落在 MODULE_TENANT 模块（`ServiceTagToBusinessModule`，`pkg/constants/module_mapping.go:41-43`：
+- 这一组服务的端点应落在 MODULE_TENANT 模块（`ServiceTagToBusinessModule`，`platform/pkg/constants/module_mapping.go:41-43`：
   TenantService / PlanService / PlanQuotaService → TENANT）；新部署实例记得「接口同步」（tenant_isolation §4.3）。
 
   ⚠ **`PlanModuleService` 目前不在这张映射表里**，而它确实注册了 HTTP 服务
@@ -113,7 +115,7 @@ STORAGE（上传入口）、API_CALL（租户闸门）见第 7.2 节；AI_TOKENS
 ```
 AsyncTenantExpiryScan（系统级周期任务）
   ├─ 注册：NewAsynqServer 启动时（internal/server asynq providers），
-  │        cron = "0 * * * *"（每小时整点，pkg/task/tenant_expiry.go 常量），
+  │        cron = "0 * * * *"（每小时整点，platform/pkg/task/tenant_expiry.go 常量），
   │        系统级常驻——不写入 sys_tasks 表、不经任务管理页
   ▼
 EnforceExpiryPolicies（tenant_usage_repo，SystemContext 跨租户）
@@ -138,7 +140,7 @@ EnforceExpiryPolicies（tenant_usage_repo，SystemContext 跨租户）
 `tenant_usage_repo.go:281-336`）。
 
 ⚠ **这条链路不产生任何审计行**。四张审计表（API / 操作 / 数据访问 / 登录）的写入函数全部装在
-HTTP 服务端的 logging 中间件里（`rest_server.go:55-71` → `pkg/middleware/logging/`），
+HTTP 服务端的 logging 中间件里（`rest_server.go:55-71` → `platform/pkg/middleware/logging/`），
 asynq worker 不在覆盖面内；而状态改写是 repo 里直接 `Tenant.UpdateOneID(t.ID).SetStatus(...)`
 （`tenant_usage_repo.go:315-317`），连 service 层都不经过。所以"租户为什么被置成 EXPIRED"在
 审计页查不到，只能对日志行与 `enforced` 计数。第 8 节的清理是 HTTP 触发的，会留下一条
@@ -158,32 +160,19 @@ handler 为 `TaskService.AsyncTenantExpiryScan`。它**不在** sys_tasks 表（
 
 新功能模块上线的完整链（缺一环 = 租户 403）：
 
-1. 新服务的 OpenAPI tag 在 `pkg/constants/module_mapping.go` 登记（否则 Api 表
+1. 新服务的 OpenAPI tag 在 `platform/pkg/constants/module_mapping.go` 登记（否则 Api 表
    `business_module=UNSPECIFIED`，所有租户被拒）；
 2. 部署后在管理页跑「接口同步」（Api 表全量重建）；
 3. **给需要放行的套餐补 `sys_plan_modules` 白名单行**（套餐管理页）——第 1/2 步只让
    模块"可归类"，第 3 步才让"某套餐的租户"真正可达；
 4. 平台管理员验收 ≠ 租户验收（平台上下文不走闸门，见 tenant_isolation §4.1）；
-5. **菜单侧的归类是另一条链，而且方向相反（fail-open）**：`GetNavigation` 的白名单过滤
-   （`internal/service/admin_portal_service.go:212-243`）遇到 `module IS NULL` 的行是
-   **保留**（`:233-236`，设计意图是给 catalog 容器放行），而 `menu_repo.go:589` 的
-   `moduleForComponent` 在"归类不出来"时**也返回 nil**。两者叠加 = 归类失败的页面菜单
-   对所有挂了任意套餐的租户可见。Api 侧同样是"未归类"，但那里是 UNSPECIFIED → 403，
-   别把两边的直觉互相套用。
-   归类失败的两种成因（2026-09-25 现网 `gwa` 库实测：`sys_menus` 47 行里 16 行 module 为空，
-   其中 10 行是 `BasicLayout` 容器属预期，剩下 6 行是真页面）：
-   - **目录命名不一致**：`constants.ComponentToModule`（`pkg/constants/default_data.go:286-313`）
-     按前缀匹配，写的是 `app/internal_message/`，而 **react 端的目录是连字符**
-     （`react/src/pages/app/internal-message/`）→ react 同步进来的 3 行全部落到 nil 桶；
-     vue-element / vue-vben 用下划线，同类页面就能正常归类成 `INTERNAL_MESSAGE`。
-   - **枚举里没有这个模块**：`identity.service.v1.Module`（`api/protos/identity/service/v1/module.proto:7-21`）
-     只有 DASHBOARD/OPM/SYSTEM/DICT/TENANT/PERMISSION/LOG/INTERNAL_MESSAGE/FILE/TASK 十档，
-     **没有 NOTIFICATION**（`menu.go:81-96` 的 `NamedValues` 同）→ 通知域 3 个页面菜单
-     无处可归，也只能落 nil。补这一档要同时动 proto + `menu.go` 枚举 + `ComponentToModule` +
-     `ServiceTagOrBusinessModule`，再 `gow api && gow ent` 重生成——属需要产品确认的契约变更，
-     未擅自落地。
-   排障口径：`SELECT name, component FROM sys_menus WHERE module IS NULL AND component <> 'BasicLayout' AND deleted_at IS NULL;`
-   列出的就是"当前不受模块白名单约束"的页面。
+5. **菜单与接口共同遵守套餐白名单**：`GetNavigation` 和 `GetInitialContext` 递归过滤菜单树，
+   未在套餐中的模块页面会被剔除，空目录一并移除。业务菜单的 `module` 缺失时按
+   `ComponentToModule` 登记的组件前缀推断；无法归类的业务页面不对租户显示。
+   `BasicLayout` 容器只保留仍有可见子项的层级，不使其子页面绕过模块检查。
+6. **React 租户会话使用后端菜单**：本地保存的前端路由模式不覆盖套餐约束；平台身份保留
+   路由模式偏好。套餐修改后刷新页面或重新登录以重建浏览器菜单，HTTP 入口每次请求立即
+   检查最新套餐。验证时同时检查侧栏显隐、直接 URL 路由和接口 403。
 
 ## 7. 配额与用量计量
 
@@ -215,7 +204,7 @@ handler 为 `TaskService.AsyncTenantExpiryScan`。它**不在** sys_tasks 表（
 - **STORAGE**：文件上传入口（FileTransferService.directUploadFile）检查
   当前占用 + 本次大小 > 上限即拒绝（配额条目经 GetUsage 预载，当前占用经
   SumStorageInTenant 轻量直查）；
-- **API_CALL**：已落地（2026-10-03）。入口=租户闸门（`pkg/middleware/auth` 的
+- **API_CALL**：已落地（2026-10-03）。入口=租户闸门（`platform/pkg/middleware/auth` 的
   `auth.Server` → data 层 `TenantAccessCheckerImpl.CheckTenantAccess` 第 4 步），
   每请求实时检查：上限取自第 1 步预载的套餐配额边（与 GetUsage 同一预载形态），
   当前计数 = `sys_api_audit_logs` 按租户 COUNT——与 §7.1 `ApiCallCount` 完全

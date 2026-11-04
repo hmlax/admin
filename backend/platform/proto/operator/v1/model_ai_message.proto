@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// AI 对话消息
+message SysAiMessages {
+  option (operator.v1.model) = {
+    entity: "AiMessage"
+    relations: { name: "AiConversation" target: "SysAiConversations" foreign_key: "ConversationID" references: "ID" many: false }
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID"];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt"];
+
+  // 更新时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "gorm:\"column:updated_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:更新时间\" json:\"updated_at,omitempty\"", (operator.v1.go_name) = "UpdatedAt"];
+
+  // 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "gorm:\"column:deleted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:删除时间\" json:\"deleted_at,omitempty\"", (operator.v1.go_name) = "DeletedAt"];
+
+  // 创建者ID
+  optional uint32 created_by = 5 [(tagger.tags) = "gorm:\"column:created_by;type:bigint;comment:创建者ID\" json:\"created_by,omitempty\"", (operator.v1.go_name) = "CreatedBy"];
+
+  // 更新者ID
+  optional uint32 updated_by = 6 [(tagger.tags) = "gorm:\"column:updated_by;type:bigint;comment:更新者ID\" json:\"updated_by,omitempty\"", (operator.v1.go_name) = "UpdatedBy"];
+
+  // 删除者ID
+  optional uint32 deleted_by = 7 [(tagger.tags) = "gorm:\"column:deleted_by;type:bigint;comment:删除者ID\" json:\"deleted_by,omitempty\"", (operator.v1.go_name) = "DeletedBy"];
+
+  // 租户ID
+  optional uint32 tenant_id = 8 [(tagger.tags) = "gorm:\"column:tenant_id;type:bigint;default:0;index:idx_sys_ai_messages_tenant_user,priority:1;comment:租户ID\" json:\"tenant_id,omitempty\"", (operator.v1.go_name) = "TenantID"];
+
+  // 消息角色
+  optional string role = 9 [(tagger.tags) = "gorm:\"column:role;type:varchar(255);comment:消息角色\" json:\"role,omitempty\"", (operator.v1.go_name) = "Role", (operator.v1.enum_values) = { name: "RoleUSER" value: "USER" }, (operator.v1.enum_values) = { name: "RoleASSISTANT" value: "ASSISTANT" }, (operator.v1.enum_values) = { name: "RoleSYSTEM" value: "SYSTEM" }];
+
+  // 消息正文（Markdown）
+  optional string content = 10 [(tagger.tags) = "gorm:\"column:content;type:text;comment:消息正文（Markdown）\" json:\"content,omitempty\"", (operator.v1.go_name) = "Content"];
+
+  // 模型名称快照
+  optional string model_name = 11 [(tagger.tags) = "gorm:\"column:model_name;type:varchar(255);comment:模型名称快照\" json:\"model_name,omitempty\"", (operator.v1.go_name) = "ModelName"];
+
+  // 输入 token 数
+  optional uint32 prompt_tokens = 12 [(tagger.tags) = "gorm:\"column:prompt_tokens;type:bigint;comment:输入 token 数\" json:\"prompt_tokens,omitempty\"", (operator.v1.go_name) = "PromptTokens"];
+
+  // 输出 token 数
+  optional uint32 completion_tokens = 13 [(tagger.tags) = "gorm:\"column:completion_tokens;type:bigint;comment:输出 token 数\" json:\"completion_tokens,omitempty\"", (operator.v1.go_name) = "CompletionTokens"];
+
+  // 生成耗时（毫秒）
+  optional uint32 duration_ms = 14 [(tagger.tags) = "gorm:\"column:duration_ms;type:bigint;comment:生成耗时（毫秒）\" json:\"duration_ms,omitempty\"", (operator.v1.go_name) = "DurationMs"];
+
+  // 生成失败原因
+  optional string error_message = 15 [(tagger.tags) = "gorm:\"column:error_message;type:text;comment:生成失败原因\" json:\"error_message,omitempty\"", (operator.v1.go_name) = "ErrorMessage"];
+
+  // 归属用户ID
+  optional uint32 user_id = 16 [(tagger.tags) = "gorm:\"column:user_id;type:bigint;index:idx_sys_ai_messages_tenant_user,priority:2;comment:归属用户ID\" json:\"user_id,omitempty\"", (operator.v1.go_name) = "UserID"];
+
+  // 所属会话ID（edge 外键）
+  optional uint32 conversation_id = 17 [(tagger.tags) = "gorm:\"column:conversation_id;type:bigint;comment:所属会话ID（edge 外键）\" json:\"conversation_id,omitempty\"", (operator.v1.go_name) = "ConversationID"];
+}

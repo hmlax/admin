@@ -1,0 +1,32 @@
+data:
+  database:
+    driver: postgres
+    source: 'REPLACE_DB_DSN'
+    migrate: true
+    max_idle_connections: 10
+    max_open_connections: 25
+    connection_max_lifetime: 300s
+  redis:
+    addr: infra-redis:6379
+    password: 'REPLACE_REDIS_PASSWORD'
+    db: 12
+    dial_timeout: 10s
+    read_timeout: 0.4s
+    write_timeout: 0.6s
+oss:
+  minio:
+    endpoint: infra-minio:9000
+    upload_host: 127.0.0.1:9000
+    download_host: 127.0.0.1:9000
+    access_key: 'REPLACE_OSS_ACCESS_KEY'
+    secret_key: 'REPLACE_OSS_SECRET_KEY'
+    use_ssl: false
+authn:
+  type: jwt
+  jwt:
+    method: HS256
+    key: 'REPLACE_JWT_KEY'
+    access_token_expires: 5400s
+    refresh_token_expires: 43200s
+runtime:
+  crypto_key: 'REPLACE_CRYPTO_KEY'

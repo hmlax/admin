@@ -77,6 +77,6 @@ services:
     networks:
       - app-tier
     volumes:
-      - ./scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - ./platform/scripts/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
 #      - ${APP_ROOT:-/root/app}/seaweedfs/data:/data
     command: server -dir=/data -filer -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json

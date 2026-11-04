@@ -1,5 +1,7 @@
 # 如何搭建后端开发环境
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 ## 安装开发工具
 
 需要安装的软件有：
@@ -43,12 +45,11 @@ brew install --cask visual-studio-code goland
 
 - [protoc-gen-go](https://google.golang.org/protobuf/cmd/protoc-gen-go)
 - [protoc-gen-go-grpc](https://google.golang.org/grpc/cmd/protoc-gen-go-grpc)
-- [protoc-gen-go-http](https://github.com/go-kratos/kratos/cmd/protoc-gen-go-http)
 - [protoc-gen-go-errors](https://github.com/go-kratos/kratos/cmd/protoc-gen-go-errors)
 - [protoc-gen-openapi](https://github.com/google/gnostic/cmd/protoc-gen-openapi)
 - [protoc-gen-validate](https://github.com/envoyproxy/protoc-gen-validate)
 - [protoc-gen-go-redact](https://github.com/tx7do/go-wind-toolkit)（生成脱敏字段）
-- [protoc-gen-typescript-http](https://github.com/tx7do/go-wind-toolkit)（**三端 TS 客户端就靠它**，`make ts` 用）
+- [protoc-gen-typescript-http](https://github.com/tx7do/go-wind-toolkit)（React TS 客户端使用它，`make ts` 用）
 
 一条命令全装（**注意目录：仓库根目录没有 Makefile，须在 `backend/` 下执行**）：
 
@@ -62,7 +63,6 @@ make plugin
 ```shell
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@latest
 go install github.com/go-kratos/kratos/cmd/protoc-gen-go-errors/v2@latest
 go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
 go install github.com/envoyproxy/protoc-gen-validate@latest
@@ -70,7 +70,7 @@ go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@latest
 go install github.com/tx7do/go-wind-toolkit/protoc-gen-typescript-http@latest
 ```
 
-CLI 工具（buf、ent、gow、golangci-lint 等）在另一个目标里，`make init` = `plugin` + `cli`，
+CLI 工具（buf、hz、golangci-lint 等）在另一个目标里，`make init` = `plugin` + `cli`，
 首次搭建直接跑 `make init` 即可（同样在 `backend/` 下）。
 
 ## 装完之后：跑起来
@@ -83,7 +83,7 @@ CLI 工具（buf、ent、gow、golangci-lint 等）在另一个目标里，`make
 ```shell
 cd backend
 docker compose -f docker-compose.libs.yaml up -d   # 起 PostgreSQL / Redis / SeaweedFS
-gow run admin                                      # 起后端，HTTP :7788
+go run ./admin                                      # 起后端，HTTP :7788
 ```
 
 前端侧的三端命令见 [如何搭建前端开发环境](./frontend_development_environment_preparation.md)。

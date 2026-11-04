@@ -1,6 +1,8 @@
-# GoWind Admin Windows 本地开发启动指南
+# Go Admin Windows 本地开发启动指南
 
-本文档介绍如何在 Windows 系统上从零搭建开发环境并启动 GoWind Admin 项目。
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
+本文档介绍如何在 Windows 系统上从零搭建开发环境并启动 Go Admin 项目。
 
 基于实际在 Windows 11 上完整跑通后编写，包含所有已知的坑和解决方案。
 
@@ -27,11 +29,11 @@
 
 ```powershell
 # 在项目根目录执行
-powershell -ExecutionPolicy Bypass -File backend\scripts\env\install_windows_dev.ps1
+powershell -ExecutionPolicy Bypass -File backend\platform\scripts\env\install_windows_dev.ps1
 ```
 
-在 `backend/` 目录下执行 `.\scripts\env\install_windows_dev.ps1` 等价——脚本用 `$MyInvocation` 解析自身目录来加载
-`scripts/env/lib/*.ps1`（`install_windows_dev.ps1:13`），**工作目录不影响行为**。
+在 `backend/` 目录下执行 `.\platform\scripts\env\install_windows_dev.ps1` 等价——脚本用 `$MyInvocation` 解析自身目录来加载
+`platform/scripts/env/lib/*.ps1`（`install_windows_dev.ps1:13`），**工作目录不影响行为**。
 
 该脚本通过 Scoop 自动安装 Go、Docker Desktop、Node.js、Git、Make 等，并安装所有 Go 代码生成工具（buf、ent、gow 等）。
 
@@ -126,7 +128,7 @@ docker compose -f docker-compose.libs.yaml ps
 
 默认配置中的主机名（`postgres`、`redis`、`minio`）是 Docker Compose 的容器服务名，仅在容器网络内部有效。本地运行后端时**必须改为 `localhost`**。
 
-需要修改 `backend/app/admin/service/configs/` 下的三个文件：
+需要修改 `backend/operator/configs/` 下的三个文件：
 
 ### data.yaml
 
@@ -210,20 +212,20 @@ buf generate --template buf.admin.openapi.gen.yaml
 ### 方式一：命令行
 
 ```bash
-cd backend/app/admin/service
+cd backend/operator
 go run ./cmd/server -c ./configs
 ```
 
 ### 方式二：Make
 
 ```bash
-cd backend/app/admin/service
+cd backend/operator
 make run
 ```
 
 ### 方式三：GoLand IDE
 
-1. 打开 `backend/app/admin/service/cmd/server/main.go`
+1. 打开 `backend/operator/cmd/server/main.go`
 2. 点击 `main` 函数旁的运行按钮
 3. 在 Run Configuration 中设置 Program arguments：`-c ../../configs`
 
@@ -292,7 +294,7 @@ pnpm dev
 
 ```
 终端 1：cd backend && docker compose -f docker-compose.libs.yaml up -d
-终端 2：cd backend/app/admin/service && go run ./cmd/server -c ./configs
+终端 2：cd backend/operator && go run ./cmd/server -c ./configs
 终端 3：cd frontend/admin/vue-vben && pnpm dev
 ```
 
@@ -336,7 +338,6 @@ ls "$(go env GOPATH)/bin/"
 ```bash
 go install github.com/tx7do/go-wind-toolkit/gowind/cmd/gow@latest
 go install github.com/bufbuild/buf/cmd/buf@latest
-go install entgo.io/ent/cmd/ent@latest
 ```
 
 ### Q: `golangci-lint` 安装失败

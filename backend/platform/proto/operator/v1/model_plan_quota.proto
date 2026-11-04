@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package operator.v1;
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
+
+import "google/protobuf/timestamp.proto";
+import "operator/v1/persistence.proto";
+import "tagger/tagger.proto";
+
+// 套餐配额表
+message SysPlanQuotas {
+  option (operator.v1.model) = {
+    entity: "PlanQuota"
+    relations: { name: "Plan" target: "SysPlans" foreign_key: "PlanID" references: "ID" many: false }
+  };
+
+  // id
+  uint32 id = 1 [(tagger.tags) = "gorm:\"column:id;size:32;primaryKey;autoIncrement;not null;comment:id\" json:\"id,omitempty\"", (operator.v1.go_name) = "ID", (operator.v1.immutable) = true];
+
+  // 创建时间
+  google.protobuf.Timestamp created_at = 2 [(tagger.tags) = "gorm:\"column:created_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_sys_plan_quotas_created_at,priority:1;comment:创建时间\" json:\"created_at,omitempty\"", (operator.v1.go_name) = "CreatedAt", (operator.v1.immutable) = true];
+
+  // 更新时间
+  google.protobuf.Timestamp updated_at = 3 [(tagger.tags) = "gorm:\"column:updated_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:更新时间\" json:\"updated_at,omitempty\"", (operator.v1.go_name) = "UpdatedAt"];
+
+  // 删除时间
+  google.protobuf.Timestamp deleted_at = 4 [(tagger.tags) = "gorm:\"column:deleted_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:删除时间\" json:\"deleted_at,omitempty\"", (operator.v1.go_name) = "DeletedAt"];
+
+  // 创建者ID
+  optional uint32 created_by = 5 [(tagger.tags) = "gorm:\"column:created_by;type:bigint;comment:创建者ID\" json:\"created_by,omitempty\"", (operator.v1.go_name) = "CreatedBy"];
+
+  // 更新者ID
+  optional uint32 updated_by = 6 [(tagger.tags) = "gorm:\"column:updated_by;type:bigint;comment:更新者ID\" json:\"updated_by,omitempty\"", (operator.v1.go_name) = "UpdatedBy"];
+
+  // 删除者ID
+  optional uint32 deleted_by = 7 [(tagger.tags) = "gorm:\"column:deleted_by;type:bigint;comment:删除者ID\" json:\"deleted_by,omitempty\"", (operator.v1.go_name) = "DeletedBy"];
+
+  // 配额类型
+  optional string quota_type = 8 [(tagger.tags) = "gorm:\"column:quota_type;type:varchar(255);comment:配额类型\" json:\"quota_type,omitempty\"", (operator.v1.go_name) = "QuotaType", (operator.v1.enum_values) = { name: "QuotaTypeUserLimit" value: "USER_LIMIT" }, (operator.v1.enum_values) = { name: "QuotaTypeStorage" value: "STORAGE" }, (operator.v1.enum_values) = { name: "QuotaTypeApiCall" value: "API_CALL" }, (operator.v1.enum_values) = { name: "QuotaTypeAiTokens" value: "AI_TOKENS" }];
+
+  // 配额值
+  optional uint64 quota_value = 9 [(tagger.tags) = "gorm:\"column:quota_value;type:bigint;comment:配额值\" json:\"quota_value,omitempty\"", (operator.v1.go_name) = "QuotaValue"];
+
+  //
+  optional uint32 plan_id = 10 [(tagger.tags) = "gorm:\"column:plan_id;type:bigint\" json:\"plan_id,omitempty\"", (operator.v1.go_name) = "PlanID"];
+}

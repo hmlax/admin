@@ -1,5 +1,7 @@
 # 列表查询规则
 
+> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+
 ## 通用列表查询请求
 
 | 字段名       | 类型        | 格式                                  | 字段描述    | 示例                                                                                                       | 备注                                                               |
@@ -202,5 +204,4 @@
 
 ## 项目代码
 
-* [go-wind-admin Gitee](https://gitee.com/tx7do/go-wind-admin)
-* [go-wind-admin Github](https://github.com/tx7do/go-wind-admin)
+* [Go Admin GitHub](https://github.com/hmlax/admin)

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560">
-  <title>GoWind 风行 — 登录页品牌插画（旋涡 v2：环流动效 + 风痕 + 字标）</title>
+  <title>Go Admin — 登录页品牌插画（旋涡 v2：环流动效 + 风痕 + 字标）</title>
   <style>
     .gw-ring1,.gw-ring2,.gw-orbit,.gw-orbit2{transform-box:view-box;transform-origin:280px 268px}
     .gw-ring1{animation:gw-spin 48s linear infinite}
@@ -59,13 +59,17 @@
       <path d="M264 199 A58 58 0 1 1 204 282" stroke-width="54"/>
     </g>
   </g>
-  <!-- GOWIND 几何字标签名 -->
-  <g transform="translate(185,464) scale(0.30)" fill="none" stroke="#0D74F2" stroke-opacity=".5" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M70 22 A40 40 0 1 0 82 50 L56 50"/>
-    <g transform="translate(126,0)"><circle cx="42" cy="50" r="40"/></g>
-    <path transform="translate(254,0)" d="M10 0 L30 100 L48 30 L66 100 L86 0"/>
-    <path transform="translate(384,0)" d="M10 0 L10 100"/>
-    <path transform="translate(438,0)" d="M10 100 L10 0 L74 100 L74 0"/>
-    <path transform="translate(546,0)" d="M10 0 L10 100 M10 0 L24 0 A50 50 0 0 1 24 100 L10 100"/>
+  <!-- GO ADMIN 几何字标签名 -->
+  <defs>
+    <path id="cG" d="M70 22 A40 40 0 1 0 82 50 L56 50"/>
+    <circle id="cO" cx="42" cy="50" r="40"/>
+    <path id="cA" d="M0 100 L40 0 L80 100 M16 60 H64"/>
+    <path id="cD" d="M10 0 V100 M10 0 H24 A50 50 0 0 1 24 100 H10"/>
+    <path id="cM" d="M0 100 V0 L40 60 L80 0 V100"/>
+    <path id="cI" d="M10 0 V100"/>
+    <path id="cN" d="M10 100 V0 L74 100 V0"/>
+  </defs>
+  <g transform="translate(171,464) scale(0.30)" fill="none" stroke="#0D74F2" stroke-opacity=".5" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#cG"/><use href="#cO" x="116"/><use href="#cA" x="254"/><use href="#cD" x="362"/><use href="#cM" x="470"/><use href="#cI" x="588"/><use href="#cN" x="642"/>
   </g>
 </svg>
