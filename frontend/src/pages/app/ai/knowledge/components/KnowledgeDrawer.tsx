@@ -23,7 +23,13 @@ interface KnowledgeDrawerProps {
   onSuccess: () => void;
 }
 
-export default function KnowledgeDrawer({ open, mode, data, onClose, onSuccess }: KnowledgeDrawerProps) {
+export default function KnowledgeDrawer({
+  open,
+  mode,
+  data,
+  onClose,
+  onSuccess,
+}: KnowledgeDrawerProps) {
   const { t } = useTranslation('aiKnowledge');
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -39,13 +45,20 @@ export default function KnowledgeDrawer({ open, mode, data, onClose, onSuccess }
   // provider 下拉（启用项）
   useEffect(() => {
     if (!open) return;
-    fetchListAiProviders(new PaginationQuery({ paging: { page: 1, pageSize: 100 }, formValues: { isEnabled: true } }))
+    fetchListAiProviders(
+      new PaginationQuery({ paging: { page: 1, pageSize: 100 }, formValues: { isEnabled: true } }),
+    )
       .then((res) => {
         setProviderOptions(
-          (res.items ?? []).map((p) => ({ label: `${p.name ?? ''} / ${p.modelName ?? ''}`, value: p.id! })),
+          (res.items ?? []).map((p) => ({
+            label: `${p.name ?? ''} / ${p.modelName ?? ''}`,
+            value: p.id!,
+          })),
         );
       })
-      .catch((error: Error) => console.error('fetch providers for knowledge drawer failed:', error));
+      .catch((error: Error) =>
+        console.error('fetch providers for knowledge drawer failed:', error),
+      );
   }, [open]);
 
   useEffect(() => {
@@ -63,10 +76,10 @@ export default function KnowledgeDrawer({ open, mode, data, onClose, onSuccess }
     return () => clearTimeout(timer);
   }, [open, mode, data]);
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: AiKnowledgeBase) => {
     try {
       if (mode === 'create') {
-        await createMutation.mutateAsync({ data: values as any });
+        await createMutation.mutateAsync({ data: values });
         message.success(t('createSuccess'));
       } else {
         await updateMutation.mutateAsync({ id: data!.id!, values });
@@ -86,11 +99,18 @@ export default function KnowledgeDrawer({ open, mode, data, onClose, onSuccess }
   return (
     <DrawerForm
       formRef={formRef}
-      title={mode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('common:modal.update', { moduleName: t('moduleName') })}
+      title={
+        mode === 'create'
+          ? t('common:modal.create', { moduleName: t('moduleName') })
+          : t('common:modal.update', { moduleName: t('moduleName') })
+      }
       open={open}
       onValuesChange={handleValuesChange}
       onFinish={handleSubmit}
-      submitter={{ submitButtonProps: { loading: createMutation.isPending || updateMutation.isPending }, resetButtonProps: { onClick: guardClose } }}
+      submitter={{
+        submitButtonProps: { loading: createMutation.isPending || updateMutation.isPending },
+        resetButtonProps: { onClick: guardClose },
+      }}
       drawerProps={{ destroyOnHidden: true, onClose: guardClose, size: 600 }}
       layout="horizontal"
       labelCol={{ flex: '0 0 120px' }}
@@ -102,11 +122,7 @@ export default function KnowledgeDrawer({ open, mode, data, onClose, onSuccess }
         rules={[{ required: true, message: t('requiredName') }]}
         placeholder={t('namePlaceholder')}
       />
-      <ProFormTextArea
-        name="description"
-        label={t('description')}
-        fieldProps={{ rows: 2 }}
-      />
+      <ProFormTextArea name="description" label={t('description')} fieldProps={{ rows: 2 }} />
       <ProFormSelect
         name="providerId"
         label={t('provider')}

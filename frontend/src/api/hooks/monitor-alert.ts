@@ -27,11 +27,7 @@ export function fetchListMonitorAlertRules(
 }
 
 export function useCreateMonitorAlertRule(
-  options?: UseMutationOptions<
-    MonitorAlertRule,
-    Error,
-    CreateMonitorAlertRuleRequest
-  >,
+  options?: UseMutationOptions<MonitorAlertRule, Error, CreateMonitorAlertRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -42,7 +38,7 @@ export function useCreateMonitorAlertRule(
 }
 
 export function useUpdateMonitorAlertRule(
-  options?: UseMutationOptions<{}, Error, UpdateMonitorAlertRuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, UpdateMonitorAlertRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -53,7 +49,7 @@ export function useUpdateMonitorAlertRule(
 }
 
 export function useDeleteMonitorAlertRule(
-  options?: UseMutationOptions<{}, Error, DeleteMonitorAlertRuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteMonitorAlertRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -64,7 +60,7 @@ export function useDeleteMonitorAlertRule(
 }
 
 export function useEvaluateMonitorAlerts(
-  options?: UseMutationOptions<EvaluateMonitorAlertsResponse, Error, {}>,
+  options?: UseMutationOptions<EvaluateMonitorAlertsResponse, Error, Record<string, never>>,
 ) {
   return useMutation({
     mutationFn: () => apiClient.monitorAlertService.EvaluateMonitorAlerts({}),

@@ -177,7 +177,10 @@ const InboxList = () => {
           },
           {
             label: t('common:dateRange.yesterday'),
-            value: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+            value: [
+              dayjs().subtract(1, 'day').startOf('day'),
+              dayjs().subtract(1, 'day').endOf('day'),
+            ],
           },
           {
             label: t('common:dateRange.thisWeek'),
@@ -185,7 +188,10 @@ const InboxList = () => {
           },
           {
             label: t('common:dateRange.lastWeek'),
-            value: [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
+            value: [
+              dayjs().subtract(1, 'week').startOf('week'),
+              dayjs().subtract(1, 'week').endOf('week'),
+            ],
           },
           {
             label: t('common:dateRange.thisMonth'),
@@ -193,7 +199,10 @@ const InboxList = () => {
           },
           {
             label: t('common:dateRange.lastMonth'),
-            value: [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')],
+            value: [
+              dayjs().subtract(1, 'month').startOf('month'),
+              dayjs().subtract(1, 'month').endOf('month'),
+            ],
           },
         ],
       },
@@ -251,7 +260,7 @@ const InboxList = () => {
           actionRef={actionRef}
           columns={columns}
           params={{ userId }}
-          request={async (params, _sorter, _filter) => {
+          request={async (params) => {
             // 收件箱只看自己的：不传 recipient_user_id 会按租户过滤，列出其他用户的收件记录。
             // userId 未就绪（静默恢复期 profile 拉取失败等半残会话）时绝不能发请求——
             // String(undefined) 会把字面量 "undefined" 当用户 ID 发出去，后端解析直接 500；
@@ -259,7 +268,7 @@ const InboxList = () => {
             if (!userId) {
               return { data: [], total: 0, success: true };
             }
-            const formValues: Record<string, any> = {
+            const formValues: Record<string, unknown> = {
               recipient_user_id: String(userId),
             };
             Object.entries(params).forEach(([key, value]) => {
@@ -282,7 +291,8 @@ const InboxList = () => {
             };
           }}
           rowKey="id"
-          search={{ optionRender: searchOptionRender,
+          search={{
+            optionRender: searchOptionRender,
             labelWidth: 'auto',
             defaultCollapsed: false,
             // 全局 span 8，各字段再乘自己的 colSize（标题 1 / 状态 0.625 / 接收时间

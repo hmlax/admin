@@ -2,7 +2,7 @@
  * 收件箱模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 接收者消息状态 ==========
 

@@ -1,5 +1,6 @@
+import type { LayoutMenuItem } from '@/core/router/utils/menu';
 import { useMemo, useCallback, useState } from 'react';
-import { Menu } from 'antd';
+import { Menu, type MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +10,7 @@ import ControlPanel from './ControlPanel';
 import './SiderMenu.style.less';
 
 interface SiderMenuProps {
-  menuData: any[];
+  menuData: LayoutMenuItem[];
   isMobile: boolean;
   isDark: boolean;
   openKeys: string[];
@@ -26,7 +27,7 @@ export const Index = ({
   onOpenChange,
 }: SiderMenuProps) => {
   const navigate = useNavigate();
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
   const { t: tRoutes } = useTranslation('routes');
 
   const preferences = usePreferencesStore((state) => state.preferences);
@@ -42,9 +43,7 @@ export const Index = ({
   // 折叠是一条跨元素的动效：容器 width 与 Logo 区 padding 在此，菜单项 padding / 标签 opacity /
   // 图标 font-size 在 styles/pro-layout-overrides.css，两边共用 §2.7 允许档内的 240ms +
   // 同一条 standard 曲线。各跑各的时钟会被读成"先弹一下再慢慢追"（即用户反馈的"生硬"）。
-  const siderCurve = preferences.transition.enable
-    ? '240ms cubic-bezier(0.4, 0, 0.2, 1)'
-    : null;
+  const siderCurve = preferences.transition.enable ? '240ms cubic-bezier(0.4, 0, 0.2, 1)' : null;
   const siderMotion = siderCurve ? `width ${siderCurve}` : 'none';
   const siderPaddingMotion = siderCurve ? `padding ${siderCurve}` : 'none';
   const siderFadeMotion = siderCurve ? `opacity ${siderCurve}` : 'none';
@@ -74,16 +73,16 @@ export const Index = ({
       return tRoutes(label, { defaultValue: label });
     };
 
-    const transformItem = (items: any[]): any[] => {
+    const transformItem = (items: LayoutMenuItem[]): NonNullable<MenuProps['items']> => {
       return items.map((item) => ({
-        key: item.path || item.key,
+        key: item.path || item.key || '',
         icon: getIconFromName(item.icon),
         label: translateLabel(item.name || item.label), // 翻译标题
         children: item.children ? transformItem(item.children) : undefined,
       }));
     };
     return transformItem(menuData);
-  }, [menuData, t, i18n.language]); // 添加 i18n.language 依赖，语言切换时重新翻译
+  }, [menuData, t, tRoutes]); // 添加 i18n.language 依赖，语言切换时重新翻译
 
   // 菜单点击
   const handleMenuClick = useCallback(
@@ -133,7 +132,8 @@ export const Index = ({
   };
 
   // 切换 expandOnHover 状态（固定/自动模式）
-  const handleToggleExpandOnHover = () => {    const newExpandOnHover = !expandOnHover;
+  const handleToggleExpandOnHover = () => {
+    const newExpandOnHover = !expandOnHover;
 
     // 关键：切换模式时，同步更新 hover 状态以保持当前视觉效果
     if (newExpandOnHover) {

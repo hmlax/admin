@@ -1,11 +1,7 @@
+import type { DictEntry as DictEntryRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormDigit,
-  ProFormRadio,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormDigit, ProFormRadio } from '@ant-design/pro-components';
 import { App, Select, Form, Table, Input, Button, Space, Spin } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +24,7 @@ interface I18nRow {
 interface DictEntryDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: DictEntryRecord;
   typeId: number;
   onClose: () => void;
   onSuccess: () => void;
@@ -38,7 +34,7 @@ interface DictEntryDrawerProps {
  * 字典条目编辑/创建抽屉组件
  * 含国际化（i18n）子表格
  */
-const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
+const DictEntryDrawerContent: React.FC<DictEntryDrawerProps> = ({
   open,
   mode,
   data,
@@ -61,7 +57,7 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
 
   // i18n 子表格
   const [i18nData, setI18nData] = useState<I18nRow[]>([]);
-  const [i18nLoading, setI18nLoading] = useState(false);
+  const [i18nLoading, setI18nLoading] = useState(open);
   const [editingKey, setEditingKey] = useState<string>('');
   // 编辑开始时的原始值快照，取消编辑时用于还原（对齐 Vue 版 _backup 机制）
   const [i18nBackup, setI18nBackup] = useState<{
@@ -76,13 +72,16 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
       // is_enabled 是布尔列：传布尔值走 EQ；字符串会被序列化成 __contains，后端报 500
       fetchListDictTypes(new PaginationQuery({ formValues: { is_enabled: true } }))
         .then((res) => {
-          const options = (res.items || []).map((item: any) => ({
-            label: item.typeName,
-            value: item.id,
+          const options = (res.items || []).map((item) => ({
+            label: item.typeName ?? String(item.id),
+            value: item.id ?? 0,
           }));
           setTypeOptions(options);
         })
-        .catch(() => setTypeOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setTypeOptions([]);
+        });
     }
   }, [open]);
 
@@ -121,13 +120,18 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
   // 加载 i18n 数据（打开时加载语言列表）
   useEffect(() => {
     if (open) {
-      setI18nLoading(true);
       fetchListLanguages(new PaginationQuery({ orderBy: ['sortOrder'] }))
         .then((res) => {
-          const i18nMap = (data?.i18n ?? {}) as Record<string, { description?: string; entryLabel?: string }>;
+          const i18nMap = (data?.i18n ?? {}) as Record<
+            string,
+            { description?: string; entryLabel?: string }
+          >;
           const rows: I18nRow[] = (res.items || [])
-            .filter((lang: any) => lang.languageCode)
-            .map((lang: any) => ({
+            .filter(
+              (lang): lang is typeof lang & { languageCode: string } =>
+                typeof lang.languageCode === 'string' && lang.languageCode.length > 0,
+            )
+            .map((lang) => ({
               key: lang.languageCode,
               languageCode: lang.languageCode,
               languageName: lang.nativeName || '',
@@ -136,7 +140,10 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
             }));
           setI18nData(rows);
         })
-        .catch(() => setI18nData([]))
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setI18nData([]);
+        })
         .finally(() => setI18nLoading(false));
     }
   }, [open, data?.i18n]);
@@ -168,13 +175,13 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: DictEntryRecord) => {
     try {
       setConfirmLoading(true);
 
       // 构建 i18n map：只提交用户实际填写过的语言行。
       // 后端 entry_label 有 NotEmpty 校验，空标签行会导致 500（对齐 vue-element/vben 行为）。
-      const i18nMap: Record<string, any> = {};
+      const i18nMap: NonNullable<DictEntryRecord['i18n']> = {};
       i18nData.forEach((row) => {
         const label = (row.entryLabel || '').trim();
         const desc = (row.description || '').trim();
@@ -198,7 +205,8 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
         await createMutation.mutateAsync({ data: payload });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Save dictionary entry failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);
@@ -237,16 +245,14 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
     setEditingKey('');
   };
 
-  const save = (_key: string) => {
+  const save = () => {
     // 保存：保留改动，清除快照
     setI18nBackup(null);
     setEditingKey('');
   };
 
   const updateI18nRow = (key: string, field: string, value: string) => {
-    setI18nData((prev) =>
-      prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)),
-    );
+    setI18nData((prev) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
   };
 
   // i18n 表格列定义
@@ -264,13 +270,13 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
     {
       title: t('entryLabel'),
       dataIndex: 'entryLabel',
-      render: (_: any, record: I18nRow) => {
+      render: (_: unknown, record: I18nRow) => {
         if (isEditing(record)) {
           return (
             <Input
               value={record.entryLabel}
               onChange={(e) => updateI18nRow(record.key, 'entryLabel', e.target.value)}
-              onPressEnter={() => save(record.key)}
+              onPressEnter={() => save()}
               size="small"
             />
           );
@@ -281,13 +287,13 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
     {
       title: t('description'),
       dataIndex: 'description',
-      render: (_: any, record: I18nRow) => {
+      render: (_: unknown, record: I18nRow) => {
         if (isEditing(record)) {
           return (
             <Input
               value={record.description}
               onChange={(e) => updateI18nRow(record.key, 'description', e.target.value)}
-              onPressEnter={() => save(record.key)}
+              onPressEnter={() => save()}
               size="small"
             />
           );
@@ -299,11 +305,11 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
       title: t('action'),
       dataIndex: 'action',
       width: 120,
-      render: (_: any, record: I18nRow) => {
+      render: (_: unknown, record: I18nRow) => {
         if (isEditing(record)) {
           return (
             <Space size={4}>
-              <Button type="link" size="small" onClick={() => save(record.key)}>
+              <Button type="link" size="small" onClick={() => save()}>
                 {t('common:button.ok')}
               </Button>
               <Button type="link" size="small" onClick={cancel}>
@@ -416,4 +422,11 @@ const DictEntryDrawer: React.FC<DictEntryDrawerProps> = ({
   );
 };
 
-export default DictEntryDrawer;
+export default function DictEntryDrawer(props: DictEntryDrawerProps) {
+  return (
+    <DictEntryDrawerContent
+      key={`${props.open}-${props.mode}-${props.data?.id}-${props.typeId}`}
+      {...props}
+    />
+  );
+}

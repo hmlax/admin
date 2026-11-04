@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { getErrorMessage } from '@/utils/error';
 import { adminApplication, getMerchantCode } from '@/config/application';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +18,7 @@ import { fetchTenantBranding } from '@/api/hooks/tenant-branding';
  */
 const CaptchaField: React.FC<{
   value?: string;
-  onChange?: (...event: any[]) => void;
+  onChange?: (...event: unknown[]) => void;
   label?: string;
   placeholder?: string;
   imageEl?: React.ReactNode;
@@ -49,25 +51,17 @@ const Login: React.FC = () => {
   // SSO 开关（后端未配置 OIDC 时按钮不渲染）
   const [ssoOn, setSsoOn] = useState(false);
 
-  // 租户白标：租户编号失焦后拉取（防抖交给 blur 语义），命中则替换站牌
-  const [tenantBranding, setTenantBranding] = useState<{ found: boolean; name: string; logoUrl: string } | null>(null);
-  const applyTenantBranding = useCallback(async (code: string) => {
-    const trimmed = (code || '').trim();
-    if (!trimmed) {
-      setTenantBranding(null);
-      return;
-    }
-    try {
-      const branding = await fetchTenantBranding(trimmed);
-      setTenantBranding(branding.found ? branding : null);
-    } catch ( brandingError ) {
-      // 白标是非关键路径：失败静默保持默认品牌，原始错误留控制台
-      console.warn('fetch tenant branding failed', brandingError);
-      setTenantBranding(null);
-    }
-  }, []);
-
-  useEffect(() => { void applyTenantBranding(getMerchantCode()); }, [applyTenantBranding]);
+  const merchantCode = getMerchantCode().trim();
+  const brandingQuery = useQuery({
+    queryKey: ['tenantBranding', merchantCode],
+    queryFn: () => fetchTenantBranding(merchantCode),
+    enabled: !!merchantCode,
+    retry: false,
+  });
+  const tenantBranding = brandingQuery.data?.found ? brandingQuery.data : null;
+  useEffect(() => {
+    if (brandingQuery.error) console.warn('fetch tenant branding failed', brandingQuery.error);
+  }, [brandingQuery.error]);
 
   // 获取验证码
   const refreshCaptcha = useCallback(async () => {
@@ -113,7 +107,12 @@ const Login: React.FC = () => {
 
   // SSO 开关探测：失败/未配置都不显示按钮（非关键路径，静默降级）
   useEffect(() => {
-    ssoEnabled().then(setSsoOn).catch((error) => { console.warn('Failed to load SSO settings:', error); setSsoOn(false); });
+    ssoEnabled()
+      .then(setSsoOn)
+      .catch((error) => {
+        console.warn('Failed to load SSO settings:', error);
+        setSsoOn(false);
+      });
   }, []);
 
   const handleSubmit = async (values: {
@@ -151,11 +150,12 @@ const Login: React.FC = () => {
       );
 
       message.success(t('loginSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
       // 登录失败后刷新验证码
       refreshCaptcha();
       // 弹出错误提示（与 CRUD 页面统一模式：优先用后端 message，兜底走 i18n）
-      message.error(error?.message || t('loginFailed'));
+      message.error(getErrorMessage(error) || t('loginFailed'));
     }
   };
 
@@ -170,11 +170,7 @@ const Login: React.FC = () => {
       onClick={() => !captchaLoading && refreshCaptcha()}
     >
       {captchaImage ? (
-        <img
-          src={captchaImage}
-          alt="captcha"
-          className="h-full w-full object-cover"
-        />
+        <img src={captchaImage} alt="captcha" className="h-full w-full object-cover" />
       ) : (
         // 占位文案走 §2.1 的实底暗墨而非次要文字档：外层盒子两态都是浅底
         // （暗色 bg-white / 浅色 bg-black/[0.03]），实测次要档在浅底上只有 2.6:1。
@@ -211,7 +207,11 @@ const Login: React.FC = () => {
               {t(adminApplication === 'platform' ? 'platformAdminTitle' : 'merchantAdminTitle')}
             </h2>
             <p className="text-[15px] leading-relaxed text-[color:var(--go-admin-secondary-text)]">
-              {t(adminApplication === 'platform' ? 'platformLoginDescription' : 'merchantLoginDescription')}
+              {t(
+                adminApplication === 'platform'
+                  ? 'platformLoginDescription'
+                  : 'merchantLoginDescription',
+              )}
             </p>
           </>
         )}
@@ -311,9 +311,9 @@ const Login: React.FC = () => {
               block
               size="large"
               onClick={() => {
-                startSsoLogin().catch((err: any) => {
+                startSsoLogin().catch((err: unknown) => {
                   console.error('start sso login failed', err);
-                  message.error(err?.message || t('ssoLoginFailed'));
+                  message.error(getErrorMessage(err) || t('ssoLoginFailed'));
                 });
               }}
             >
@@ -325,9 +325,7 @@ const Login: React.FC = () => {
 
       {/* 底部链接 */}
       <div className="mt-6 text-center text-[13px]">
-        <span className="text-[color:var(--ant-color-text-secondary)]">
-          {t('noAccount')}{' '}
-        </span>
+        <span className="text-[color:var(--ant-color-text-secondary)]">{t('noAccount')} </span>
         <a
           href="/auth/forgot-password"
           className="go-admin-auth-link hover:opacity-80"
@@ -335,7 +333,6 @@ const Login: React.FC = () => {
         >
           {t('forgotPassword')}
         </a>
-
       </div>
     </div>
   );

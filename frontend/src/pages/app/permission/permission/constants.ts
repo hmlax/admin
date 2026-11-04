@@ -1,8 +1,10 @@
+import type { Api, PermissionGroup } from '@/api/generated/admin/v1';
+import type { SelectionNode } from '@/types/selection';
 /**
  * 权限点/权限分组模块通用常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // 通用 fallback：在非组件环境下的默认翻译
 const defaultT = (key: string) => key;
@@ -50,7 +52,12 @@ export function buildTreeSelectData(
   items.forEach((item) => {
     if (item.id === undefined || item.id === null) return;
     if (excludeId !== undefined && item.id === excludeId) return;
-    map.set(item.id, { value: Number(item.id), title: item.name || '', children: [], parentId: item.parentId });
+    map.set(item.id, {
+      value: Number(item.id),
+      title: item.name || '',
+      children: [],
+      parentId: item.parentId,
+    });
   });
 
   const tree: TreeSelectNode[] = [];
@@ -78,13 +85,13 @@ export function buildTreeSelectData(
 /**
  * 将扁平权限分组数据构建为 ProTable 需要的树形结构（children 嵌套）
  */
-export function buildGroupTreeData(items: any[]): any[] {
+export function buildGroupTreeData(items: PermissionGroup[]): PermissionGroup[] {
   if (!items || items.length === 0) return [];
 
-  const map = new Map<number, any>();
-  const roots: any[] = [];
+  const map = new Map<number, PermissionGroup & { children: PermissionGroup[] }>();
+  const roots: PermissionGroup[] = [];
 
-  items.forEach((item: any) => {
+  items.forEach((item) => {
     if (item.id == null) return;
     map.set(Number(item.id), { ...item, children: [] });
   });
@@ -99,7 +106,7 @@ export function buildGroupTreeData(items: any[]): any[] {
   });
 
   // 清理空的 children 数组
-  const cleanEmpty = (nodes: any[]) => {
+  const cleanEmpty = (nodes: PermissionGroup[]) => {
     nodes.forEach((n) => {
       if (n.children && n.children.length === 0) {
         delete n.children;
@@ -116,7 +123,7 @@ export function buildGroupTreeData(items: any[]): any[] {
 // ========== Tree 组件数据构建（用于 Drawer 的勾选树） ==========
 
 interface TreeNode {
-  key: number;
+  key: number | string;
   title: string;
   children?: TreeNode[];
 }
@@ -169,20 +176,10 @@ export function buildMenuTree(
 /**
  * 构建 API 树形数据（按模块分组，用于 Tree 组件勾选）
  */
-export function buildApiTree(
-  items?: Array<{
-    id?: number | string;
-    method?: string;
-    path?: string;
-    description?: string;
-    name?: string;
-    module?: string;
-  }> | null,
-  t?: TFn,
-): TreeNode[] {
+export function buildApiTree(items?: Api[] | null, t?: TFn): TreeNode[] {
   if (!items || items.length === 0) return [];
 
-  const moduleMap = new Map<string, any[]>();
+  const moduleMap = new Map<string, Api[]>();
 
   items.forEach((item) => {
     const mod = item.module || (t || defaultT)('permission-group:moduleOther');
@@ -193,12 +190,12 @@ export function buildApiTree(
   });
 
   return Array.from(moduleMap.entries()).map(([mod, apis]) => ({
-    key: `module_${mod}` as any,
+    key: `module_${mod}`,
     title: mod,
     selectable: false,
     children: apis.map((api) => ({
       key: Number(api.id),
-      title: `${api.method || ''} ${api.path || ''} - ${api.description || api.name}`,
+      title: `${api.method || ''} ${api.path || ''} - ${api.description || ''}`,
     })),
   }));
 }
@@ -208,7 +205,7 @@ export function buildApiTree(
 /**
  * 从勾选值中提取所有数字 ID（过滤掉模块分组等非数字值）
  */
-export function filterNumbers(values: any[]): number[] {
+export function filterNumbers(values: unknown[]): number[] {
   if (!Array.isArray(values)) return [];
   return values
     .flat(Infinity)
@@ -224,15 +221,15 @@ export function filterNumbers(values: any[]): number[] {
  * 而父菜单 key 是 Number(id)（数字）无法被过滤，会被后端当作菜单 ID 处理。
  * 这里用叶子集合对 checkedKeys 求交集，只保留真正的叶子菜单 ID。
  */
-export function extractLeafIds(checkedKeys: any[], treeData: any[]): number[] {
+export function extractLeafIds(checkedKeys: unknown[], treeData: SelectionNode[]): number[] {
   if (!Array.isArray(checkedKeys) || !Array.isArray(treeData)) return [];
   const leafIds = new Set<number>();
-  const collect = (nodes: any[]) => {
+  const collect = (nodes: SelectionNode[]) => {
     for (const node of nodes) {
       if (node.children && node.children.length > 0) {
         collect(node.children);
       } else if (typeof node.key === 'number' && !isNaN(node.key)) {
-        leafIds.add(node.key);
+        if (node.key !== undefined) leafIds.add(node.key);
       }
     }
   };

@@ -13,7 +13,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPolicyEvaluationLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPolicyEvaluationLogResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPolicyEvaluationLogResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPolicyEvaluationLogs', query],
@@ -32,7 +32,7 @@ export async function fetchListPolicyEvaluationLogs(params: PaginationQuery) {
 
 export function useGetPolicyEvaluationLog(
   req: GetPolicyEvaluationLogRequest,
-  options?: UseQueryOptions<PolicyEvaluationLog, Error>,
+  options?: Omit<UseQueryOptions<PolicyEvaluationLog, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPolicyEvaluationLog', req],

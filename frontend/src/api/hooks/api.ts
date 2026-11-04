@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListApis(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListApiResponse, Error>,
+  options?: Omit<UseQueryOptions<ListApiResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listApis', query],
@@ -39,7 +39,7 @@ export async function fetchListApis(params: PaginationQuery) {
 
 export function useGetApi(
   req: GetApiRequest,
-  options?: UseQueryOptions<Api, Error>,
+  options?: Omit<UseQueryOptions<Api, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getApi', req],
@@ -49,7 +49,7 @@ export function useGetApi(
 }
 
 export function useCreateApi(
-  options?: UseMutationOptions<{}, Error, CreateApiRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateApiRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.apiService.Create(data),
@@ -58,10 +58,20 @@ export function useCreateApi(
 }
 
 export function useUpdateApi(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; values: NonNullable<Parameters<typeof apiClient.apiService.Update>[0]['data']> }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.apiService.Update>[0]['data']>;
+    }) =>
       apiClient.apiService.Update({
         id,
         data: {
@@ -74,7 +84,7 @@ export function useUpdateApi(
 }
 
 export function useDeleteApi(
-  options?: UseMutationOptions<{}, Error, DeleteApiRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteApiRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.apiService.Delete(data),
@@ -82,7 +92,7 @@ export function useDeleteApi(
   });
 }
 
-export function useSyncApisApi(options?: UseMutationOptions<{}, Error>) {
+export function useSyncApisApi(options?: UseMutationOptions<Record<string, never>, Error>) {
   return useMutation({
     mutationFn: () => apiClient.apiService.SyncApis({}),
     ...options,

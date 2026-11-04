@@ -29,7 +29,7 @@ import { apiClient } from '@/api/client';
 // ==============================
 export function useListInternalMessages(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListInternalMessageResponse, Error>,
+  options?: Omit<UseQueryOptions<ListInternalMessageResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listInternalMessages', query],
@@ -59,10 +59,27 @@ export function useGetInternalMessage(
 }
 
 export function useUpdateInternalMessage(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<
+        Parameters<typeof apiClient.internalMessageService.UpdateMessage>[0]['data']
+      >;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<
+        Parameters<typeof apiClient.internalMessageService.UpdateMessage>[0]['data']
+      >;
+    }) =>
       apiClient.internalMessageService.UpdateMessage({
         id,
         data: { ...values },
@@ -73,7 +90,7 @@ export function useUpdateInternalMessage(
 }
 
 export function useDeleteInternalMessage(
-  options?: UseMutationOptions<{}, Error, DeleteInternalMessageRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteInternalMessageRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageService.DeleteMessage(data),
@@ -82,11 +99,7 @@ export function useDeleteInternalMessage(
 }
 
 export function useSendMessage(
-  options?: UseMutationOptions<
-    SendMessageResponse,
-    Error,
-    SendMessageRequest
-  >,
+  options?: UseMutationOptions<SendMessageResponse, Error, SendMessageRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageService.SendMessage(data),
@@ -95,7 +108,7 @@ export function useSendMessage(
 }
 
 export function useRevokeMessage(
-  options?: UseMutationOptions<{}, Error, RevokeMessageRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, RevokeMessageRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageService.RevokeMessage(data),
@@ -108,7 +121,10 @@ export function useRevokeMessage(
 // ==============================
 export function useListMessageCategories(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListInternalMessageCategoryResponse, Error>,
+  options?: Omit<
+    UseQueryOptions<ListInternalMessageCategoryResponse, Error>,
+    'queryKey' | 'queryFn'
+  >,
 ) {
   return useQuery({
     queryKey: ['listMessageCategories', query],
@@ -127,7 +143,7 @@ export async function fetchListMessageCategories(params: PaginationQuery) {
 
 export function useGetMessageCategory(
   req: GetInternalMessageCategoryRequest,
-  options?: UseQueryOptions<InternalMessageCategory, Error>,
+  options?: Omit<UseQueryOptions<InternalMessageCategory, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getMessageCategory', req],
@@ -137,11 +153,7 @@ export function useGetMessageCategory(
 }
 
 export function useCreateMessageCategory(
-  options?: UseMutationOptions<
-    {},
-    Error,
-    CreateInternalMessageCategoryRequest
-  >,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateInternalMessageCategoryRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageCategoryService.Create(data),
@@ -151,13 +163,26 @@ export function useCreateMessageCategory(
 
 export function useUpdateMessageCategory(
   options?: UseMutationOptions<
-    {},
+    Record<string, never>,
     Error,
-    { id: number; values: Record<string, any> }
+    {
+      id: number;
+      values: NonNullable<
+        Parameters<typeof apiClient.internalMessageCategoryService.Update>[0]['data']
+      >;
+    }
   >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<
+        Parameters<typeof apiClient.internalMessageCategoryService.Update>[0]['data']
+      >;
+    }) =>
       apiClient.internalMessageCategoryService.Update({
         id,
         data: { ...values },
@@ -168,11 +193,7 @@ export function useUpdateMessageCategory(
 }
 
 export function useDeleteMessageCategory(
-  options?: UseMutationOptions<
-    {},
-    Error,
-    DeleteInternalMessageCategoryRequest
-  >,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteInternalMessageCategoryRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageCategoryService.Delete(data),
@@ -185,7 +206,7 @@ export function useDeleteMessageCategory(
 // ==============================
 export function useListUserInbox(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListUserInboxResponse, Error>,
+  options?: Omit<UseQueryOptions<ListUserInboxResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listUserInbox', query],
@@ -203,20 +224,17 @@ export async function fetchListUserInbox(params: PaginationQuery) {
 }
 
 export function useDeleteNotificationFromInbox(
-  options?: UseMutationOptions<
-    {},
-    Error,
-    DeleteNotificationFromInboxRequest
-  >,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteNotificationFromInboxRequest>,
 ) {
   return useMutation({
-    mutationFn: (data) => apiClient.internalMessageRecipientService.DeleteNotificationFromInbox(data),
+    mutationFn: (data) =>
+      apiClient.internalMessageRecipientService.DeleteNotificationFromInbox(data),
     ...options,
   });
 }
 
 export function useMarkNotificationAsRead(
-  options?: UseMutationOptions<{}, Error, MarkNotificationAsReadRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, MarkNotificationAsReadRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.internalMessageRecipientService.MarkNotificationAsRead(data),

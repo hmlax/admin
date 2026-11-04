@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useState } from 'react';
 import { List, Button, Drawer, Form, Input, App } from 'antd';
 import { MailOutlined, MobileOutlined } from '@ant-design/icons';
@@ -32,7 +33,9 @@ const AccountBind = ({ onSwitchTab }: AccountBindProps) => {
 
   const [bindOpen, setBindOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(bindOpen, () => setBindOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(bindOpen, () =>
+    setBindOpen(false),
+  );
   const [bindForm] = Form.useForm();
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -76,9 +79,9 @@ const AccountBind = ({ onSwitchTab }: AccountBindProps) => {
       await apiClient.userProfileService.BindContact({ email: { email } });
       setCodeSent(true);
       message.success(t('accountBind.codeSent'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to send bind code:', error);
-      message.error(error?.message || t('accountBind.vcodeSendFailed'));
+      message.error(getErrorMessage(error) || t('accountBind.vcodeSendFailed'));
     } finally {
       setSending(false);
     }
@@ -101,9 +104,9 @@ const AccountBind = ({ onSwitchTab }: AccountBindProps) => {
       setBindOpen(false);
       // 刷新用户信息以更新绑定状态展示（本页读 getMe，顶栏头像等也读 getMe）
       queryClient.invalidateQueries({ queryKey: ['getMe'] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to verify bind code:', error);
-      message.error(error?.message || t('accountBind.bindFailed'));
+      message.error(getErrorMessage(error) || t('accountBind.bindFailed'));
     } finally {
       setVerifying(false);
     }
@@ -126,11 +129,7 @@ const AccountBind = ({ onSwitchTab }: AccountBindProps) => {
               </Button>,
             ].filter(Boolean)}
           >
-            <List.Item.Meta
-              avatar={item.icon}
-              title={item.title}
-              description={item.description}
-            />
+            <List.Item.Meta avatar={item.icon} title={item.title} description={item.description} />
           </List.Item>
         )}
       />
@@ -150,7 +149,13 @@ const AccountBind = ({ onSwitchTab }: AccountBindProps) => {
           </div>
         }
       >
-        <Form form={bindForm} layout="horizontal" labelCol={{ flex: '0 0 120px' }} wrapperCol={{ flex: 'auto' }} onValuesChange={handleValuesChange}>
+        <Form
+          form={bindForm}
+          layout="horizontal"
+          labelCol={{ flex: '0 0 120px' }}
+          wrapperCol={{ flex: 'auto' }}
+          onValuesChange={handleValuesChange}
+        >
           <Form.Item
             name="email"
             label={t('accountBind.newEmail')}

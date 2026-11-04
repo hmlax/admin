@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  type UseMutationOptions,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, type UseMutationOptions } from '@tanstack/react-query';
 import {
   type CopyBiDashboardRequest,
   type CreateBiDashboardRequest,
@@ -43,7 +39,7 @@ export function useBiDashboard(id: number | undefined, enabled = true) {
 }
 
 export function useCreateBiDashboard(
-  options?: UseMutationOptions<{}, Error, CreateBiDashboardRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateBiDashboardRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.biDashboardService.Create(data),
@@ -52,13 +48,26 @@ export function useCreateBiDashboard(
 }
 
 export function useUpdateBiDashboard(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.biDashboardService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.biDashboardService.Update>[0]['data']>;
+    }) =>
       apiClient.biDashboardService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -70,13 +79,17 @@ export function useUpdateBiDashboard(
  * 后端对 stale 写返回 409（提示刷新重试）。
  */
 export function useSaveBiDashboardPayload(
-  options?: UseMutationOptions<{}, Error, { id: number; version: number; payload: string; chartCount: number; themeKey?: string }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; version: number; payload: string; chartCount: number; themeKey?: string }
+  >,
 ) {
   return useMutation({
     mutationFn: ({ id, version, payload, chartCount, themeKey }) =>
       apiClient.biDashboardService.Update({
         id,
-        data: { version, payload, chartCount, themeKey } as any,
+        data: { version, payload, chartCount, themeKey },
         updateMask: makeUpdateMask(['payload', 'chartCount', 'themeKey', 'version']),
       }),
     ...options,
@@ -84,7 +97,7 @@ export function useSaveBiDashboardPayload(
 }
 
 export function useDeleteBiDashboard(
-  options?: UseMutationOptions<{}, Error, DeleteBiDashboardRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteBiDashboardRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.biDashboardService.Delete(req),
@@ -93,7 +106,7 @@ export function useDeleteBiDashboard(
 }
 
 export function useCopyBiDashboard(
-  options?: UseMutationOptions<{}, Error, CopyBiDashboardRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CopyBiDashboardRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.biDashboardService.Copy(req),

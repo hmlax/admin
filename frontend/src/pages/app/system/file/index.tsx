@@ -4,11 +4,7 @@ import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Button, Tag, App, Upload } from 'antd';
-import {
-  DeleteOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { File as FileItem } from '@/api/generated/admin/v1';
@@ -78,9 +74,10 @@ const FileManagement = () => {
 
   // 处理下载
   const handleDownload = (record: FileItem) => {
-    const objectName = record.fileDirectory && record.saveFileName
-      ? `${record.fileDirectory}/${record.saveFileName}`
-      : '';
+    const objectName =
+      record.fileDirectory && record.saveFileName
+        ? `${record.fileDirectory}/${record.saveFileName}`
+        : '';
     if (record.bucketName && objectName) {
       downloadMutation.mutate({
         bucketName: record.bucketName as string,
@@ -182,16 +179,14 @@ const FileManagement = () => {
           <ListTable<FileItem>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, sorter, _filter) => {
+            request={async (params, sorter) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || 10,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -210,24 +205,21 @@ const FileManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListFiles} columns={columns} filename="files" />,
-              <Upload
-                key="upload"
-                showUploadList={false}
-                beforeUpload={handleUpload}
-                accept="*"
-              >
-                <Button
-                  type="primary"
-                  icon={<UploadOutlined />}
-                  loading={uploadMutation.isPending}
-                >
+              <TableExportButton
+                key="export"
+                fetcher={fetchListFiles}
+                columns={columns}
+                filename="files"
+              />,
+              <Upload key="upload" showUploadList={false} beforeUpload={handleUpload} accept="*">
+                <Button type="primary" icon={<UploadOutlined />} loading={uploadMutation.isPending}>
                   {t('upload')}
                 </Button>
               </Upload>,

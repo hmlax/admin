@@ -97,7 +97,10 @@ const BiDesignerDrawer: React.FC<BiDesignerDrawerProps> = ({
     },
     onError: (error: Error) => {
       // 后端乐观锁冲突：CONFLICT reason / 409
-      if (error.message.includes('modified by another session') || error.message.includes('CONFLICT')) {
+      if (
+        error.message.includes('modified by another session') ||
+        error.message.includes('CONFLICT')
+      ) {
         message.error(t('saveConflict'));
       } else {
         message.error(error.message || t('updateFailed'));
@@ -147,7 +150,7 @@ const BiDesignerDrawer: React.FC<BiDesignerDrawerProps> = ({
             isPublic: values.isPublic ?? false,
             isBuiltIn: false,
             sortOrder: 100,
-          } as any,
+          },
         });
       }
     } finally {
@@ -155,9 +158,7 @@ const BiDesignerDrawer: React.FC<BiDesignerDrawerProps> = ({
     }
   };
 
-  const title = mode === 'edit'
-    ? t('editTitle')
-    : t('createTitle');
+  const title = mode === 'edit' ? t('editTitle') : t('createTitle');
 
   return (
     <Drawer
@@ -170,18 +171,18 @@ const BiDesignerDrawer: React.FC<BiDesignerDrawerProps> = ({
       footer={
         <Space style={{ float: 'right' }}>
           <Button onClick={guardClose}>{t('common:button.cancel')}</Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={submitting}
-            onClick={handleSave}
-          >
+          <Button type="primary" icon={<SaveOutlined />} loading={submitting} onClick={handleSave}>
             {t('common:button.save')}
           </Button>
         </Space>
       }
     >
-      <Form form={form} layout="vertical" onValuesChange={handleValuesChange} style={{ flexShrink: 0 }}>
+      <Form
+        form={form}
+        layout="vertical"
+        onValuesChange={handleValuesChange}
+        style={{ flexShrink: 0 }}
+      >
         <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
           <Form.Item
             name="name"
@@ -202,10 +203,20 @@ const BiDesignerDrawer: React.FC<BiDesignerDrawerProps> = ({
           <Form.Item name="remark" label={t('remark')} style={{ flex: 2, minWidth: 220 }}>
             <Input />
           </Form.Item>
-          <Form.Item name="isEnabled" label={t('isEnabled')} valuePropName="checked" initialValue={true}>
+          <Form.Item
+            name="isEnabled"
+            label={t('isEnabled')}
+            valuePropName="checked"
+            initialValue={true}
+          >
             <Switch />
           </Form.Item>
-          <Form.Item name="isPublic" label={t('isPublic')} valuePropName="checked" initialValue={false}>
+          <Form.Item
+            name="isPublic"
+            label={t('isPublic')}
+            valuePropName="checked"
+            initialValue={false}
+          >
             <Switch />
           </Form.Item>
         </div>

@@ -49,6 +49,7 @@ declare global {
   const cache: typeof import('react').cache
   const cacheSignal: typeof import('react').cacheSignal
   const connectSSEServer: typeof import('../src/hooks/useTokenRefresh').connectSSEServer
+  const createAuthActions: typeof import('../src/hooks/useAuth').createAuthActions
   const createContext: typeof import('react').createContext
   const createRef: typeof import('react').createRef
   const defaultImageUpload: typeof import('../src/components/common/Editor/src/TiptapEditor/defaultImageUpload').defaultImageUpload
@@ -99,6 +100,7 @@ declare global {
   const useLinkClickHandler: typeof import('react-router-dom').useLinkClickHandler
   const useLocation: typeof import('react-router-dom').useLocation
   const useLockStore: typeof import('../src/stores/lock').useLockStore
+  const useMediaQuery: typeof import('../src/hooks/useMediaQuery').useMediaQuery
   const useMemo: typeof import('react').useMemo
   const useNavigate: typeof import('react-router-dom').useNavigate
   const useNavigationType: typeof import('react-router-dom').useNavigationType

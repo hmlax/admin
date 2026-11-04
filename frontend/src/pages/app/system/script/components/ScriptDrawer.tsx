@@ -51,7 +51,13 @@ const skeletonFor = (lang: 'LUA' | 'JAVASCRIPT') =>
 /**
  * 脚本编辑/创建抽屉组件
  */
-const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
+const ScriptDrawerContent: React.FC<ScriptDrawerProps> = ({
+  open,
+  mode,
+  data,
+  onClose,
+  onSuccess,
+}) => {
   const { t } = useTranslation('script');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -61,8 +67,12 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
   const { message, modal } = App.useApp();
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [source, setSource] = useState('');
-  const [language, setLanguage] = useState<'LUA' | 'JAVASCRIPT'>('LUA');
+  const [source, setSource] = useState(() =>
+    mode === 'edit' ? (data?.source ?? '') : DEFAULT_LUA_SOURCE,
+  );
+  const [language, setLanguage] = useState<'LUA' | 'JAVASCRIPT'>(() =>
+    data?.language === 'JAVASCRIPT' ? 'JAVASCRIPT' : 'LUA',
+  );
 
   // 钩子点下拉（允许自由输入）
   const hookPointsQuery = useListHookPoints({ enabled: open });
@@ -83,13 +93,7 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
           description: data.description || '',
           critical: !!data.critical,
         });
-        setSource(data.source || '');
-        setLanguage((data.language || 'LUA') as 'LUA' | 'JAVASCRIPT');
       }, 0);
-    }
-    if (open && mode === 'create') {
-      setSource(DEFAULT_LUA_SOURCE);
-      setLanguage('LUA');
     }
   }, [open, mode, data]);
 
@@ -117,20 +121,20 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Script) => {
     if (!source.trim()) {
       message.error(t('requiredSource'));
       return;
     }
     setConfirmLoading(true);
     try {
-      const payload: Record<string, any> = {
+      const payload: Script = {
         ...values,
         source,
       };
 
       if (mode === 'create') {
-        await createMutation.mutateAsync({ data: payload as any });
+        await createMutation.mutateAsync({ data: payload });
       } else if (data?.id) {
         await updateMutation.mutateAsync({ id: data.id, values: payload });
       }
@@ -192,7 +196,7 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
         fieldProps={{
           optionType: 'button',
           buttonStyle: 'solid',
-          onChange: (e: any) => {
+          onChange: (e) => {
             const next = e.target.value as 'LUA' | 'JAVASCRIPT';
             if (next === language) return;
 
@@ -218,11 +222,7 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
         extra={language === 'LUA' ? t('languageLuaTip') : t('languageJavascriptTip')}
       />
 
-      <ProFormItem
-        name="hookPoint"
-        label={t('hookPoint')}
-        extra={t('hookPointPlaceholder')}
-      >
+      <ProFormItem name="hookPoint" label={t('hookPoint')} extra={t('hookPointPlaceholder')}>
         <AutoComplete
           options={hookPointOptions}
           filterOption
@@ -275,4 +275,6 @@ const ScriptDrawer: React.FC<ScriptDrawerProps> = ({ open, mode, data, onClose, 
   );
 };
 
-export default ScriptDrawer;
+export default function ScriptDrawer(props: ScriptDrawerProps) {
+  return <ScriptDrawerContent key={`${props.open}-${props.mode}-${props.data?.id}`} {...props} />;
+}

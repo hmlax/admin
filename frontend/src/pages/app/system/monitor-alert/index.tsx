@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import ListTable from '@/components/common/ListTable';
@@ -12,12 +13,7 @@ import {
   ProFormSwitch,
 } from '@ant-design/pro-components';
 import { App, Button, Tag, Tooltip } from 'antd';
-import {
-  CaretRightOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { CaretRightOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type {
   CreateMonitorAlertRuleRequest,
@@ -73,7 +69,9 @@ const MonitorAlertPage = () => {
 
   const [formOpen, setFormOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () => setFormOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () =>
+    setFormOpen(false),
+  );
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<MonitorAlertRule | undefined>();
 
@@ -90,9 +88,9 @@ const MonitorAlertPage = () => {
       await deleteMutation.mutateAsync({ id: record.id });
       message.success(t('deleteSuccess'));
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('delete monitor alert rule failed', error);
-      message.error(error.message || t('deleteFailed'));
+      message.error(getErrorMessage(error) || t('deleteFailed'));
     }
   };
 
@@ -102,25 +100,23 @@ const MonitorAlertPage = () => {
       const lines = (resp.outcomes ?? []).map((o) => {
         const value = o.currentValue != null ? o.currentValue.toFixed(2) : '-';
         const state = o.firing ? t('outcomeFiring') : t('outcomeNormal');
-        const extra = o.notified
-          ? ` · ${t('outcomeNotified')}`
-          : o.reason
-            ? ` · ${o.reason}`
-            : '';
+        const extra = o.notified ? ` · ${t('outcomeNotified')}` : o.reason ? ` · ${o.reason}` : '';
         return `${o.name}: ${state} (${value}${extra})`;
       });
       modal.info({
         title: t('evaluateResultTitle'),
-        content: <div style={{ whiteSpace: 'pre-wrap' }}>{lines.join('\n') || t('evaluateEmpty')}</div>,
+        content: (
+          <div style={{ whiteSpace: 'pre-wrap' }}>{lines.join('\n') || t('evaluateEmpty')}</div>
+        ),
         width: 560,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('evaluate monitor alerts failed', error);
-      message.error(error.message || t('evaluateFailed'));
+      message.error(getErrorMessage(error) || t('evaluateFailed'));
     }
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: MonitorAlertRule) => {
     const isPingFail = values.metric === 'DB_PING_FAIL';
     const data = {
       name: values.name,
@@ -151,9 +147,9 @@ const MonitorAlertPage = () => {
       setFormOpen(false);
       refresh();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('save monitor alert rule failed', error);
-      message.error(error.message || t('saveFailed'));
+      message.error(getErrorMessage(error) || t('saveFailed'));
       return false;
     }
   };
@@ -191,7 +187,8 @@ const MonitorAlertPage = () => {
       width: 100,
       valueType: 'select',
       fieldProps: { options: channelOptions(t) },
-      render: (_, record) => (record.channel ? <Tag>{t(`channelMap.${record.channel}`)}</Tag> : '-'),
+      render: (_, record) =>
+        record.channel ? <Tag>{t(`channelMap.${record.channel}`)}</Tag> : '-',
     },
     {
       title: t('target'),
@@ -285,7 +282,12 @@ const MonitorAlertPage = () => {
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
             showSizeChanger: true,
           }}
-          options={{ density: true, fullScreen: true, setting: { settingIcon: <ColumnSlidersIcon /> }, reload: true }}
+          options={{
+            density: true,
+            fullScreen: true,
+            setting: { settingIcon: <ColumnSlidersIcon /> },
+            reload: true,
+          }}
           toolBarRender={() => [
             <Tooltip key="evaluate-tip" title={t('evaluateHint')}>
               <Button
@@ -318,7 +320,11 @@ const MonitorAlertPage = () => {
       </div>
 
       <DrawerForm
-        title={formMode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('common:modal.update', { moduleName: t('moduleName') })}
+        title={
+          formMode === 'create'
+            ? t('common:modal.create', { moduleName: t('moduleName') })
+            : t('common:modal.update', { moduleName: t('moduleName') })
+        }
         open={formOpen}
         onOpenChange={(v) => {
           // 关闭一律走 drawerProps.onClose 守卫；这里只放行打开
@@ -340,7 +346,10 @@ const MonitorAlertPage = () => {
         <ProFormText
           name="name"
           label={t('name')}
-          rules={[{ required: true, message: t('requiredName') }, { max: 100, message: t('maxChars', { max: 100 }) }]}
+          rules={[
+            { required: true, message: t('requiredName') },
+            { max: 100, message: t('maxChars', { max: 100 }) },
+          ]}
         />
         <ProFormSelect
           name="metric"
@@ -386,14 +395,13 @@ const MonitorAlertPage = () => {
           name="target"
           label={t('target')}
           tooltip={t('targetHint')}
-          rules={[{ required: true, message: t('requiredTarget') }, { max: 500, message: t('maxChars', { max: 500 }) }]}
+          rules={[
+            { required: true, message: t('requiredTarget') },
+            { max: 500, message: t('maxChars', { max: 500 }) },
+          ]}
         />
         <ProFormSwitch name="isEnabled" label={t('isEnabled')} />
-        <ProFormTextArea
-          name="remark"
-          label={t('remark')}
-          fieldProps={{ rows: 2 }}
-        />
+        <ProFormTextArea name="remark" label={t('remark')} fieldProps={{ rows: 2 }} />
       </DrawerForm>
     </ContentContainer>
   );

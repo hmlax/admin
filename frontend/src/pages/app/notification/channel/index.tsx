@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useMemo, useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -62,7 +63,9 @@ const CHANNEL_TYPE_COLOR: Partial<Record<NonNullable<NotificationChannel['type']
 function safeParseSettings(raw: string): Record<string, unknown> | undefined {
   try {
     const parsed = JSON.parse(raw);
-    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : undefined;
+    return typeof parsed === 'object' && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : undefined;
   } catch {
     return undefined;
   }
@@ -74,10 +77,7 @@ const EXT_TAG_COLOR = 'geekblue';
 /**
  * 短信服务商 → 文案。列值就是 proto SmsProvider 成员名的同一组字符串（枚举按名字配对）。
  */
-const SMS_PROVIDER_LABEL_KEY: Record<
-  NonNullable<NotificationChannel['smsProvider']>,
-  string
-> = {
+const SMS_PROVIDER_LABEL_KEY: Record<NonNullable<NotificationChannel['smsProvider']>, string> = {
   ALIYUN: 'providerAliyun',
   TENCENT: 'providerTencent',
 };
@@ -86,10 +86,7 @@ const SMS_PROVIDER_LABEL_KEY: Record<
  * 签名风格 → 文案。列值就是后端 webhook_style.go 里的同一组字符串（枚举按名字配对），
  * 所以这里既不换算也不加前缀。
  */
-const SIGN_STYLE_LABEL_KEY: Record<
-  NonNullable<NotificationChannel['webhookSignStyle']>,
-  string
-> = {
+const SIGN_STYLE_LABEL_KEY: Record<NonNullable<NotificationChannel['webhookSignStyle']>, string> = {
   CUSTOM: 'signStyleCustom',
   NONE: 'signStyleNone',
   DINGTALK: 'signStyleDingtalk',
@@ -101,9 +98,7 @@ const SIGN_STYLE_LABEL_KEY: Record<
 // （本机实测：PG 加列带 DEFAULT，存量行已被回填成 'CUSTOM'，所以空值只出现在直接写 SQL 置 NULL 的行。）
 // EMAIL 行没有这一列，返回 undefined 由列渲染 '-'。
 const signStyleKeyOf = (record: NotificationChannel): string | undefined =>
-  record.type === 'WEBHOOK'
-    ? SIGN_STYLE_LABEL_KEY[record.webhookSignStyle ?? 'CUSTOM']
-    : undefined;
+  record.type === 'WEBHOOK' ? SIGN_STYLE_LABEL_KEY[record.webhookSignStyle ?? 'CUSTOM'] : undefined;
 
 /**
  * 载荷模板可引用的占位符清单，作为词条的 `vars` 插值值传进去，而不是把花括号写进词条：
@@ -152,12 +147,18 @@ const NotificationChannelManagement = () => {
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g)!.push({ label: String(s.label), value: String(s.type) });
     }
-    return [...groups.entries()].map(([group, options]) => ({ group, label: t(`extGroup.${group}`), options }));
+    return [...groups.entries()].map(([group, options]) => ({
+      group,
+      label: t(`extGroup.${group}`),
+      options,
+    }));
   }, [schemas, t]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(drawerOpen, () => setDrawerOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(drawerOpen, () =>
+    setDrawerOpen(false),
+  );
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<NotificationChannel | undefined>();
   const [testTarget, setTestTarget] = useState<NotificationChannel | undefined>();
@@ -182,19 +183,30 @@ const NotificationChannelManagement = () => {
     if (!record.id) return;
     try {
       await deleteMutation.mutateAsync({ id: record.id });
-    } catch (error: any) {
-      message.error(error.message || t('deleteFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('deleteFailed'));
     }
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (
+    values: Omit<NotificationChannel, 'settings' | 'type'> & {
+      type?: NotificationChannel['type'] | 'SMS@ALIYUN' | 'SMS@TENCENT';
+      settings?: Record<string, unknown>;
+      password?: string;
+      webhookSecret?: string;
+      smsAccessSecret?: string;
+    },
+  ) => {
     // 三个密钥是请求级字段（不进 data）：读视图只有 hasPassword / hasWebhookSecret / hasSmsAccessSecret 布尔
-    const { password, webhookSecret, smsAccessSecret, settings, ...data } = values;
+    const { password, webhookSecret, smsAccessSecret, settings, type, ...fields } = values;
     // 拆分选项合成键：SMS@ALIYUN / SMS@TENCENT → type=SMS + smsProvider
-    if (String(data.type).startsWith('SMS@')) {
-      data.smsProvider = String(data.type).split('@')[1];
-      data.type = 'SMS';
-    }
+    const data: NotificationChannel = {
+      ...fields,
+      type: type === 'SMS@ALIYUN' || type === 'SMS@TENCENT' ? 'SMS' : type,
+    };
+    if (type === 'SMS@ALIYUN') data.smsProvider = 'ALIYUN';
+    if (type === 'SMS@TENCENT') data.smsProvider = 'TENCENT';
     // 扩展渠道：动态表单的 settings 对象序列化为 JSON 明文上送（sensitive 留空 = 保留已存值）
     if (isExtType(data.type)) {
       data.settings = settings ? JSON.stringify(settings) : '';
@@ -228,8 +240,9 @@ const NotificationChannelManagement = () => {
       setDrawerOpen(false);
       refresh();
       return true;
-    } catch (error: any) {
-      message.error(error.message || t('saveFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('saveFailed'));
       return false;
     }
   };
@@ -245,8 +258,9 @@ const NotificationChannelManagement = () => {
       message.success(t('testSendSuccess'));
       setTestTarget(undefined);
       return true;
-    } catch (error: any) {
-      message.error(error.message || t('testSendFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('testSendFailed'));
       return false;
     }
   };
@@ -265,7 +279,8 @@ const NotificationChannelManagement = () => {
       render: (_, record) =>
         record.type ? (
           <Tag color={CHANNEL_TYPE_COLOR[record.type] ?? EXT_TAG_COLOR}>
-            {schemaByType.get(record.type)?.label ?? t(CHANNEL_TYPE_LABEL_KEY[record.type] ?? record.type)}
+            {schemaByType.get(record.type)?.label ??
+              t(CHANNEL_TYPE_LABEL_KEY[record.type] ?? record.type)}
           </Tag>
         ) : (
           '-'
@@ -450,9 +465,19 @@ const NotificationChannelManagement = () => {
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
             showSizeChanger: true,
           }}
-          options={{ density: true, fullScreen: true, setting: { settingIcon: <ColumnSlidersIcon /> }, reload: true }}
+          options={{
+            density: true,
+            fullScreen: true,
+            setting: { settingIcon: <ColumnSlidersIcon /> },
+            reload: true,
+          }}
           toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListNotificationChannels} columns={columns} filename="notification-channels" />,
+            <TableExportButton
+              key="export"
+              fetcher={fetchListNotificationChannels}
+              columns={columns}
+              filename="notification-channels"
+            />,
             <Button
               key="create"
               color="primary"
@@ -476,7 +501,11 @@ const NotificationChannelManagement = () => {
       {/* 新建/编辑用抽屉不用弹窗：扩展渠道的 settings 动态表单字段多（6~8 个），
           弹窗高度挤不下；抽屉纵向空间足、与 ele 端渠道抽屉同形。 */}
       <DrawerForm
-        title={drawerMode === 'create' ? t('common:modal.create', { moduleName: t('title') }) : t('common:modal.update', { moduleName: t('title') })}
+        title={
+          drawerMode === 'create'
+            ? t('common:modal.create', { moduleName: t('title') })
+            : t('common:modal.update', { moduleName: t('title') })
+        }
         open={drawerOpen}
         onOpenChange={(v) => {
           // 关闭一律走 drawerProps.onClose 守卫；这里只放行打开
@@ -488,7 +517,14 @@ const NotificationChannelManagement = () => {
         onFinish={handleSubmit}
         initialValues={
           drawerMode === 'create'
-            ? { type: 'EMAIL', smtpTls: 'START_TLS', smtpPort: 587, webhookSignStyle: 'CUSTOM', smsProvider: 'ALIYUN', enabled: true }
+            ? {
+                type: 'EMAIL',
+                smtpTls: 'START_TLS',
+                smtpPort: 587,
+                webhookSignStyle: 'CUSTOM',
+                smsProvider: 'ALIYUN',
+                enabled: true,
+              }
             : {
                 ...selected,
                 password: undefined,
@@ -561,9 +597,9 @@ const NotificationChannelManagement = () => {
                   name="webhookSignStyle"
                   label={t('webhookSignStyle')}
                   tooltip={t('webhookSignStyleHint')}
-                  options={(
-                    ['CUSTOM', 'NONE', 'DINGTALK', 'FEISHU', 'WECOM'] as const
-                  ).map((value) => ({ value, label: t(SIGN_STYLE_LABEL_KEY[value]) }))}
+                  options={(['CUSTOM', 'NONE', 'DINGTALK', 'FEISHU', 'WECOM'] as const).map(
+                    (value) => ({ value, label: t(SIGN_STYLE_LABEL_KEY[value]) }),
+                  )}
                   rules={[{ required: true, message: t('requiredSignStyle') }]}
                 />
                 {/* 留空 = 用该风格的内置默认正文（内置形状由后端 webhook_style.go 持有，
@@ -579,7 +615,9 @@ const NotificationChannelManagement = () => {
                   name="webhookSecret"
                   label={t('webhookSecret')}
                   placeholder={
-                    drawerMode === 'edit' ? t('webhookSecretKeepHint') : t('webhookSecretPlaceholder')
+                    drawerMode === 'edit'
+                      ? t('webhookSecretKeepHint')
+                      : t('webhookSecretPlaceholder')
                   }
                   tooltip={t('webhookSecretHint')}
                 />
@@ -607,11 +645,15 @@ const NotificationChannelManagement = () => {
                   name="smsAccessSecret"
                   label={t('smsAccessSecret')}
                   placeholder={
-                    drawerMode === 'edit' ? t('smsAccessSecretKeepHint') : t('smsAccessSecretPlaceholder')
+                    drawerMode === 'edit'
+                      ? t('smsAccessSecretKeepHint')
+                      : t('smsAccessSecretPlaceholder')
                   }
                   tooltip={t('smsAccessSecretHint')}
                   rules={
-                    drawerMode === 'create' ? [{ required: true, message: t('requiredSmsAccessSecret') }] : []
+                    drawerMode === 'create'
+                      ? [{ required: true, message: t('requiredSmsAccessSecret') }]
+                      : []
                   }
                 />
                 <ProFormText
@@ -656,12 +698,20 @@ const NotificationChannelManagement = () => {
                 <ProFormText.Password
                   name="password"
                   label={t('password')}
-                  placeholder={drawerMode === 'edit' ? t('passwordKeepHint') : t('passwordPlaceholder')}
+                  placeholder={
+                    drawerMode === 'edit' ? t('passwordKeepHint') : t('passwordPlaceholder')
+                  }
                   rules={
-                    drawerMode === 'create' ? [{ required: true, message: t('requiredPassword') }] : []
+                    drawerMode === 'create'
+                      ? [{ required: true, message: t('requiredPassword') }]
+                      : []
                   }
                 />
-                <ProFormText name="smtpFrom" label={t('smtpFrom')} placeholder="noreply@example.com" />
+                <ProFormText
+                  name="smtpFrom"
+                  label={t('smtpFrom')}
+                  placeholder="noreply@example.com"
+                />
                 <ProFormText name="smtpFromName" label={t('smtpFromName')} placeholder="Go Admin" />
                 <ProFormSelect
                   name="smtpTls"
@@ -677,11 +727,7 @@ const NotificationChannelManagement = () => {
           }
         </ProFormDependency>
         <ProFormSwitch name="enabled" label={t('enabled')} />
-        <ProFormTextArea
-          name="remark"
-          label={t('remark')}
-          fieldProps={{ rows: 2 }}
-        />
+        <ProFormTextArea name="remark" label={t('remark')} fieldProps={{ rows: 2 }} />
       </DrawerForm>
 
       <ModalForm<{ recipient: string }>
@@ -706,9 +752,7 @@ const NotificationChannelManagement = () => {
             {
               required: true,
               message:
-                testTarget?.type === 'SMS'
-                  ? t('requiredRecipientPhone')
-                  : t('requiredRecipient'),
+                testTarget?.type === 'SMS' ? t('requiredRecipientPhone') : t('requiredRecipient'),
             },
             // 校验跟随渠道类型：SMS 收手机号、EMAIL 收邮箱；EXT_* 的目标语义按渠道各不相同
             // （chat_id/topic/设备 Key…），只做非空不做格式——格式错了由服务商报错进台账。
@@ -727,7 +771,6 @@ const NotificationChannelManagement = () => {
 
 export default NotificationChannelManagement;
 
-
 /** schema 字段类型 → 动态表单（settings 命名空间：提交时 values.settings = {name: value}）。 */
 function SettingsFormFields({ schema }: { schema: ChannelSchema | undefined }) {
   const { t } = useTranslation('notification-channel');
@@ -735,7 +778,9 @@ function SettingsFormFields({ schema }: { schema: ChannelSchema | undefined }) {
   return (
     <>
       {schema.targetLabel && (
-        <div style={{ color: 'var(--ant-color-text-tertiary, #aaa)', fontSize: 12, marginBottom: 8 }}>
+        <div
+          style={{ color: 'var(--ant-color-text-tertiary, #aaa)', fontSize: 12, marginBottom: 8 }}
+        >
           {t('ext.targetLabel', { label: schema.targetLabel })}
         </div>
       )}
@@ -774,7 +819,10 @@ function SettingsFormFields({ schema }: { schema: ChannelSchema | undefined }) {
               <ProFormSelect
                 key={f.name}
                 {...common}
-                options={(f.options ?? []).map((o) => ({ label: o === '' ? t('ext.optionDefault') : o, value: o }))}
+                options={(f.options ?? []).map((o) => ({
+                  label: o === '' ? t('ext.optionDefault') : o,
+                  value: o,
+                }))}
                 fieldProps={{ allowClear: true }}
               />
             );

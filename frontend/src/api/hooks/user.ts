@@ -38,7 +38,7 @@ function listUsers(query: PaginationQuery) {
 // ==============================
 export function useListUsers(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListUserResponse, Error>,
+  options?: Omit<UseQueryOptions<ListUserResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listUsers', query],
@@ -63,7 +63,7 @@ export async function fetchListUsers(params: PaginationQuery) {
 // ==============================
 export function useGetUser(
   req: GetUserRequest,
-  options?: UseQueryOptions<User, Error>,
+  options?: Omit<UseQueryOptions<User, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getUser', req],
@@ -87,7 +87,7 @@ export async function fetchUser(params: GetUserRequest) {
 // 创建用户
 // ==============================
 export function useCreateUser(
-  options?: UseMutationOptions<{}, Error, { data: User; password?: string }>,
+  options?: UseMutationOptions<Record<string, never>, Error, { data: User; password?: string }>,
 ) {
   return useMutation({
     mutationFn: ({ data, password }) => apiClient.userService.Create({ data, password }),
@@ -98,7 +98,7 @@ export function useCreateUser(
 // ==============================
 // 删除用户
 // ==============================
-export function useDeleteUser(options?: UseMutationOptions<{}, Error, number>) {
+export function useDeleteUser(options?: UseMutationOptions<Record<string, never>, Error, number>) {
   return useMutation({
     mutationFn: (id) => apiClient.userService.Delete({ id }),
     ...options,
@@ -109,16 +109,33 @@ export function useDeleteUser(options?: UseMutationOptions<{}, Error, number>) {
 // 更新用户
 // ==============================
 export function useUpdateUser(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.userService.Update>[0]['data']> & {
+        password?: string;
+      };
+    }
+  >,
 ) {
   return useMutation({
     // proto UpdateUserRequest.password 是顶层字段且要求 AES 密文：
     // 留在 data/updateMask 里后端读不到，会静默跳过重置密码（200 但密码未变）
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) => {
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.userService.Update>[0]['data']> & {
+        password?: string;
+      };
+    }) => {
       const { password, ...data } = values ?? {};
       return apiClient.userService.Update({
         id,
-        data: data as any,
+        data: data,
         password: password ? encryptPassword(String(password)) : undefined,
         updateMask: makeUpdateMask(Object.keys(data)),
       });
@@ -131,11 +148,7 @@ export function useUpdateUser(
 // 检查用户是否存在
 // ==============================
 export function useUserExists(
-  options?: UseMutationOptions<
-    UserExistsResponse,
-    Error,
-    UserExistsRequest
-  >,
+  options?: UseMutationOptions<UserExistsResponse, Error, UserExistsRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.userService.UserExists(data),
@@ -147,7 +160,7 @@ export function useUserExists(
 // 修改用户密码（管理员）
 // ==============================
 export function useEditUserPassword(
-  options?: UseMutationOptions<{}, Error, EditUserPasswordRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, EditUserPasswordRequest>,
 ) {
   return useMutation({
     // 后端 NeedDecrypt 要求 AES 密文传输（与登录同规），明文会被当密文解密导致校验必败

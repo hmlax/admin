@@ -1,11 +1,7 @@
+import type { PermissionGroup as PermissionGroupRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormDigit,
-  ProFormRadio,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormDigit, ProFormRadio } from '@ant-design/pro-components';
 import { App, TreeSelect, Form } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +18,7 @@ import { getStatusOptions, buildTreeSelectData } from './constants';
 interface PermissionGroupDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: PermissionGroupRecord;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -46,7 +42,7 @@ const PermissionGroupDrawer: React.FC<PermissionGroupDrawerProps> = ({
   const { message } = App.useApp();
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [parentTreeData, setParentTreeData] = useState<any[]>([]);
+  const [parentTreeData, setParentTreeData] = useState<ReturnType<typeof buildTreeSelectData>>([]);
 
   // 加载父级分组树
   useEffect(() => {
@@ -55,7 +51,10 @@ const PermissionGroupDrawer: React.FC<PermissionGroupDrawerProps> = ({
         .then((res) => {
           setParentTreeData(buildTreeSelectData(res?.items || [], data?.id));
         })
-        .catch(() => setParentTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setParentTreeData([]);
+        });
     }
   }, [open, data?.id]);
 
@@ -101,16 +100,17 @@ const PermissionGroupDrawer: React.FC<PermissionGroupDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: PermissionGroupRecord) => {
     try {
       setConfirmLoading(true);
       if (mode === 'edit' && data?.id) {
         await updateMutation.mutateAsync({ id: data.id, values });
       } else {
-        await createMutation.mutateAsync({ data: { ...values, children: [] } as any });
+        await createMutation.mutateAsync({ data: { ...values, children: [] } });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);
@@ -160,10 +160,7 @@ const PermissionGroupDrawer: React.FC<PermissionGroupDrawerProps> = ({
       />
 
       {/* 父级分组 - TreeSelect */}
-      <Form.Item
-        name="parentId"
-        label={t('parentId')}
-      >
+      <Form.Item name="parentId" label={t('parentId')}>
         <TreeSelect
           treeData={parentTreeData}
           placeholder={t('parentIdPlaceholder')}

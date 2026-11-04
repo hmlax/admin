@@ -25,7 +25,13 @@ interface CategoryDrawerProps {
 /**
  * 消息分类编辑/创建抽屉组件
  */
-const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
+const CategoryDrawer: React.FC<CategoryDrawerProps> = ({
+  open,
+  mode,
+  data,
+  onClose,
+  onSuccess,
+}) => {
   const { t } = useTranslation('message-category');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -43,9 +49,9 @@ const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ open, mode, data, onClo
         formRef.current?.setFieldsValue({
           name: data.name || '',
           code: data.code || '',
-          sortOrder: (data as any).sortOrder ?? 1,
+          sortOrder: data.sortOrder ?? 1,
           isEnabled: data.isEnabled ?? true,
-          remark: (data as any).remark || '',
+          remark: '',
         });
       }, 0);
     }
@@ -75,12 +81,16 @@ const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ open, mode, data, onClo
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Category) => {
     setConfirmLoading(true);
     try {
       // InternalMessageCategory proto 没有 remark 字段，残留会进 updateMask 触发 500
-      const payload: any = { ...values };
-      delete payload.remark;
+      const payload: Category = {
+        name: values.name,
+        code: values.code,
+        sortOrder: values.sortOrder,
+        isEnabled: values.isEnabled,
+      };
       if (mode === 'create') {
         await createMutation.mutateAsync({ data: payload });
       } else if (data?.id) {

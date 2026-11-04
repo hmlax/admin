@@ -4,7 +4,8 @@ import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Button, Popconfirm, Tag, Switch, App } from 'antd';
-import { EditOutlined,
+import {
+  EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   CaretRightOutlined,
@@ -52,7 +53,7 @@ const TaskManagement = () => {
   const tableScrollY = useProTableScrollY(containerRef);
 
   // Drawer 状态管理
-const [sysTasksOpen, setSysTasksOpen] = useState(false);
+  const [sysTasksOpen, setSysTasksOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
@@ -247,7 +248,10 @@ const [sysTasksOpen, setSysTasksOpen] = useState(false);
                 description: t('startTaskConfirmDesc', { moduleName: t('moduleName') }),
               },
               onClick: () =>
-                controlMutation.mutate({ typeName: record.typeName as string, controlType: 'Start' }),
+                controlMutation.mutate({
+                  typeName: record.typeName as string,
+                  controlType: 'Start',
+                }),
             },
             {
               key: 'stop',
@@ -260,7 +264,10 @@ const [sysTasksOpen, setSysTasksOpen] = useState(false);
                 description: t('stopTaskConfirmDesc', { moduleName: t('moduleName') }),
               },
               onClick: () =>
-                controlMutation.mutate({ typeName: record.typeName as string, controlType: 'Stop' }),
+                controlMutation.mutate({
+                  typeName: record.typeName as string,
+                  controlType: 'Stop',
+                }),
             },
             {
               key: 'restart',
@@ -302,16 +309,14 @@ const [sysTasksOpen, setSysTasksOpen] = useState(false);
           <ListTable<Task>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || 10,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
@@ -324,69 +329,100 @@ const [sysTasksOpen, setSysTasksOpen] = useState(false);
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              canAccess('POST', '/admin/v1/system-tasks:inspect') && <Button
-                key="sysTasks"
-                icon={<CloudServerOutlined />}
-                onClick={() => setSysTasksOpen(true)}
-              >
-                {t('sysTasksButton')}
-              </Button>,
-              canAccess('POST', '/admin/v1/tasks:start') && <Popconfirm
-                key="startAll"
-                title={t('startAllConfirmTitle')}
-                description={t('startAllConfirmDesc', { moduleName: t('moduleName') })}
-                onConfirm={() => startAllMutation.mutate()}
-                okText={t('common:button.ok')}
-                cancelText={t('common:button.cancel')}
-              >
-                <Button color="green" variant="outlined" icon={<CaretRightOutlined />} loading={startAllMutation.isPending}>
-                  {t('startAll')}
+              canAccess('POST', '/admin/v1/system-tasks:inspect') && (
+                <Button
+                  key="sysTasks"
+                  icon={<CloudServerOutlined />}
+                  onClick={() => setSysTasksOpen(true)}
+                >
+                  {t('sysTasksButton')}
                 </Button>
-              </Popconfirm>,
-              canAccess('POST', '/admin/v1/tasks:stop') && <Popconfirm
-                key="stopAll"
-                title={t('stopAllConfirmTitle')}
-                description={t('stopAllConfirmDesc', { moduleName: t('moduleName') })}
-                onConfirm={() => stopAllMutation.mutate()}
-                okText={t('common:button.ok')}
-                cancelText={t('common:button.cancel')}
-              >
-                <Button color="danger" variant="outlined" icon={<PauseOutlined />} loading={stopAllMutation.isPending}>
-                  {t('stopAll')}
+              ),
+              canAccess('POST', '/admin/v1/tasks:start') && (
+                <Popconfirm
+                  key="startAll"
+                  title={t('startAllConfirmTitle')}
+                  description={t('startAllConfirmDesc', { moduleName: t('moduleName') })}
+                  onConfirm={() => startAllMutation.mutate()}
+                  okText={t('common:button.ok')}
+                  cancelText={t('common:button.cancel')}
+                >
+                  <Button
+                    color="green"
+                    variant="outlined"
+                    icon={<CaretRightOutlined />}
+                    loading={startAllMutation.isPending}
+                  >
+                    {t('startAll')}
+                  </Button>
+                </Popconfirm>
+              ),
+              canAccess('POST', '/admin/v1/tasks:stop') && (
+                <Popconfirm
+                  key="stopAll"
+                  title={t('stopAllConfirmTitle')}
+                  description={t('stopAllConfirmDesc', { moduleName: t('moduleName') })}
+                  onConfirm={() => stopAllMutation.mutate()}
+                  okText={t('common:button.ok')}
+                  cancelText={t('common:button.cancel')}
+                >
+                  <Button
+                    color="danger"
+                    variant="outlined"
+                    icon={<PauseOutlined />}
+                    loading={stopAllMutation.isPending}
+                  >
+                    {t('stopAll')}
+                  </Button>
+                </Popconfirm>
+              ),
+              canAccess('POST', '/admin/v1/tasks:restart') && (
+                <Popconfirm
+                  key="restartAll"
+                  title={t('restartAllConfirmTitle')}
+                  description={t('restartAllConfirmDesc', { moduleName: t('moduleName') })}
+                  onConfirm={() => restartAllMutation.mutate()}
+                  okText={t('common:button.ok')}
+                  cancelText={t('common:button.cancel')}
+                >
+                  <Button
+                    color="orange"
+                    variant="outlined"
+                    icon={<ReloadOutlined />}
+                    loading={restartAllMutation.isPending}
+                  >
+                    {t('restartAll')}
+                  </Button>
+                </Popconfirm>
+              ),
+              <TableExportButton
+                key="export"
+                fetcher={fetchListTasks}
+                columns={columns}
+                filename="tasks"
+              />,
+              canCreate && (
+                <Button
+                  key="create"
+                  color="primary"
+                  variant="outlined"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setDrawerMode('create');
+                    setSelectedTask(undefined);
+                    setDrawerOpen(true);
+                  }}
+                >
+                  {t('common:button.add')}
                 </Button>
-              </Popconfirm>,
-              canAccess('POST', '/admin/v1/tasks:restart') && <Popconfirm
-                key="restartAll"
-                title={t('restartAllConfirmTitle')}
-                description={t('restartAllConfirmDesc', { moduleName: t('moduleName') })}
-                onConfirm={() => restartAllMutation.mutate()}
-                okText={t('common:button.ok')}
-                cancelText={t('common:button.cancel')}
-              >
-                <Button color="orange" variant="outlined" icon={<ReloadOutlined />} loading={restartAllMutation.isPending}>
-                  {t('restartAll')}
-                </Button>
-              </Popconfirm>,
-              <TableExportButton key="export" fetcher={fetchListTasks} columns={columns} filename="tasks" />,
-              canCreate && <Button
-                key="create"
-                color="primary"
-                variant="outlined"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setDrawerMode('create');
-                  setSelectedTask(undefined);
-                  setDrawerOpen(true);
-                }}
-              >
-                {t('common:button.add')}
-              </Button>,
+              ),
             ]}
             options={{
               density: true,
@@ -401,10 +437,7 @@ const [sysTasksOpen, setSysTasksOpen] = useState(false);
           />
         </div>
       </ContentContainer>
-      <SystemTasksModal
-        open={sysTasksOpen}
-        onClose={() => setSysTasksOpen(false)}
-      />
+      <SystemTasksModal open={sysTasksOpen} onClose={() => setSysTasksOpen(false)} />
 
       {/* 任务编辑/创建 Drawer */}
       <TaskDrawer

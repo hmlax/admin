@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { applicationStorageKey } from '@/config/application';
 import { create, type StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -58,16 +59,9 @@ export interface AuthState {
    * 完成 MFA 挑战：用 operation_id + TOTP 码调后端验证，通过则后端返回真 token，
    * 复用登录成功流程（存 token / 拉用户信息 / 跳首页）。失败抛错。
    */
-  completeMfaChallenge: (
-    totpCode: string,
-    onSuccess?: () => void,
-  ) => Promise<void>;
+  completeMfaChallenge: (totpCode: string, onSuccess?: () => void) => Promise<void>;
   /** 完成 OIDC SSO 登录：code+state 换令牌，复用登录成功流程；失败抛错 */
-  completeSsoLogin: (
-    code: string,
-    state: string,
-    onSuccess?: () => void,
-  ) => Promise<void>;
+  completeSsoLogin: (code: string, state: string, onSuccess?: () => void) => Promise<void>;
   logout: (redirect?: boolean) => Promise<void>;
   refreshToken: () => Promise<string>;
   reauthenticate: () => void;
@@ -180,8 +174,8 @@ export const useAuthStore = create<AuthState>()(
 
           const now = Date.now();
           await applySuccessfulLogin(set, response, now, onSuccess);
-        } catch (err: any) {
-          const errorMsg = err?.message || i18next.t('auth:loginFailed');
+        } catch (err: unknown) {
+          const errorMsg = getErrorMessage(err) || i18next.t('auth:loginFailed');
           // 登录失败时清除任何可能被部分写入的认证状态（含空 token / 未来 expiry / MFA 状态），
           // 避免脏数据残留导致后续鉴权误判。
           set({
@@ -213,8 +207,8 @@ export const useAuthStore = create<AuthState>()(
           // MFA 验证成功后清掉挑战态，复用登录成功流程存 token / 拉用户信息 / 跳转。
           set({ mfaOperationId: null });
           await applySuccessfulLogin(set, response, Date.now(), onSuccess);
-        } catch (err: any) {
-          const errorMsg = err?.message || i18next.t('auth:mfaVerifyFailed');
+        } catch (err: unknown) {
+          const errorMsg = getErrorMessage(err) || i18next.t('auth:mfaVerifyFailed');
           set({ error: errorMsg, mfaOperationId: null });
           throw err;
         } finally {
@@ -229,16 +223,18 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await apiClient.authenticationService.SsoLogin({ code, state });
           await applySuccessfulLogin(set, response, Date.now(), onSuccess);
-        } catch (err: any) {
-          set({ error: err?.message || i18next.t('auth:ssoLoginFailed'), loginLoading: false });
+        } catch (err: unknown) {
+          set({
+            error: getErrorMessage(err) || i18next.t('auth:ssoLoginFailed'),
+            loginLoading: false,
+          });
           throw err;
         }
       },
 
-
       // 登出（主动，调后端接口）
       // 清除状态后由 React 组件响应状态变化自然重定向
-      logout: async (_redirect = true) => {
+      logout: async () => {
         stopRefreshTimer();
         disconnectSSEServer();
         try {
@@ -262,7 +258,7 @@ export const useAuthStore = create<AuthState>()(
             userInfo: null,
             error: null,
             loginLoading: false,
-              });
+          });
         }
       },
 

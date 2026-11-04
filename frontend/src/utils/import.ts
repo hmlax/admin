@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import ExcelJS from 'exceljs';
 
 /**
@@ -31,7 +32,7 @@ export async function generateImportTemplate(
 export async function runImportFile(
   file: File,
   fields: ImportField[],
-  createRow: (values: Record<string, any>) => Promise<any>,
+  createRow: (values: Record<string, unknown>) => Promise<unknown>,
 ): Promise<number> {
   const buffer = await file.arrayBuffer();
   const workbook = new ExcelJS.Workbook();
@@ -46,12 +47,12 @@ export async function runImportFile(
 
   let imported = 0;
   for (let i = 2; i <= ws.rowCount; i++) {
-    const row: Record<string, any> = {};
+    const row: Record<string, unknown> = {};
     ws.getRow(i).eachCell((cell, col) => {
       const label = labels[col - 1];
       if (label) row[label] = cell.value;
     });
-    const mapped: Record<string, any> = {};
+    const mapped: Record<string, unknown> = {};
     Object.keys(row).forEach((label) => {
       const prop = labelToProp.get(label);
       if (prop) mapped[prop] = row[label];
@@ -60,8 +61,8 @@ export async function runImportFile(
     try {
       await createRow(mapped);
       imported += 1;
-    } catch (err: any) {
-      throw new Error(`row ${i}: ${err?.message ?? String(err)}`);
+    } catch (err: unknown) {
+      throw new Error(`row ${i}: ${getErrorMessage(err) ?? String(err)}`, { cause: err });
     }
   }
   return imported;

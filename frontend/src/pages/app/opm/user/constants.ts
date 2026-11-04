@@ -2,7 +2,7 @@
  * 用户管理模块通用常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 用户状态 ==========
 

@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Button, Input, Alert, Descriptions, Space, Typography, App } from 'antd';
 import { DeleteOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type {
-  Script as Script,
-  TestRunScriptResponse,
-} from '@/api/generated/admin/v1';
+import type { Script as Script, TestRunScriptResponse } from '@/api/generated/admin/v1';
 import { useTestRunScript } from '@/api/hooks/script';
 import { type TestRunInputRow } from '../constants';
 
@@ -23,7 +20,7 @@ interface TestRunModalProps {
  * 以 id 模式调用后端 TestRun（在服务端一次性隔离引擎中执行）。
  * 支持配置若干「键 → JSON 值」的上下文输入。
  */
-const TestRunModal: React.FC<TestRunModalProps> = ({ open, script, onClose, onSuccess }) => {
+const TestRunModalContent: React.FC<TestRunModalProps> = ({ open, script, onClose, onSuccess }) => {
   const { t } = useTranslation('script');
   const { message } = App.useApp();
 
@@ -42,15 +39,6 @@ const TestRunModal: React.FC<TestRunModalProps> = ({ open, script, onClose, onSu
       message.error(error.message || t('fetchFailed'));
     },
   });
-
-  // 打开时重置
-  useEffect(() => {
-    if (open) {
-      setInputRows([]);
-      setResult(undefined);
-      setHadInvalidJson(false);
-    }
-  }, [open]);
 
   const updateRow = (index: number, patch: Partial<TestRunInputRow>) => {
     setInputRows((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -104,7 +92,9 @@ const TestRunModal: React.FC<TestRunModalProps> = ({ open, script, onClose, onSu
     >
       <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
         <Descriptions.Item label={t('language')}>{script?.language || '-'}</Descriptions.Item>
-        <Descriptions.Item label={t('hookPoint')}>{script?.hookPoint || t('unmounted')}</Descriptions.Item>
+        <Descriptions.Item label={t('hookPoint')}>
+          {script?.hookPoint || t('unmounted')}
+        </Descriptions.Item>
       </Descriptions>
 
       <Typography.Paragraph type="secondary" style={{ marginBottom: 8 }}>
@@ -142,7 +132,12 @@ const TestRunModal: React.FC<TestRunModalProps> = ({ open, script, onClose, onSu
       </Button>
 
       {hadInvalidJson && (
-        <Alert type="warning" showIcon title={t('testRunInvalidJson')} style={{ marginBottom: 12 }} />
+        <Alert
+          type="warning"
+          showIcon
+          title={t('testRunInvalidJson')}
+          style={{ marginBottom: 12 }}
+        />
       )}
 
       {result && (
@@ -195,4 +190,6 @@ function safeParse(value: string): unknown {
   }
 }
 
-export default TestRunModal;
+export default function TestRunModal(props: TestRunModalProps) {
+  return <TestRunModalContent key={`${props.open}-${props.script?.id}`} {...props} />;
+}

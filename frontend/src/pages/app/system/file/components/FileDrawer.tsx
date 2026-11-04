@@ -1,10 +1,6 @@
 import { useRef, useState } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormTextArea,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import { App } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -23,13 +19,7 @@ interface FileDrawerProps {
 /**
  * 文件编辑/创建抽屉组件
  */
-const FileDrawer: React.FC<FileDrawerProps> = ({
-  open,
-  mode,
-  data,
-  onClose,
-  onSuccess,
-}) => {
+const FileDrawer: React.FC<FileDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
   const { t } = useTranslation('file');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -67,7 +57,7 @@ const FileDrawer: React.FC<FileDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: FileItem) => {
     setConfirmLoading(true);
 
     try {
@@ -84,7 +74,9 @@ const FileDrawer: React.FC<FileDrawerProps> = ({
   return (
     <DrawerForm
       formRef={formRef}
-      title={mode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('edit')}
+      title={
+        mode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('edit')
+      }
       open={open}
       onValuesChange={handleValuesChange}
       initialValues={mode === 'edit' ? { ...data } : undefined}

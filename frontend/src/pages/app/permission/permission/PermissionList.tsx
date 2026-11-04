@@ -1,3 +1,4 @@
+import type { Permission as PermissionRecord } from '@/api/generated/admin/v1';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -11,7 +12,11 @@ import { useTranslation } from 'react-i18next';
 import { PaginationQuery } from '@/core';
 import { TABLE } from '@/config/constants';
 import { useProTableScrollY } from '@/hooks/useProTableScrollY';
-import { fetchListPermissions, useDeletePermission, useSyncPermissions } from '@/api/hooks/permission';
+import {
+  fetchListPermissions,
+  useDeletePermission,
+  useSyncPermissions,
+} from '@/api/hooks/permission';
 import { getStatusMap, getStatusOptions } from './constants';
 import PermissionDrawer from './PermissionDrawer';
 import { searchOptionRender } from '@/components/common/searchSubmitter';
@@ -34,7 +39,7 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingPermission, setEditingPermission] = useState<any>(null);
+  const [editingPermission, setEditingPermission] = useState<PermissionRecord | null>(null);
 
   const statusMap = getStatusMap(t);
 
@@ -64,7 +69,7 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
   });
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<PermissionRecord>[] = [
     {
       title: t('name'),
       dataIndex: 'name',
@@ -134,9 +139,13 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
         {groupId ? (
-          <ListTable<any>
+          <ListTable<PermissionRecord>
             actionRef={actionRef}
             columns={columns}
             headerTitle={false}
@@ -166,7 +175,8 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -176,7 +186,12 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListPermissions} columns={columns} filename="permissions" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListPermissions}
+                columns={columns}
+                filename="permissions"
+              />,
               <Popconfirm
                 key="syncPermissions"
                 title={t('syncConfirmTitle')}
@@ -185,7 +200,12 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
                 okText={t('common:button.ok')}
                 cancelText={t('common:button.cancel')}
               >
-                <Button color="orange" variant="outlined" icon={<SyncOutlined />} loading={syncMutation.isPending}>
+                <Button
+                  color="orange"
+                  variant="outlined"
+                  icon={<SyncOutlined />}
+                  loading={syncMutation.isPending}
+                >
                   {t('syncPermissions')}
                 </Button>
               </Popconfirm>,
@@ -215,7 +235,14 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
             scroll={{ y: tableScrollY }}
           />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+            }}
+          >
             <Empty description={t('selectGroupFirst')} />
           </div>
         )}
@@ -224,7 +251,7 @@ const PermissionList: React.FC<PermissionListProps> = ({ groupId }) => {
       <PermissionDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingPermission}
+        data={editingPermission ?? undefined}
         groupId={groupId!}
         onClose={() => {
           setDrawerOpen(false);

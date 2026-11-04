@@ -18,14 +18,14 @@ export const SourcePieChart = ({ data }: SourcePieChartProps) => {
   const { t: tAuditLog } = useI18n('login-audit-log');
 
   // 状态语义色：绿=成功、红=失败、琥珀=部分成功，未知状态回退中性灰
-  const statusColors: Record<string, string> = {
-    SUCCESS: '#34D399',
-    FAILED: '#F87171',
-    PARTIAL: '#FBBF24',
-  };
-  const fallbackColor = '#94A3B8';
-
   const option = useMemo(() => {
+    const statusColors: Record<string, string> = {
+      SUCCESS: '#34D399',
+      FAILED: '#F87171',
+      PARTIAL: '#FBBF24',
+    };
+    const fallbackColor = '#94A3B8';
+
     const items = data?.items ?? [];
 
     // 状态枚举名 → 本地化文案，复用登录审计日志模块的 status.* 翻译。

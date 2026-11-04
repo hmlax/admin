@@ -9,12 +9,12 @@ import type {
   StorageMetrics,
   StorageValue,
   SyncMessage,
-} from "./storage.types";
+} from './storage.types';
 
 class StorageManager implements IStorageCache {
   private readonly prefix: string | undefined;
   private readonly storage: Storage;
-  private readonly options: Required<Omit<StorageManagerOptions, "onMetrics" | "onSync">>;
+  private readonly options: Required<Omit<StorageManagerOptions, 'onMetrics' | 'onSync'>>;
   private readonly defaultTTL?: number | null;
   private readonly tabId: string;
   private channel: BroadcastChannel | null = null;
@@ -33,10 +33,10 @@ class StorageManager implements IStorageCache {
 
   constructor(options: StorageManagerOptions = {}) {
     const {
-      prefix = "",
-      storageType = "localStorage",
+      prefix = '',
+      storageType = 'localStorage',
       compressionThreshold = 1024,
-      evictionStrategy = "hybrid",
+      evictionStrategy = 'hybrid',
       maxItems = 0,
       maxUsageMB = 10,
       defaultTTL = null,
@@ -59,17 +59,17 @@ class StorageManager implements IStorageCache {
     this.onMetricsCallback = onMetrics;
     this.onSyncCallback = onSync;
     this.tabId =
-      typeof window !== "undefined"
+      typeof window !== 'undefined'
         ? `${prefix}_${Math.random().toString(36).substring(2, 10)}`
-        : "ssr";
+        : 'ssr';
 
     // SSR 兼容
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
       this.storage = {} as Storage;
       return;
     }
 
-    this.storage = storageType === "localStorage" ? window.localStorage : window.sessionStorage;
+    this.storage = storageType === 'localStorage' ? window.localStorage : window.sessionStorage;
     this.defaultTTL = defaultTTL;
 
     if (enableSync) this.initSync();
@@ -101,7 +101,7 @@ class StorageManager implements IStorageCache {
     try {
       this.storage.setItem(this.getMetaKey(key), JSON.stringify(meta));
     } catch (error) {
-      console.warn("[StorageManager] Failed to write meta:", error);
+      console.warn('[StorageManager] Failed to write meta:', error);
     }
   }
 
@@ -156,13 +156,13 @@ class StorageManager implements IStorageCache {
     try {
       this.storage.removeItem(this.getMetaKey(key));
     } catch (error) {
-      console.warn("[StorageManager] Failed to remove meta:", error);
+      console.warn('[StorageManager] Failed to remove meta:', error);
     }
   }
 
   private getAllMeta(): Map<string, StorageMeta> {
     const map = new Map<string, StorageMeta>();
-    const prefix = this.prefix ? `${this.prefix}:__meta:` : "__meta:";
+    const prefix = this.prefix ? `${this.prefix}:__meta:` : '__meta:';
 
     for (let i = 0; i < this.storage.length; i++) {
       const k = this.storage.key(i);
@@ -184,13 +184,13 @@ class StorageManager implements IStorageCache {
       const parsed: StorageValue<T> = JSON.parse(raw);
       // 检查过期
       if (parsed.expiry !== null && Date.now() > parsed.expiry) {
-        this.trackMetric("expirations");
+        this.trackMetric('expirations');
         return null;
       }
       return parsed.data;
     } catch (error) {
       console.error(`[StorageManager] Parse error:`, error);
-      this.trackMetric("errors");
+      this.trackMetric('errors');
       return null;
     }
   }
@@ -221,7 +221,7 @@ class StorageManager implements IStorageCache {
 
     // 如果键不存在，记录未命中
     if (raw === null) {
-      this.trackMetric("misses");
+      this.trackMetric('misses');
       return defaultValue;
     }
 
@@ -236,7 +236,7 @@ class StorageManager implements IStorageCache {
     }
 
     // 记录命中并更新元数据
-    this.trackMetric("hits");
+    this.trackMetric('hits');
     this.updateMetaOnAccess(key);
 
     return parsed;
@@ -257,32 +257,32 @@ class StorageManager implements IStorageCache {
       this.updateMetaOnSet(key, serialized, ttl);
 
       // 记录设置操作
-      this.trackMetric("sets");
+      this.trackMetric('sets');
 
       // 检查是否需要驱逐
       this.checkAndEvict();
 
       // 广播同步消息
-      this.broadcast({ type: "set", key, ts: Date.now() });
+      this.broadcast({ type: 'set', key, ts: Date.now() });
     } catch (error) {
-      this.trackMetric("errors");
+      this.trackMetric('errors');
       // 处理 QuotaExceededError
-      if (error instanceof DOMException && error.name === "QuotaExceededError") {
-        console.warn("[StorageManager] Storage quota exceeded, clearing expired items...");
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('[StorageManager] Storage quota exceeded, clearing expired items...');
         this.clearExpiredItems();
         // 重试一次
         try {
           const serialized = this.serializeValue(value, ttl);
           this.storage.setItem(fullKey, serialized);
           this.updateMetaOnSet(key, serialized, ttl);
-          this.trackMetric("sets");
-          this.broadcast({ type: "set", key, ts: Date.now() });
+          this.trackMetric('sets');
+          this.broadcast({ type: 'set', key, ts: Date.now() });
         } catch (retryError) {
-          console.error("[StorageManager] Failed to set item after cleanup:", retryError);
-          this.trackMetric("errors");
+          console.error('[StorageManager] Failed to set item after cleanup:', retryError);
+          this.trackMetric('errors');
         }
       } else {
-        console.error("[StorageManager] Set item error:", error);
+        console.error('[StorageManager] Set item error:', error);
       }
     }
   }
@@ -299,7 +299,7 @@ class StorageManager implements IStorageCache {
     this.removeMeta(key);
 
     // 广播同步消息
-    this.broadcast({ type: "remove", key, ts: Date.now() });
+    this.broadcast({ type: 'remove', key, ts: Date.now() });
   }
 
   /**
@@ -320,9 +320,9 @@ class StorageManager implements IStorageCache {
     // 倒序遍历，收集要删除的 key
     for (let i = this.storage.length - 1; i >= 0; i--) {
       const key = this.storage.key(i);
-      if (key && (this.prefix === "" || key.startsWith(`${this.prefix}:`))) {
+      if (key && (this.prefix === '' || key.startsWith(`${this.prefix}:`))) {
         // 排除元数据键，单独处理
-        if (!key.includes(":__meta:")) {
+        if (!key.includes(':__meta:')) {
           keysToRemove.push(key);
         }
         this.storage.removeItem(key);
@@ -337,7 +337,7 @@ class StorageManager implements IStorageCache {
     });
 
     // 广播同步消息
-    this.broadcast({ type: "clear", key: "*", ts: Date.now() });
+    this.broadcast({ type: 'clear', key: '*', ts: Date.now() });
   }
 
   /**
@@ -354,7 +354,7 @@ class StorageManager implements IStorageCache {
       if (!key) continue;
 
       // 跳过元数据键
-      if (key.includes(":__meta:")) {
+      if (key.includes(':__meta:')) {
         continue;
       }
 
@@ -384,7 +384,7 @@ class StorageManager implements IStorageCache {
       const shortKey =
         this.prefix && key.startsWith(`${this.prefix}:`) ? key.slice(this.prefix.length + 1) : key;
       this.removeMeta(shortKey);
-      this.trackMetric("expirations");
+      this.trackMetric('expirations');
     });
   }
 
@@ -441,7 +441,7 @@ class StorageManager implements IStorageCache {
   async getItems<T>(
     keys: string[],
     options: BatchGetOptions = {},
-    onProgress?: BatchProgressCallback
+    onProgress?: BatchProgressCallback,
   ): Promise<Record<string, T | null>> {
     const { skipExpired = true, includeRaw = false } = options;
     const result: Record<string, T | null> = {};
@@ -459,8 +459,8 @@ class StorageManager implements IStorageCache {
 
         if (!raw) {
           result[key] = null;
-          this.trackMetric("misses");
-          onProgress?.({ current: i + 1, total: keys.length, key, status: "failed" });
+          this.trackMetric('misses');
+          onProgress?.({ current: i + 1, total: keys.length, key, status: 'failed' });
           continue;
         }
 
@@ -468,12 +468,12 @@ class StorageManager implements IStorageCache {
 
         // 检查过期
         if (parsed.expiry !== null && Date.now() > parsed.expiry) {
-          this.trackMetric("expirations");
+          this.trackMetric('expirations');
           if (skipExpired) {
             this.storage.removeItem(fullKey);
             this.removeMeta(key);
             result[key] = null;
-            onProgress?.({ current: i + 1, total: keys.length, key, status: "expired" });
+            onProgress?.({ current: i + 1, total: keys.length, key, status: 'expired' });
           } else {
             // 不过滤过期项，返回原始数据（调用方自行处理）
             result[key] = includeRaw ? (parsed as unknown as T) : null;
@@ -482,17 +482,17 @@ class StorageManager implements IStorageCache {
         }
 
         result[key] = parsed.data;
-        this.trackMetric("hits");
+        this.trackMetric('hits');
         this.updateMetaOnAccess(key);
-        onProgress?.({ current: i + 1, total: keys.length, key, status: "success" });
+        onProgress?.({ current: i + 1, total: keys.length, key, status: 'success' });
       } catch (error) {
         console.error(`[StorageManager] getItems error for key "${key}":`, error);
-        this.trackMetric("errors");
+        this.trackMetric('errors');
         // 解析失败则清理脏数据
         this.storage.removeItem(fullKey);
         this.removeMeta(key);
         result[key] = null;
-        onProgress?.({ current: i + 1, total: keys.length, key, status: "failed" });
+        onProgress?.({ current: i + 1, total: keys.length, key, status: 'failed' });
       }
 
       // 微任务让出主线程，避免阻塞 UI
@@ -512,7 +512,7 @@ class StorageManager implements IStorageCache {
    */
   async setItems<T>(
     items: Record<string, T | BatchSetItem<T>>,
-    onProgress?: BatchProgressCallback
+    onProgress?: BatchProgressCallback,
   ): Promise<BatchResult<T>> {
     const result: BatchResult<T> = {
       success: {},
@@ -523,7 +523,7 @@ class StorageManager implements IStorageCache {
     if (!this.storage) {
       // 将所有项标记为失败
       for (const key of Object.keys(items)) {
-        result.failed[key] = new Error("Storage not available");
+        result.failed[key] = new Error('Storage not available');
       }
       return result;
     }
@@ -542,16 +542,16 @@ class StorageManager implements IStorageCache {
         this.storage.setItem(fullKey, serialized);
         this.updateMetaOnSet(key, serialized, ttl);
         result.success[key] = value;
-        this.trackMetric("sets");
-        onProgress?.({ current: i + 1, total: entries.length, key, status: "success" });
+        this.trackMetric('sets');
+        onProgress?.({ current: i + 1, total: entries.length, key, status: 'success' });
       } catch (error) {
-        this.trackMetric("errors");
+        this.trackMetric('errors');
         const err = error instanceof Error ? error : new Error(String(error));
 
         // 处理配额超限：自动清理过期项后重试
-        if (err.name === "QuotaExceededError") {
+        if (err.name === 'QuotaExceededError') {
           console.warn(
-            "[StorageManager] Quota exceeded during batch set, cleaning expired items..."
+            '[StorageManager] Quota exceeded during batch set, cleaning expired items...',
           );
           this.clearExpiredItems();
 
@@ -561,20 +561,21 @@ class StorageManager implements IStorageCache {
             this.storage.setItem(fullKey, serialized);
             this.updateMetaOnSet(key, serialized, ttl);
             result.success[key] = value;
-            this.trackMetric("sets");
-            onProgress?.({ current: i + 1, total: entries.length, key, status: "success" });
+            this.trackMetric('sets');
+            onProgress?.({ current: i + 1, total: entries.length, key, status: 'success' });
             continue;
           } catch (retryError) {
+            console.error('Operation failed:', retryError);
             result.failed[key] =
-              retryError instanceof Error ? retryError : new Error("Retry failed");
-            this.trackMetric("errors");
-            onProgress?.({ current: i + 1, total: entries.length, key, status: "failed" });
+              retryError instanceof Error ? retryError : new Error('Retry failed');
+            this.trackMetric('errors');
+            onProgress?.({ current: i + 1, total: entries.length, key, status: 'failed' });
             continue;
           }
         }
 
         result.failed[key] = err;
-        onProgress?.({ current: i + 1, total: entries.length, key, status: "failed" });
+        onProgress?.({ current: i + 1, total: entries.length, key, status: 'failed' });
       }
 
       // 每 50 项让出主线程
@@ -587,7 +588,7 @@ class StorageManager implements IStorageCache {
     this.checkAndEvict();
 
     // 广播同步消息
-    this.broadcast({ type: "set", key: "*", ts: Date.now() });
+    this.broadcast({ type: 'set', key: '*', ts: Date.now() });
 
     return result;
   }
@@ -603,7 +604,7 @@ class StorageManager implements IStorageCache {
 
     if (!this.storage) {
       for (const key of keys) {
-        failed[key] = new Error("Storage not available");
+        failed[key] = new Error('Storage not available');
       }
       return { removed, failed };
     }
@@ -615,13 +616,14 @@ class StorageManager implements IStorageCache {
         this.removeMeta(key);
         removed.push(key);
       } catch (error) {
+        console.error('Operation failed:', error);
         failed[key] = error instanceof Error ? error : new Error(String(error));
       }
     }
 
     // 广播同步消息
     if (removed.length > 0) {
-      this.broadcast({ type: "remove", key: "*", ts: Date.now() });
+      this.broadcast({ type: 'remove', key: '*', ts: Date.now() });
     }
 
     return { removed, failed };
@@ -651,7 +653,7 @@ class StorageManager implements IStorageCache {
    * 内部方法：标准化批量设置的值配置
    */
   private _normalizeBatchValue<T>(item: T | BatchSetItem<T>): { value: T; ttl?: number | null } {
-    if (item && typeof item === "object" && "value" in item) {
+    if (item && typeof item === 'object' && 'value' in item) {
       const batchItem = item as BatchSetItem<T>;
       return { value: batchItem.value, ttl: batchItem.ttl };
     }
@@ -686,7 +688,7 @@ class StorageManager implements IStorageCache {
       setTimeout(() => {
         keysToEvict.forEach((k) => this.removeItem(k));
         console.log(
-          `[StorageManager] Evicted ${evicted} items using ${this.options.evictionStrategy} strategy`
+          `[StorageManager] Evicted ${evicted} items using ${this.options.evictionStrategy} strategy`,
         );
       }, 0);
     }
@@ -708,10 +710,10 @@ class StorageManager implements IStorageCache {
       const strategy = this.options.evictionStrategy;
       let scoreA: number, scoreB: number;
 
-      if (strategy === "lru") {
+      if (strategy === 'lru') {
         scoreA = ma.t;
         scoreB = mb.t;
-      } else if (strategy === "lfu") {
+      } else if (strategy === 'lfu') {
         scoreA = ma.a;
         scoreB = mb.a;
       } else {
@@ -728,9 +730,9 @@ class StorageManager implements IStorageCache {
   }
 
   private initSync(): void {
-    if (typeof window === "undefined" || !window.BroadcastChannel) return;
+    if (typeof window === 'undefined' || !window.BroadcastChannel) return;
 
-    this.channel = new BroadcastChannel(`__sm_sync__${this.prefix || "default"}`);
+    this.channel = new BroadcastChannel(`__sm_sync__${this.prefix || 'default'}`);
     this.channel.onmessage = (e: MessageEvent<SyncMessage>) => {
       const msg = e.data;
       if (msg.tabId === this.tabId) return; // 忽略自身发出的消息
@@ -742,13 +744,13 @@ class StorageManager implements IStorageCache {
 
   private handleSyncMessage(msg: SyncMessage): void {
     // 同步当前实例状态，避免脏读
-    if (msg.type === "remove" || msg.type === "clear") {
+    if (msg.type === 'remove' || msg.type === 'clear') {
       // 元数据已随 removeItem 清理，无需额外操作
     }
     // set 操作已在 getItem 中通过元数据保证一致性
   }
 
-  private broadcast(msg: Omit<SyncMessage, "tabId">): void {
+  private broadcast(msg: Omit<SyncMessage, 'tabId'>): void {
     if (!this.channel || !this.options.enableSync) return;
     this.channel.postMessage({ ...msg, tabId: this.tabId });
   }
@@ -763,7 +765,7 @@ class StorageManager implements IStorageCache {
   // ================= 监控埋点 =================
 
   private trackMetric(key: keyof StorageMetrics): void {
-    (this.metrics as any)[key]++;
+    this.metrics[key]++;
     this.updateHitRate();
     this.debounceReportMetrics();
   }
@@ -774,7 +776,7 @@ class StorageManager implements IStorageCache {
   }
 
   private debounceReportMetrics(): void {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
     if (this.metricsDebounceTimer) clearTimeout(this.metricsDebounceTimer);
     this.metricsDebounceTimer = window.setTimeout(() => {
       this.onMetricsCallback?.({ ...this.metrics });
@@ -782,7 +784,7 @@ class StorageManager implements IStorageCache {
   }
 
   private async updateQuotaUsage(): Promise<void> {
-    if (typeof window === "undefined" || !navigator.storage?.estimate) return;
+    if (typeof window === 'undefined' || !navigator.storage?.estimate) return;
     try {
       const est = await navigator.storage.estimate();
       this.metrics.quotaUsageBytes = est.usage || 0;

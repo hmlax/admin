@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQueryClient,
-  type UseMutationOptions,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient, type UseMutationOptions } from '@tanstack/react-query';
 import {
   type CreateNotificationRuleRequest,
   type DeleteNotificationRuleRequest,
@@ -32,11 +28,7 @@ export function fetchListNotificationRules(
 }
 
 export function useCreateNotificationRule(
-  options?: UseMutationOptions<
-    NotificationRule,
-    Error,
-    CreateNotificationRuleRequest
-  >,
+  options?: UseMutationOptions<NotificationRule, Error, CreateNotificationRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -47,7 +39,7 @@ export function useCreateNotificationRule(
 }
 
 export function useUpdateNotificationRule(
-  options?: UseMutationOptions<{}, Error, UpdateNotificationRuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, UpdateNotificationRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -58,7 +50,7 @@ export function useUpdateNotificationRule(
 }
 
 export function useDeleteNotificationRule(
-  options?: UseMutationOptions<{}, Error, DeleteNotificationRuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteNotificationRuleRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({

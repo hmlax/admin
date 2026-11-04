@@ -1,10 +1,8 @@
+import { getErrorMessage } from '@/utils/error';
 import { Table, Tag, Typography, App, Popconfirm, Button } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
-import {
-  useListMyOnlineSessions,
-  useRevokeMyOnlineSession,
-} from '@/api/hooks/online-session';
+import { useListMyOnlineSessions, useRevokeMyOnlineSession } from '@/api/hooks/online-session';
 import type { OnlineSession as OnlineSession } from '@/api/generated/admin/v1';
 import { formatDateTime } from '@/utils/date';
 
@@ -31,9 +29,9 @@ const MySessions = () => {
         clientType: record.clientType,
         jti: record.jti,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to revoke session:', error);
-      message.error(error.message || t('revokeFailed'));
+      message.error(getErrorMessage(error) || t('revokeFailed'));
     }
   };
 
@@ -65,7 +63,7 @@ const MySessions = () => {
       title: t('loginAt'),
       dataIndex: 'loginAt',
       width: 170,
-      render: (val) => formatDateTime(val as any),
+      render: (val) => formatDateTime(val as unknown),
     },
     {
       title: t('status'),

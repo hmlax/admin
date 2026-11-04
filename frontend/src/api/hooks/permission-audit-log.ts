@@ -13,7 +13,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPermissionAuditLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPermissionAuditLogResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPermissionAuditLogResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPermissionAuditLogs', query],
@@ -32,7 +32,7 @@ export async function fetchListPermissionAuditLogs(params: PaginationQuery) {
 
 export function useGetPermissionAuditLog(
   req: GetPermissionAuditLogRequest,
-  options?: UseQueryOptions<PermissionAuditLog, Error>,
+  options?: Omit<UseQueryOptions<PermissionAuditLog, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPermissionAuditLog', req],

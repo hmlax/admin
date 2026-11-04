@@ -22,17 +22,14 @@ export function fetchListNotificationTemplates(
 ): Promise<ListNotificationTemplateResponse> {
   return queryClient.fetchQuery({
     queryKey: [LIST_KEY, query],
-    queryFn: () => apiClient.notificationTemplateService.ListNotificationTemplate(query.toRawParams()),
+    queryFn: () =>
+      apiClient.notificationTemplateService.ListNotificationTemplate(query.toRawParams()),
     retry: 0,
   });
 }
 
 export function useCreateNotificationTemplate(
-  options?: UseMutationOptions<
-    NotificationTemplate,
-    Error,
-    CreateNotificationTemplateRequest
-  >,
+  options?: UseMutationOptions<NotificationTemplate, Error, CreateNotificationTemplateRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -43,7 +40,7 @@ export function useCreateNotificationTemplate(
 }
 
 export function useUpdateNotificationTemplate(
-  options?: UseMutationOptions<{}, Error, UpdateNotificationTemplateRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, UpdateNotificationTemplateRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -54,7 +51,7 @@ export function useUpdateNotificationTemplate(
 }
 
 export function useDeleteNotificationTemplate(
-  options?: UseMutationOptions<{}, Error, DeleteNotificationTemplateRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteNotificationTemplateRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({

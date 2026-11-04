@@ -1,4 +1,12 @@
-import type { ProLayoutProps } from '@ant-design/pro-components';
+import type { MenuDataItem } from '@ant-design/pro-components';
+export interface LayoutMenuItem extends Omit<MenuDataItem, 'children'> {
+  path: string;
+  name?: string;
+  key?: string;
+  icon?: string;
+  order?: number;
+  children?: LayoutMenuItem[];
+}
 import type { AppRouteObject } from '@/core/router/types';
 
 type MenuRoute = AppRouteObject;
@@ -6,7 +14,7 @@ type MenuRoute = AppRouteObject;
 /**
  * 递归排序菜单树（按 order 字段）
  */
-const sortMenuTree = (menuList: any[]): any[] => {
+const sortMenuTree = (menuList: LayoutMenuItem[]): LayoutMenuItem[] => {
   return menuList
     .map((menu) => ({
       ...menu,
@@ -25,7 +33,7 @@ export const transformRoutesToMenu = (
   routes: MenuRoute[],
   permissions: string[],
   parentPath: string = '',
-): NonNullable<ProLayoutProps['route']>['routes'] => {
+): LayoutMenuItem[] => {
   const menus = routes
     .filter((route) => {
       // 过滤隐藏菜单
@@ -47,10 +55,13 @@ export const transformRoutesToMenu = (
         ? route.path
         : `${parentPath}/${route.path}`.replace(/\/+/g, '/');
 
-      const menuItem: any = {
+      const menuItem: LayoutMenuItem = {
         path: fullPath, // 使用完整路径作为 key
-        name: route.label || route.meta?.title || route.name,
-        icon: route.meta?.icon,
+        name:
+          (typeof route.label === 'string' ? route.label : undefined) ||
+          route.meta?.title ||
+          route.name,
+        icon: typeof route.meta?.icon === 'string' ? route.meta.icon : undefined,
         order: route.meta?.order, // 提取排序字段
       };
 

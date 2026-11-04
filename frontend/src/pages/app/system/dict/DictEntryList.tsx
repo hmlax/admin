@@ -1,3 +1,4 @@
+import type { DictEntry as DictEntryRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -38,7 +39,7 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [editingEntry, setEditingEntry] = useState<DictEntryRecord | null>(null);
 
   // 当 typeId 变化时自动刷新列表
   useEffect(() => {
@@ -60,7 +61,7 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
   });
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<DictEntryRecord>[] = [
     {
       title: t('entryLabel'),
       dataIndex: 'entryLabel',
@@ -94,8 +95,8 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
         options: enableBoolOptions(t),
       },
       render: (_, record) => (
-        <Tag color={getEnableColor(record.isEnabled)}>
-          {getEnableLabel(t, record.isEnabled)}
+        <Tag color={getEnableColor(record.isEnabled ?? false)}>
+          {getEnableLabel(t, record.isEnabled ?? false)}
         </Tag>
       ),
     },
@@ -136,9 +137,13 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
         {typeId ? (
-          <ListTable<any>
+          <ListTable<DictEntryRecord>
             actionRef={actionRef}
             columns={columns}
             headerTitle={false}
@@ -168,7 +173,8 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -178,7 +184,12 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListDictEntries} columns={columns} filename="dict-entries" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListDictEntries}
+                columns={columns}
+                filename="dict-entries"
+              />,
               <Button
                 key="create"
                 color="primary"
@@ -205,7 +216,14 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
             scroll={{ y: tableScrollY }}
           />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+            }}
+          >
             <Empty description={t('selectTypeFirst')} />
           </div>
         )}
@@ -214,7 +232,7 @@ const DictEntryList: React.FC<DictEntryListProps> = ({ typeId }) => {
       <DictEntryDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingEntry}
+        data={editingEntry ?? undefined}
         typeId={typeId!}
         onClose={() => {
           setDrawerOpen(false);

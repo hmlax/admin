@@ -13,7 +13,7 @@ import { apiClient } from '@/api/client';
 
 export function useListApiAuditLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListApiAuditLogResponse, Error>,
+  options?: Omit<UseQueryOptions<ListApiAuditLogResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listApiAuditLogs', query],
@@ -32,7 +32,7 @@ export async function fetchListApiAuditLogs(params: PaginationQuery) {
 
 export function useGetApiAuditLog(
   req: GetApiAuditLogRequest,
-  options?: UseQueryOptions<ApiAuditLog, Error>,
+  options?: Omit<UseQueryOptions<ApiAuditLog, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getApiAuditLog', req],

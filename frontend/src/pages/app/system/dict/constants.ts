@@ -2,7 +2,7 @@
  * 字典模块通用常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 启用/禁用 ==========
 
@@ -31,7 +31,10 @@ export function enableBoolRadioOptions(t: TFn) {
 /**
  * 获取条目标签（根据当前语言环境从 i18n 中提取）
  */
-export function getEntryLabel(row: any, locale: string): string {
+export function getEntryLabel(
+  row: { i18n?: Record<string, { entryLabel?: string }> },
+  locale: string,
+): string {
   const currentI18n = row.i18n?.[locale];
   if (!currentI18n) return '';
   return currentI18n.entryLabel ?? '';

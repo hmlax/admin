@@ -58,9 +58,9 @@ export const setupLocaleSync = (callback?: (locale: SupportedLocale) => void): (
  * @param params 翻译参数
  */
 export const syncPageTitle = (
-  t: (key: string, params?: Record<string, any>) => string,
+  t: (key: string, params?: Record<string, unknown>) => string,
   titleKey: string,
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
 ): void => {
   document.title = t(titleKey, params);
 };

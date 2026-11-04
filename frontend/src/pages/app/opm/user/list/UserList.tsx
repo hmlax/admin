@@ -1,10 +1,18 @@
+import type { User as UserRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Button, Tag, App } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, InfoCircleOutlined , SafetyOutlined, PrinterOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  InfoCircleOutlined,
+  SafetyOutlined,
+  PrinterOutlined,
+} from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -48,16 +56,17 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
   const canUpdate = hasApiAccess('PUT', USER_DETAIL_API_PATH);
   const canDelete = hasApiAccess('DELETE', USER_DETAIL_API_PATH);
   const canReadDetail = hasApiAccess('GET', USER_DETAIL_API_PATH);
-  const canPrint = hasApiAccess('GET', '/admin/v1/print-templates') &&
+  const canPrint =
+    hasApiAccess('GET', '/admin/v1/print-templates') &&
     hasApiAccess('POST', '/admin/v1/print-templates:render-pdf');
 
   // 行打印定式（docs/print_template.md §5）：模板按 resourceKey 匹配，无绑定回退通用模板；
   // print 入参传数组即批量（内核份数合并单文档）
   const { node: printDialogNode, print: printRow } = usePrintTemplateDialog();
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<UserRecord[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
 
   const statusMap = getUserStatusMap(t);
 
@@ -94,178 +103,183 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
     onError: (err: Error) => message.error(err.message || t('resetMfaFailed')),
   });
 
-  const columns: ProColumns<any>[] = ([
-    {
-      title: t('username'),
-      dataIndex: 'username',
-      width: 120,
-      fixed: 'left',
-    },
-    {
-      title: t('realname'),
-      dataIndex: 'realname',
-      width: 130,
-    },
-    {
-      title: t('nickname'),
-      dataIndex: 'nickname',
-      width: 100,
-    },
-    {
-      title: t('email'),
-      dataIndex: 'email',
-      width: 160,
-    },
-    {
-      title: t('mobile'),
-      dataIndex: 'mobile',
-      width: 130,
-    },
-    {
-      title: t('orgUnitIds'),
-      dataIndex: 'orgUnitNames',
-      width: 130,
-      hideInSearch: true,
-      render: (_, record) => (
-        <span>
-          {(record.orgUnitNames || []).map((name: string, idx: number) => (
-            <Tag key={idx} style={{ marginBottom: 2 }}>
-              {name}
-            </Tag>
-          ))}
-        </span>
-      ),
-    },
-    {
-      title: t('positionIds'),
-      dataIndex: 'positionNames',
-      width: 130,
-      hideInSearch: true,
-      render: (_, record) => (
-        <span>
-          {(record.positionNames || []).map((name: string, idx: number) => (
-            <Tag key={idx} color="blue" style={{ marginBottom: 2 }}>
-              {name}
-            </Tag>
-          ))}
-        </span>
-      ),
-    },
-    {
-      title: t('roleIds'),
-      dataIndex: 'roleNames',
-      width: 120,
-      hideInSearch: true,
-      render: (_, record) => (
-        <span>
-          {(record.roleNames || []).map((name: string, idx: number) => (
-            <Tag key={idx} color="purple" style={{ marginBottom: 2 }}>
-              {name}
-            </Tag>
-          ))}
-        </span>
-      ),
-    },
-    {
-      title: t('status'),
-      dataIndex: 'status',
-      width: 95,
-      valueType: 'select',
-      fieldProps: {
-        options: getUserStatusOptions(t),
+  const columns: ProColumns<UserRecord>[] = (
+    [
+      {
+        title: t('username'),
+        dataIndex: 'username',
+        width: 120,
+        fixed: 'left',
       },
-      render: (_, record) => {
-        const status = record.status as string;
-        const config = statusMap[status] || { text: status, color: 'default' };
-        return <Tag color={config.color}>{config.text}</Tag>;
+      {
+        title: t('realname'),
+        dataIndex: 'realname',
+        width: 130,
       },
-    },
-    {
-      title: t('lastLoginAt'),
-      dataIndex: 'lastLoginAt',
-      width: 160,
-      hideInSearch: true,
-      render: (_, record) => {
-        if (!record.lastLoginAt) return '-';
-        return formatTimestamp(record.lastLoginAt);
+      {
+        title: t('nickname'),
+        dataIndex: 'nickname',
+        width: 100,
       },
-    },
-    {
-      title: t('createdAt'),
-      dataIndex: 'createdAt',
-      width: 160,
-      hideInSearch: true,
-      render: (_, record) => {
-        if (!record.createdAt) return '-';
-        return formatTimestamp(record.createdAt);
+      {
+        title: t('email'),
+        dataIndex: 'email',
+        width: 160,
       },
-    },
-    {
-      title: t('remark'),
-      dataIndex: 'remark',
-      width: 200,
-      hideInSearch: true,
-      ellipsis: true,
-    },
-    {
-      title: t('action'),
-      valueType: 'option',
-      width: 370,
-      render: (_, record) => (
-        <TableActions
-          record={record}
-          actions={[
-            {
-              key: 'detail',
-              hidden: !canReadDetail,
-              label: t('detail'),
-              icon: <InfoCircleOutlined />,
-              onClick: () => navigate(`/opm/users/detail/${record.id}`),
-            },
-            {
-              key: 'print',
-              hidden: !canPrint,
-              label: t('printTemplate:print'),
-              icon: <PrinterOutlined />,
-              onClick: () => printRow('system/user', record),
-            },
-            {
-              key: 'edit',
-              hidden: !canUpdate,
-              label: t('common:button.edit'),
-              icon: <EditOutlined />,
-              onClick: () => {
-                setEditingUser(record);
-                setDrawerMode('edit');
-                setDrawerOpen(true);
+      {
+        title: t('mobile'),
+        dataIndex: 'mobile',
+        width: 130,
+      },
+      {
+        title: t('orgUnitIds'),
+        dataIndex: 'orgUnitNames',
+        width: 130,
+        hideInSearch: true,
+        render: (_, record) => (
+          <span>
+            {(record.orgUnitNames || []).map((name: string, idx: number) => (
+              <Tag key={idx} style={{ marginBottom: 2 }}>
+                {name}
+              </Tag>
+            ))}
+          </span>
+        ),
+      },
+      {
+        title: t('positionIds'),
+        dataIndex: 'positionNames',
+        width: 130,
+        hideInSearch: true,
+        render: (_, record) => (
+          <span>
+            {(record.positionNames || []).map((name: string, idx: number) => (
+              <Tag key={idx} color="blue" style={{ marginBottom: 2 }}>
+                {name}
+              </Tag>
+            ))}
+          </span>
+        ),
+      },
+      {
+        title: t('roleIds'),
+        dataIndex: 'roleNames',
+        width: 120,
+        hideInSearch: true,
+        render: (_, record) => (
+          <span>
+            {(record.roleNames || []).map((name: string, idx: number) => (
+              <Tag key={idx} color="purple" style={{ marginBottom: 2 }}>
+                {name}
+              </Tag>
+            ))}
+          </span>
+        ),
+      },
+      {
+        title: t('status'),
+        dataIndex: 'status',
+        width: 95,
+        valueType: 'select',
+        fieldProps: {
+          options: getUserStatusOptions(t),
+        },
+        render: (_, record) => {
+          const status = record.status as string;
+          const config = statusMap[status] || { text: status, color: 'default' };
+          return <Tag color={config.color}>{config.text}</Tag>;
+        },
+      },
+      {
+        title: t('lastLoginAt'),
+        dataIndex: 'lastLoginAt',
+        width: 160,
+        hideInSearch: true,
+        render: (_, record) => {
+          if (!record.lastLoginAt) return '-';
+          return formatTimestamp(record.lastLoginAt);
+        },
+      },
+      {
+        title: t('createdAt'),
+        dataIndex: 'createdAt',
+        width: 160,
+        hideInSearch: true,
+        render: (_, record) => {
+          if (!record.createdAt) return '-';
+          return formatTimestamp(record.createdAt);
+        },
+      },
+      {
+        title: t('remark'),
+        dataIndex: 'remark',
+        width: 200,
+        hideInSearch: true,
+        ellipsis: true,
+      },
+      {
+        title: t('action'),
+        valueType: 'option',
+        width: 370,
+        render: (_, record) => (
+          <TableActions
+            record={record}
+            actions={[
+              {
+                key: 'detail',
+                hidden: !canReadDetail,
+                label: t('detail'),
+                icon: <InfoCircleOutlined />,
+                onClick: () => navigate(`/opm/users/detail/${record.id}`),
               },
-            },
-            {
-              key: 'reset-mfa',
-              label: t('resetMfa'),
-              icon: <SafetyOutlined />,
-              hidden: !isPlatformSide || !hasApiAccess('POST', '/admin/v1/mfa/disable'),
-              confirm: { title: t('resetMfaConfirmTitle'), description: t('resetMfaConfirmDesc') },
-              onClick: () =>
-                record.id && adminResetMfa.mutate({ userId: record.id, method: 'TOTP' } as any),
-            },
-            {
-              key: 'delete',
-              hidden: !canDelete,
-              label: t('common:button.delete'),
-              icon: <DeleteOutlined />,
-              danger: true,
-              confirm: {
-                title: t('deleteConfirmTitle'),
-                description: t('deleteConfirmDesc', { moduleName: t('moduleName') }),
+              {
+                key: 'print',
+                hidden: !canPrint,
+                label: t('printTemplate:print'),
+                icon: <PrinterOutlined />,
+                onClick: () => printRow('system/user', record),
               },
-              onClick: () => record.id && deleteMutation.mutate(record.id),
-            },
-          ]}
-        />
-      ),
-    },
-  ] satisfies ProColumns<any>[]).filter((col) => {
+              {
+                key: 'edit',
+                hidden: !canUpdate,
+                label: t('common:button.edit'),
+                icon: <EditOutlined />,
+                onClick: () => {
+                  setEditingUser(record);
+                  setDrawerMode('edit');
+                  setDrawerOpen(true);
+                },
+              },
+              {
+                key: 'reset-mfa',
+                label: t('resetMfa'),
+                icon: <SafetyOutlined />,
+                hidden: !isPlatformSide || !hasApiAccess('POST', '/admin/v1/mfa/disable'),
+                confirm: {
+                  title: t('resetMfaConfirmTitle'),
+                  description: t('resetMfaConfirmDesc'),
+                },
+                onClick: () =>
+                  record.id && adminResetMfa.mutate({ userId: record.id, method: 'TOTP' }),
+              },
+              {
+                key: 'delete',
+                hidden: !canDelete,
+                label: t('common:button.delete'),
+                icon: <DeleteOutlined />,
+                danger: true,
+                confirm: {
+                  title: t('deleteConfirmTitle'),
+                  description: t('deleteConfirmDesc', { moduleName: t('moduleName') }),
+                },
+                onClick: () => record.id && deleteMutation.mutate(record.id),
+              },
+            ]}
+          />
+        ),
+      },
+    ] satisfies ProColumns<UserRecord>[]
+  ).filter((col) => {
     const key = typeof col.dataIndex === 'string' ? col.dataIndex : undefined;
     return !key || !userHiddenFields.has(key);
   });
@@ -277,13 +291,13 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
         className="page-container-content"
         style={{ padding: '0 8px', height: '100%' }}
       >
-        <ListTable<any>
+        <ListTable<UserRecord>
           actionRef={actionRef}
           columns={columns}
           headerTitle={false}
           params={{ tenantId, orgUnitId }}
           request={async (params) => {
-            const formValues: Record<string, any> = {
+            const formValues: Record<string, unknown> = {
               ...Object.fromEntries(
                 Object.entries(params).filter(
                   ([key]) => !['current', 'pageSize', 'tenantId', 'orgUnitId'].includes(key),
@@ -315,43 +329,55 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
             };
           }}
           rowKey="id"
-          rowSelection={canPrint ? {
-            onChange: (_keys, rows) => setSelectedRows(rows),
-            selections: true,
-          } : false}
-          search={{ optionRender: searchOptionRender,
-            labelWidth: 'auto',
-            defaultCollapsed: true,
-          }}
+          rowSelection={
+            canPrint
+              ? {
+                  onChange: (_keys, rows) => setSelectedRows(rows),
+                  selections: true,
+                }
+              : false
+          }
+          search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: true }}
           pagination={{
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
             showSizeChanger: true,
             showQuickJumper: true,
           }}
-          toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListUsers} columns={columns} filename="users" />,
-            canPrint ? <Button
-              key="print-batch"
-              icon={<PrinterOutlined />}
-              disabled={selectedRows.length === 0}
-              onClick={() => printRow('system/user', selectedRows)}
-            >
-              {t('printTemplate:batchPrint')}
-            </Button> : null,
-            canCreate ? <Button
-              key="create"
-              color="primary"
-              variant="outlined"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setEditingUser(null);
-                setDrawerMode('create');
-                setDrawerOpen(true);
-              }}
-            >
-              {t('common:button.add')}
-            </Button> : null,
-          ].filter(Boolean)}
+          toolBarRender={() =>
+            [
+              <TableExportButton
+                key="export"
+                fetcher={fetchListUsers}
+                columns={columns}
+                filename="users"
+              />,
+              canPrint ? (
+                <Button
+                  key="print-batch"
+                  icon={<PrinterOutlined />}
+                  disabled={selectedRows.length === 0}
+                  onClick={() => printRow('system/user', selectedRows)}
+                >
+                  {t('printTemplate:batchPrint')}
+                </Button>
+              ) : null,
+              canCreate ? (
+                <Button
+                  key="create"
+                  color="primary"
+                  variant="outlined"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setEditingUser(null);
+                    setDrawerMode('create');
+                    setDrawerOpen(true);
+                  }}
+                >
+                  {t('common:button.add')}
+                </Button>
+              ) : null,
+            ].filter(Boolean)
+          }
           options={{
             density: true,
             fullScreen: true,
@@ -365,19 +391,21 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
         />
       </div>
 
-      {(canCreate || canUpdate) && <UserDrawer
-        open={drawerOpen}
-        mode={drawerMode}
-        data={editingUser}
-        tenantId={tenantId}
-        onClose={() => {
-          setDrawerOpen(false);
-          setEditingUser(null);
-        }}
-        onSuccess={() => {
-          actionRef.current?.reload();
-        }}
-      />}
+      {(canCreate || canUpdate) && (
+        <UserDrawer
+          open={drawerOpen}
+          mode={drawerMode}
+          data={editingUser ?? undefined}
+          tenantId={tenantId}
+          onClose={() => {
+            setDrawerOpen(false);
+            setEditingUser(null);
+          }}
+          onSuccess={() => {
+            actionRef.current?.reload();
+          }}
+        />
+      )}
 
       {printDialogNode}
     </>
@@ -389,12 +417,18 @@ export default UserList;
 /**
  * 格式化 wellKnownTimestamp（秒级或毫秒级时间戳）
  */
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '-';
   let ms: number;
-  if (typeof ts === 'object' && ts.seconds !== undefined) {
+  if (
+    typeof ts === 'object' &&
+    'seconds' in ts &&
+    (typeof ts.seconds === 'string' || typeof ts.seconds === 'number')
+  ) {
     // protobuf Timestamp: { seconds: string|number, nanos?: number }
-    ms = Number(ts.seconds) * 1000 + Math.floor((ts.nanos || 0) / 1e6);
+    ms =
+      Number(ts.seconds) * 1000 +
+      Math.floor(('nanos' in ts && typeof ts.nanos === 'number' ? ts.nanos : 0) / 1e6);
   } else if (typeof ts === 'number') {
     ms = ts > 1e12 ? ts : ts * 1000;
   } else if (typeof ts === 'string') {

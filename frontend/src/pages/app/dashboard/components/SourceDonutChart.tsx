@@ -19,45 +19,45 @@ export const SourceDonutChart = ({ data }: SourceDonutChartProps) => {
   const { t: tAuditLog } = useI18n('operation-audit-log');
 
   // 主色系扩展调色板：以 #006BE6 为核心的低饱和暗色友好序列（蓝→青→靛→绿→紫…）
-  const palette = [
-    '#006BE6',
-    '#22D3EE',
-    '#818CF8',
-    '#34D399',
-    '#A78BFA',
-    '#FBBF24',
-    '#F472B6',
-    '#2DD4BF',
-    '#94A3B8',
-  ];
-
-  // 操作类型枚举名 → 本地化文案，复用操作审计日志模块的 action.* 翻译。
-  const actionLabel = (label?: string): string => {
-    switch (label) {
-      case 'CREATE':
-        return tAuditLog('action.CREATE');
-      case 'UPDATE':
-        return tAuditLog('action.UPDATE');
-      case 'DELETE':
-        return tAuditLog('action.DELETE');
-      case 'READ':
-        return tAuditLog('action.READ');
-      case 'ASSIGN':
-        return tAuditLog('action.ASSIGN');
-      case 'UNASSIGN':
-        return tAuditLog('action.UNASSIGN');
-      case 'EXPORT':
-        return tAuditLog('action.EXPORT');
-      case 'IMPORT':
-        return tAuditLog('action.IMPORT');
-      case 'OTHER':
-        return tAuditLog('action.OTHER');
-      default:
-        return label ?? '';
-    }
-  };
-
   const option = useMemo(() => {
+    const palette = [
+      '#006BE6',
+      '#22D3EE',
+      '#818CF8',
+      '#34D399',
+      '#A78BFA',
+      '#FBBF24',
+      '#F472B6',
+      '#2DD4BF',
+      '#94A3B8',
+    ];
+
+    // 操作类型枚举名 → 本地化文案，复用操作审计日志模块的 action.* 翻译。
+    const actionLabel = (label?: string): string => {
+      switch (label) {
+        case 'CREATE':
+          return tAuditLog('action.CREATE');
+        case 'UPDATE':
+          return tAuditLog('action.UPDATE');
+        case 'DELETE':
+          return tAuditLog('action.DELETE');
+        case 'READ':
+          return tAuditLog('action.READ');
+        case 'ASSIGN':
+          return tAuditLog('action.ASSIGN');
+        case 'UNASSIGN':
+          return tAuditLog('action.UNASSIGN');
+        case 'EXPORT':
+          return tAuditLog('action.EXPORT');
+        case 'IMPORT':
+          return tAuditLog('action.IMPORT');
+        case 'OTHER':
+          return tAuditLog('action.OTHER');
+        default:
+          return label ?? '';
+      }
+    };
+
     const items = data?.items ?? [];
     return {
       tooltip: {

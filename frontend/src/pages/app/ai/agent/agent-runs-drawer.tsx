@@ -1,14 +1,8 @@
+import { parseAgentTrace } from './agent-values';
 import { useState } from 'react';
-import {
-  Drawer,
-  Tag,
-  Timeline,
-  Tooltip,
-} from 'antd';
+import { Drawer, Tag, Timeline, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type {
-  AiAgentApp as AiAgentApp,
-} from '@/api/generated/admin/v1';
+import type { AiAgentApp as AiAgentApp } from '@/api/generated/admin/v1';
 import { useListAiAgentRuns } from '@/api/hooks/ai-agent-run';
 import { PaginationQuery } from '@/core';
 
@@ -29,7 +23,10 @@ export default function AgentRunsDrawer({
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const runsQuery = useListAiAgentRuns(app?.id, new PaginationQuery({ paging: { page, pageSize } }));
+  const runsQuery = useListAiAgentRuns(
+    app?.id,
+    new PaginationQuery({ paging: { page, pageSize } }),
+  );
   // 抽屉关闭时不发查询（enabled 由 hook 的 appId 参数控制，这里叠加 open 状态）
 
   const runs = runsQuery.data?.items ?? [];
@@ -39,16 +36,6 @@ export default function AgentRunsDrawer({
     if (status === 'SUCCEEDED') return <Tag color="success">{t('runs.succeeded')}</Tag>;
     if (status === 'FAILED') return <Tag color="error">{t('runs.failed')}</Tag>;
     return <Tag color="processing">{t('runs.running')}</Tag>;
-  };
-
-  const parseTrace = (raw?: string): Array<Record<string, any>> => {
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
   };
 
   return (
@@ -63,7 +50,7 @@ export default function AgentRunsDrawer({
         <div style={{ color: 'var(--ant-color-text-tertiary, #aaa)' }}>{t('runs.empty')}</div>
       )}
       {runs.map((run) => {
-        const trace = parseTrace(run.trace);
+        const trace = parseAgentTrace(run.trace);
         return (
           <div
             key={run.id}
@@ -114,7 +101,7 @@ export default function AgentRunsDrawer({
             {trace.length > 0 && (
               <Timeline
                 style={{ marginTop: 10 }}
-                items={trace.map((s: any) => ({
+                items={trace.map((s) => ({
                   color: s.status === 'ok' ? 'green' : 'red',
                   children: (
                     <div style={{ fontSize: 12 }}>

@@ -211,7 +211,7 @@ const TenantList = () => {
           <ListTable<Tenant>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, sorter, _filter) => {
+            request={async (params, sorter) => {
               // 构建查询对象
               const query = new PaginationQuery({
                 paging: {
@@ -219,9 +219,7 @@ const TenantList = () => {
                   pageSize: params.pageSize || 10,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -242,7 +240,8 @@ const TenantList = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
               span: 4,
@@ -253,7 +252,12 @@ const TenantList = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListTenants} columns={columns} filename="tenants" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListTenants}
+                columns={columns}
+                filename="tenants"
+              />,
               <Button
                 key="create"
                 color="primary"

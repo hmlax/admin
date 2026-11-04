@@ -63,7 +63,7 @@ const STYLE_ID = 'pd-host-dark-theme';
 
 /** 在自定义元素的 shadowRoot 内应用/清除暗色变量块 */
 export function applyPrintDesignerTheme(el: HTMLElement | null, isDark: boolean) {
-  const root = (el as any)?.shadowRoot as ShadowRoot | null | undefined;
+  const root = el?.shadowRoot as ShadowRoot | null | undefined;
   if (!root) return;
   let style = root.getElementById?.(STYLE_ID) ?? null;
   if (!isDark) {

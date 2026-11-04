@@ -1,10 +1,7 @@
+import type { Permission as PermissionRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormRadio,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormRadio } from '@ant-design/pro-components';
 import { App, TreeSelect, Form, Tree, Spin, Button, Space } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +30,7 @@ import {
 interface PermissionDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: PermissionRecord;
   groupId: number;
   onClose: () => void;
   onSuccess: () => void;
@@ -42,7 +39,7 @@ interface PermissionDrawerProps {
 /**
  * 权限点编辑/创建抽屉组件
  */
-const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
+const PermissionDrawerContent: React.FC<PermissionDrawerProps> = ({
   open,
   mode,
   data,
@@ -61,19 +58,23 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
   const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 分组下拉数据
-  const [groupTreeData, setGroupTreeData] = useState<any[]>([]);
+  const [groupTreeData, setGroupTreeData] = useState<ReturnType<typeof buildTreeSelectData>>([]);
 
   // 菜单树数据 + 勾选 + 展开
-  const [menuTreeData, setMenuTreeData] = useState<any[]>([]);
-  const [menuCheckedKeys, setMenuCheckedKeys] = useState<number[]>([]);
+  const [menuTreeData, setMenuTreeData] = useState<ReturnType<typeof buildMenuTree>>([]);
+  const [menuCheckedKeys, setMenuCheckedKeys] = useState<number[]>(() =>
+    mode === 'edit' ? (data?.menuIds ?? []) : [],
+  );
   const [menuExpandedKeys, setMenuExpandedKeys] = useState<React.Key[]>([]);
-  const [menuTreeLoading, setMenuTreeLoading] = useState(false);
+  const [menuTreeLoading, setMenuTreeLoading] = useState(open);
 
   // API 树数据 + 勾选 + 展开
-  const [apiTreeData, setApiTreeData] = useState<any[]>([]);
-  const [apiCheckedKeys, setApiCheckedKeys] = useState<number[]>([]);
+  const [apiTreeData, setApiTreeData] = useState<ReturnType<typeof buildApiTree>>([]);
+  const [apiCheckedKeys, setApiCheckedKeys] = useState<number[]>(() =>
+    mode === 'edit' ? (data?.apiIds ?? []) : [],
+  );
   const [apiExpandedKeys, setApiExpandedKeys] = useState<React.Key[]>([]);
-  const [apiTreeLoading, setApiTreeLoading] = useState(false);
+  const [apiTreeLoading, setApiTreeLoading] = useState(open);
 
   // 加载树形数据
   useEffect(() => {
@@ -83,10 +84,12 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
         .then((res) => {
           setGroupTreeData(buildTreeSelectData(res?.items || []));
         })
-        .catch(() => setGroupTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setGroupTreeData([]);
+        });
 
       // 加载菜单树
-      setMenuTreeLoading(true);
       fetchListMenus(new PaginationQuery({ formValues: { status: 'ON' } }))
         .then((res) => {
           const tree = buildMenuTree(res?.items);
@@ -95,11 +98,13 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
           const keys = collectAllKeys(tree);
           setMenuExpandedKeys(keys);
         })
-        .catch(() => setMenuTreeData([]))
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setMenuTreeData([]);
+        })
         .finally(() => setMenuTreeLoading(false));
 
       // 加载 API 树
-      setApiTreeLoading(true);
       fetchListApis(new PaginationQuery({}))
         .then((res) => {
           const tree = buildApiTree(res?.items, t);
@@ -108,19 +113,13 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
           const keys = collectAllKeys(tree);
           setApiExpandedKeys(keys);
         })
-        .catch(() => setApiTreeData([]))
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setApiTreeData([]);
+        })
         .finally(() => setApiTreeLoading(false));
     }
-  }, [open]);
-
-  // 打开时清空上次会话遗留的勾选态（原在 onOpenChange 关闭分支里清理，守卫改道后挪到打开时；
-  // 必须声明在填充 effect 之前，否则编辑回填会被清掉）
-  useEffect(() => {
-    if (open) {
-      setMenuCheckedKeys([]);
-      setApiCheckedKeys([]);
-    }
-  }, [open]);
+  }, [open, t]);
 
   // 编辑模式下设置表单值 + 勾选状态
   useEffect(() => {
@@ -133,36 +132,28 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
           status: data.status || 'ON',
         });
       }, 0);
-
-      // 设置菜单和 API 的勾选
-      if (Array.isArray(data.menuIds)) {
-        setMenuCheckedKeys(data.menuIds.filter((v: any) => typeof v === 'number'));
-      }
-      if (Array.isArray(data.apiIds)) {
-        setApiCheckedKeys(data.apiIds.filter((v: any) => typeof v === 'number'));
-      }
     }
   }, [open, mode, data, groupId]);
 
   // 收集树所有节点的 key
-  const collectAllKeys = (tree: any[]): React.Key[] => {
+  function collectAllKeys(tree: ReturnType<typeof buildMenuTree>): React.Key[] {
     const keys: React.Key[] = [];
-    const walk = (nodes: any[]) => {
+    const walk = (nodes: ReturnType<typeof buildMenuTree>) => {
       nodes.forEach((n) => {
-        keys.push(n.key ?? n.value ?? n.id);
+        keys.push(n.key);
         if (n.children?.length) walk(n.children);
       });
     };
     walk(tree);
     return keys;
-  };
+  }
 
   // 收集树所有节点 key（含父子，用于全选勾选）
-  const collectAllNodeKeys = (tree: any[]): React.Key[] => {
+  const collectAllNodeKeys = (tree: ReturnType<typeof buildMenuTree>): React.Key[] => {
     const keys: React.Key[] = [];
-    const walk = (nodes: any[]) => {
+    const walk = (nodes: ReturnType<typeof buildMenuTree>) => {
       nodes.forEach((n) => {
-        keys.push(n.key ?? n.value ?? n.id);
+        keys.push(n.key);
         if (n.children?.length) walk(n.children);
       });
     };
@@ -172,7 +163,7 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
 
   // 树工具栏渲染
   const renderTreeToolbar = (
-    treeData: any[],
+    treeData: ReturnType<typeof buildMenuTree>,
     _expandedKeys: React.Key[],
     _checkedKeys: React.Key[],
     onExpand: (keys: React.Key[]) => void,
@@ -245,7 +236,7 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: PermissionRecord) => {
     try {
       setConfirmLoading(true);
 
@@ -264,7 +255,8 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
         await createMutation.mutateAsync({ data: payload });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);
@@ -437,4 +429,11 @@ const PermissionDrawer: React.FC<PermissionDrawerProps> = ({
   );
 };
 
-export default PermissionDrawer;
+export default function PermissionDrawer(props: PermissionDrawerProps) {
+  return (
+    <PermissionDrawerContent
+      key={`${props.open}-${props.mode}-${props.data?.id}-${props.groupId}`}
+      {...props}
+    />
+  );
+}

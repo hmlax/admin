@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -32,7 +33,7 @@ const OperationAuditLogPage = () => {
   const { t } = useTranslation('operation-audit-log');
   const actionRef = useRef<ActionType>(null);
   // 最近一次列表查询参数：导出 CSV 时沿用当前搜索/排序条件
-  const latestParamsRef = useRef<Record<string, any>>({});
+  const latestParamsRef = useRef<Record<string, unknown>>({});
   const { message } = App.useApp();
   const [detailRecord, setDetailRecord] = useState<OperationAuditLog | null>(null);
 
@@ -178,7 +179,7 @@ const OperationAuditLogPage = () => {
       width: 150,
       hideInSearch: true,
       render: (_, record) => {
-        const geo = record.geoLocation as any;
+        const geo = record.geoLocation;
         if (!geo) return '-';
         return `${geo.province || ''} ${geo.city || ''}`.trim() || '-';
       },
@@ -228,9 +229,9 @@ const OperationAuditLogPage = () => {
         }),
       );
       message.success(t('exportServerSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('server-side audit export failed', error);
-      message.error(error?.message || t('exportServerFailed'));
+      message.error(getErrorMessage(error) || t('exportServerFailed'));
     }
   };
 
@@ -242,14 +243,18 @@ const OperationAuditLogPage = () => {
         title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
       }));
     try {
-      await exportAuditLogs({
-        fetcher: (q) => fetchListOperationAuditLogs(q),
-        filename: `operation-audit-logs-${Date.now()}.csv`,
-        columns: exportColumns,
-        params: latestParamsRef.current,
-      }, format);
-    } catch (error: any) {
-      message.error(error?.message || 'Export failed');
+      await exportAuditLogs(
+        {
+          fetcher: (q) => fetchListOperationAuditLogs(q),
+          filename: `operation-audit-logs-${Date.now()}.csv`,
+          columns: exportColumns,
+          params: latestParamsRef.current,
+        },
+        format,
+      );
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || 'Export failed');
     }
   };
 
@@ -287,7 +292,8 @@ const OperationAuditLogPage = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -318,7 +324,6 @@ const OperationAuditLogPage = () => {
                 <Button>{t('export')}</Button>
               </Dropdown>,
             ]}
-
             options={{
               density: true,
               fullScreen: true,

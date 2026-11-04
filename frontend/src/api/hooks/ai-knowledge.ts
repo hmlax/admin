@@ -1,4 +1,9 @@
-import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { type PaginationQuery, queryClient } from '@/core';
 import { makeUpdateMask } from '@/core/transport/rest/utils';
@@ -35,7 +40,7 @@ export async function fetchListAiKnowledgeBases(params: PaginationQuery) {
 
 // useCreateAiKnowledgeBase
 export function useCreateAiKnowledgeBase(
-  options?: UseMutationOptions<{}, Error, CreateAiKnowledgeBaseRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateAiKnowledgeBaseRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.aiKnowledgeBaseService.Create(data),
@@ -45,13 +50,26 @@ export function useCreateAiKnowledgeBase(
 
 // useUpdateAiKnowledgeBase — 固定签名 { id, values }
 export function useUpdateAiKnowledgeBase(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiKnowledgeBaseService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiKnowledgeBaseService.Update>[0]['data']>;
+    }) =>
       apiClient.aiKnowledgeBaseService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -60,7 +78,7 @@ export function useUpdateAiKnowledgeBase(
 
 // useDeleteAiKnowledgeBase — 后端级联删除文档与切片
 export function useDeleteAiKnowledgeBase(
-  options?: UseMutationOptions<{}, Error, DeleteAiKnowledgeBaseRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteAiKnowledgeBaseRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.aiKnowledgeBaseService.Delete(req),
@@ -74,8 +92,7 @@ export function useDeleteAiKnowledgeBase(
 export async function fetchListAiDocs(baseId: number) {
   return queryClient.fetchQuery({
     queryKey: ['listAiDocs', baseId],
-    queryFn: () =>
-      apiClient.aiKnowledgeBaseService.ListDocs({ baseId }),
+    queryFn: () => apiClient.aiKnowledgeBaseService.ListDocs({ baseId }),
     retry: 0,
   });
 }
@@ -113,11 +130,10 @@ export function useUploadDocFile(
 
 // useDeleteAiDoc — 级联删除切片
 export function useDeleteAiDoc(
-  options?: UseMutationOptions<{}, Error, { baseId: number; id: number }>,
+  options?: UseMutationOptions<Record<string, never>, Error, { baseId: number; id: number }>,
 ) {
   return useMutation({
-    mutationFn: ({ baseId, id }) =>
-      apiClient.aiKnowledgeBaseService.DeleteDoc({ baseId, id }),
+    mutationFn: ({ baseId, id }) => apiClient.aiKnowledgeBaseService.DeleteDoc({ baseId, id }),
     ...options,
   });
 }

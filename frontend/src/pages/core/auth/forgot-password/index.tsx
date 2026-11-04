@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useNavigate } from 'react-router-dom';
 import { Button, Form, Input, App } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -30,8 +31,9 @@ const ForgotPassword = () => {
       setIdentifier(values.identifier);
       setStep(2);
       message.success(t('codeSent'));
-    } catch (error: any) {
-      message.error(error.message || t('sendFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('sendFailed'));
     } finally {
       setSending(false);
     }
@@ -47,8 +49,9 @@ const ForgotPassword = () => {
       });
       message.success(t('resetSuccess'));
       navigate('/auth/login');
-    } catch (error: any) {
-      message.error(error.message || t('resetFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('resetFailed'));
     } finally {
       setResetting(false);
     }
@@ -85,7 +88,13 @@ const ForgotPassword = () => {
           >
             <Input.Password placeholder={t('newPasswordPlaceholder')} size="large" />
           </Form.Item>
-          <Button type="primary" size="large" block loading={resetting} onClick={() => form.submit()}>
+          <Button
+            type="primary"
+            size="large"
+            block
+            loading={resetting}
+            onClick={() => form.submit()}
+          >
             {t('reset')}
           </Button>
         </Form>

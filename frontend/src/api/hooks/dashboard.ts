@@ -16,7 +16,7 @@ import { apiClient } from '@/api/client';
 // 1. 概览统计卡片
 // ------------------------------
 export function useDashboardOverview(
-  options?: UseQueryOptions<DashboardOverviewResponse, Error>,
+  options?: Omit<UseQueryOptions<DashboardOverviewResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['dashboardOverview'],
@@ -30,7 +30,7 @@ export function useDashboardOverview(
 // ------------------------------
 export function useLoginTrend(
   days: number,
-  options?: UseQueryOptions<LoginTrendResponse, Error>,
+  options?: Omit<UseQueryOptions<LoginTrendResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['loginTrend', days],
@@ -43,7 +43,7 @@ export function useLoginTrend(
 // 3. 操作审计按 action 分布
 // ------------------------------
 export function useOperationActionDistribution(
-  options?: UseQueryOptions<ActionDistributionResponse, Error>,
+  options?: Omit<UseQueryOptions<ActionDistributionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['operationActionDistribution'],
@@ -56,7 +56,7 @@ export function useOperationActionDistribution(
 // 4. 登录审计按 status 分布
 // ------------------------------
 export function useLoginStatusDistribution(
-  options?: UseQueryOptions<StatusDistributionResponse, Error>,
+  options?: Omit<UseQueryOptions<StatusDistributionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['loginStatusDistribution'],

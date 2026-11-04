@@ -15,13 +15,7 @@ import { queryClient } from '@/core';
 // ------------------------------
 // 登录（Mutation）
 // ------------------------------
-export function useLogin(
-  options?: UseMutationOptions<
-    LoginResponse,
-    Error,
-    LoginRequest
-  >,
-) {
+export function useLogin(options?: UseMutationOptions<LoginResponse, Error, LoginRequest>) {
   return useMutation({
     mutationFn: (req) => apiClient.authenticationService.Login(req),
     ...options,
@@ -50,7 +44,9 @@ export const verifyMfaMutation = queryClient.getMutationCache().build(queryClien
 // ------------------------------
 // 登出（Mutation）
 // ------------------------------
-export function useLogout(options?: UseMutationOptions<{}, Error, {}>) {
+export function useLogout(
+  options?: UseMutationOptions<Record<string, never>, Error, Record<string, never>>,
+) {
   return useMutation({
     mutationFn: () => apiClient.authenticationService.Logout({}),
     ...options,
@@ -70,13 +66,7 @@ export const logoutMutation = queryClient.getMutationCache().build(queryClient, 
 // ------------------------------
 // 刷新 Token（Mutation）
 // ------------------------------
-export function useRefreshToken(
-  options?: UseMutationOptions<
-    LoginResponse,
-    Error,
-    LoginRequest
-  >,
-) {
+export function useRefreshToken(options?: UseMutationOptions<LoginResponse, Error, LoginRequest>) {
   return useMutation({
     mutationFn: () =>
       apiClient.authenticationService.RefreshToken({
@@ -102,7 +92,7 @@ export const refreshTokenMutation = queryClient.getMutationCache().build(queryCl
 // 获取验证码（Query - GET）
 // ------------------------------
 export function useGenerateCaptcha(
-  options?: UseQueryOptions<GenerateCaptchaResponse, Error>,
+  options?: Omit<UseQueryOptions<GenerateCaptchaResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['captcha'],

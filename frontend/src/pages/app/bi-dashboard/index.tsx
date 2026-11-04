@@ -1,12 +1,9 @@
 import { applicationStorageKey } from '@/config/application';
-import "@go-wind/bi-react/style.css";
+import '@go-wind/bi-react/style.css';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Tooltip } from 'antd';
-import {
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-} from '@ant-design/icons';
+import { FullscreenExitOutlined, FullscreenOutlined } from '@ant-design/icons';
 import { BiProvider, BiDashboard } from '@go-wind/bi-react';
 import { layoutCharts } from '@go-wind/bi-core';
 import type { BiDashboardSchema } from '@go-wind/bi-core';
@@ -18,14 +15,14 @@ import { usePageFullscreen } from '@/hooks/usePageFullscreen';
 const BI_SCHEMA_STORAGE_KEY = applicationStorageKey('bi-schema');
 
 const SCHEMA: Partial<BiDashboardSchema> = {
-  name: "default",
+  name: 'default',
   linkage: { enabled: true },
   // 不钉主题预设：跟随宿主亮暗（大屏需要钉死时在设计器主题下拉里选预设）
   datasets: [
     {
-      id: "ds_month",
-      name: "月度汇总",
-      type: "static",
+      id: 'ds_month',
+      name: '月度汇总',
+      type: 'static',
       rows: Array.from({ length: 12 }, (_, i) => ({
         month: `${i + 1}月`,
         sales: Math.round(80 + Math.sin(i / 2) * 60 + i * 8),
@@ -33,40 +30,66 @@ const SCHEMA: Partial<BiDashboardSchema> = {
       })),
     },
     {
-      id: "ds_orders",
-      name: "订单明细",
-      type: "static",
+      id: 'ds_orders',
+      name: '订单明细',
+      type: 'static',
       rows: Array.from({ length: 48 }, (_, i) => ({
-        city: ["北京", "上海", "广州", "深圳", "杭州", "成都"][i % 6],
-        category: ["硬件", "软件", "服务"][i % 3],
+        city: ['北京', '上海', '广州', '深圳', '杭州', '成都'][i % 6],
+        category: ['硬件', '软件', '服务'][i % 3],
         amount: Math.round(50 + Math.random() * 450),
       })),
     },
   ],
   charts: [
     {
-      id: "c_bar", title: "城市订单 Top6", datasetId: "ds_orders", type: "bar",
-      x: 0, y: 0, w: 6, h: 4,
-      encoding: { dimension: "city", measure: "amount" },
-      aggregation: "sum", sort: { by: "measure", order: "desc", topN: 6 },
+      id: 'c_bar',
+      title: '城市订单 Top6',
+      datasetId: 'ds_orders',
+      type: 'bar',
+      x: 0,
+      y: 0,
+      w: 6,
+      h: 4,
+      encoding: { dimension: 'city', measure: 'amount' },
+      aggregation: 'sum',
+      sort: { by: 'measure', order: 'desc', topN: 6 },
     },
     {
-      id: "c_wide", title: "销售 vs 目标", datasetId: "ds_month", type: "bar",
-      x: 6, y: 0, w: 6, h: 4,
-      encoding: { dimension: "month", measures: ["sales", "target"] },
+      id: 'c_wide',
+      title: '销售 vs 目标',
+      datasetId: 'ds_month',
+      type: 'bar',
+      x: 6,
+      y: 0,
+      w: 6,
+      h: 4,
+      encoding: { dimension: 'month', measures: ['sales', 'target'] },
       style: { showLegend: true },
     },
     {
-      id: "c_pie", title: "品类占比", datasetId: "ds_orders", type: "donut",
-      x: 0, y: 4, w: 6, h: 4,
-      encoding: { dimension: "category", measure: "amount" }, aggregation: "sum",
+      id: 'c_pie',
+      title: '品类占比',
+      datasetId: 'ds_orders',
+      type: 'donut',
+      x: 0,
+      y: 4,
+      w: 6,
+      h: 4,
+      encoding: { dimension: 'category', measure: 'amount' },
+      aggregation: 'sum',
     },
     {
-      id: "c_area", title: "销售趋势", datasetId: "ds_month", type: "area",
-      x: 6, y: 4, w: 6, h: 4,
-      encoding: { dimension: "month", measure: "sales" },
+      id: 'c_area',
+      title: '销售趋势',
+      datasetId: 'ds_month',
+      type: 'area',
+      x: 6,
+      y: 4,
+      w: 6,
+      h: 4,
+      encoding: { dimension: 'month', measure: 'sales' },
     },
-  ] as BiDashboardSchema["charts"],
+  ] as BiDashboardSchema['charts'],
 };
 
 /** 内容高度（设计单位）：直接复用渲染器的布局函数，避免公式重复走样 */
@@ -82,7 +105,16 @@ export default function BiDashboardPage() {
   const idParam = searchParams.get('id');
   const dashboardId = idParam ? Number(idParam) : undefined;
 
-  const [schema, setSchema] = useState<Partial<BiDashboardSchema>>(SCHEMA);
+  const [schema, setSchema] = useState<Partial<BiDashboardSchema>>(() => {
+    if (dashboardId) return SCHEMA;
+    try {
+      const saved = localStorage.getItem(BI_SCHEMA_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : SCHEMA;
+    } catch (error) {
+      console.error('[bi-dashboard] 本地 schema 解析失败，改用演示 schema', error);
+      return SCHEMA;
+    }
+  });
 
   useEffect(() => {
     if (dashboardId) {
@@ -100,17 +132,8 @@ export default function BiDashboardPage() {
         })
         .catch((error: unknown) => {
           console.error('[bi-dashboard] 拉取仪表盘失败，改用演示 schema', error);
-        })
+        });
       return;
-    }
-    const saved = localStorage.getItem(BI_SCHEMA_STORAGE_KEY);
-    if (saved) {
-      try {
-        setSchema(JSON.parse(saved));
-      } catch (error) {
-        // 脏数据不阻塞页面：记原始错误，继续用演示 schema
-        console.error("[bi-dashboard] 本地 schema 解析失败，改用演示 schema", error);
-      }
     }
   }, [dashboardId]);
 
@@ -129,9 +152,7 @@ export default function BiDashboardPage() {
       const height = el.clientHeight - 2;
       const contentHeight = contentHeightOf(schema);
       if (width <= 0 || height <= 0 || contentHeight <= 0) return;
-      setDesignWidth(
-        Math.min(3840, Math.max(960, Math.round((contentHeight * width) / height))),
-      );
+      setDesignWidth(Math.min(3840, Math.max(960, Math.round((contentHeight * width) / height))));
     };
     const observer = new ResizeObserver(sync);
     observer.observe(el);
@@ -153,7 +174,9 @@ export default function BiDashboardPage() {
       }}
     >
       {/* 工具条：编辑目标 + 全屏（进入时由 hook 补页面底色） */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, paddingBottom: 8 }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, paddingBottom: 8 }}
+      >
         <span style={{ fontSize: 15, fontWeight: 600 }}>{t('dashboardTitle')}</span>
         <span style={{ flex: 1 }} />
         {dashboardId && (

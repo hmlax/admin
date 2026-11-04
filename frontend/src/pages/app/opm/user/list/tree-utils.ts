@@ -6,6 +6,8 @@
  * 不能再用 parentId 重建——否则只遍历顶层数组会丢失所有子树。
  */
 
+import type { OrgUnit } from '@/api/generated/admin/v1';
+
 interface TreeNode {
   value: number;
   title: string;
@@ -17,13 +19,10 @@ interface TreeNode {
  * @param items API 返回的已嵌套组织树
  * @param excludeId 可选，需从候选中排除的节点 id（防止把自身设为父级形成自环）
  */
-export function buildOrgTreeSelectData(
-  items: Array<{ id?: number; name?: string; children?: any[] }>,
-  excludeId?: number,
-): TreeNode[] {
+export function buildOrgTreeSelectData(items: OrgUnit[], excludeId?: number): TreeNode[] {
   if (!items || items.length === 0) return [];
 
-  const build = (nodes: Array<{ id?: number; name?: string; children?: any[] }>): TreeNode[] => {
+  const build = (nodes: OrgUnit[]): TreeNode[] => {
     const result: TreeNode[] = [];
     nodes.forEach((item) => {
       if (item.id == null) return;

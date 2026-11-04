@@ -27,7 +27,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPlans(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPlanResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPlanResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPlans', query],
@@ -46,7 +46,7 @@ export async function fetchListPlans(params: PaginationQuery) {
 
 export function useGetPlan(
   req: GetPlanRequest,
-  options?: UseQueryOptions<Plan, Error>,
+  options?: Omit<UseQueryOptions<Plan, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPlan', req],
@@ -55,9 +55,7 @@ export function useGetPlan(
   });
 }
 
-export function useCreatePlan(
-  options?: UseMutationOptions<Plan, Error, CreatePlanRequest>,
-) {
+export function useCreatePlan(options?: UseMutationOptions<Plan, Error, CreatePlanRequest>) {
   return useMutation({
     mutationFn: (data) => apiClient.planService.Create(data),
     ...options,
@@ -68,14 +66,20 @@ export function useUpdatePlan(
   options?: UseMutationOptions<
     Plan,
     Error,
-    { id: number; values: Record<string, any> }
+    { id: number; values: NonNullable<Parameters<typeof apiClient.planService.Update>[0]['data']> }
   >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.planService.Update>[0]['data']>;
+    }) =>
       apiClient.planService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -83,7 +87,7 @@ export function useUpdatePlan(
 }
 
 export function useDeletePlan(
-  options?: UseMutationOptions<{}, Error, DeletePlanRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePlanRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.planService.Delete(data),
@@ -97,7 +101,7 @@ export function useDeletePlan(
 
 export function useListPlanQuotas(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPlanQuotaResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPlanQuotaResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPlanQuotas', query],
@@ -115,7 +119,7 @@ export async function fetchListPlanQuotas(params: PaginationQuery) {
 }
 
 export function useCreatePlanQuota(
-  options?: UseMutationOptions<{}, Error, CreatePlanQuotaRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePlanQuotaRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.planQuotaService.Create(data),
@@ -124,13 +128,26 @@ export function useCreatePlanQuota(
 }
 
 export function useUpdatePlanQuota(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.planQuotaService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.planQuotaService.Update>[0]['data']>;
+    }) =>
       apiClient.planQuotaService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -138,7 +155,7 @@ export function useUpdatePlanQuota(
 }
 
 export function useDeletePlanQuota(
-  options?: UseMutationOptions<{}, Error, DeletePlanQuotaRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePlanQuotaRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.planQuotaService.Delete(data),
@@ -152,7 +169,10 @@ export function useDeletePlanQuota(
 
 export function useListPlanModules(
   query: PaginationQuery,
-  options?: Omit<UseQueryOptions<ListPlanModuleResponse, Error, ListPlanModuleResponse, readonly unknown[]>, 'queryKey' | 'queryFn'>,
+  options?: Omit<
+    UseQueryOptions<ListPlanModuleResponse, Error, ListPlanModuleResponse, readonly unknown[]>,
+    'queryKey' | 'queryFn'
+  >,
 ) {
   return useQuery({
     queryKey: ['listPlanModules', query],
@@ -170,7 +190,7 @@ export async function fetchListPlanModules(params: PaginationQuery) {
 }
 
 export function useCreatePlanModule(
-  options?: UseMutationOptions<{}, Error, CreatePlanModuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePlanModuleRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.planModuleService.Create(data),
@@ -179,7 +199,7 @@ export function useCreatePlanModule(
 }
 
 export function useDeletePlanModule(
-  options?: UseMutationOptions<{}, Error, DeletePlanModuleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePlanModuleRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.planModuleService.Delete(data),

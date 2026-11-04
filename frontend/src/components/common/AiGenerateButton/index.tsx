@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Button, Input, Popover, App } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useGenerateContent } from '@/api/hooks/ai-content';
+import { useGenerateContent, type GenerateContentParams } from '@/api/hooks/ai-content';
 
 interface AiGenerateButtonProps {
   /** 场景：DESCRIPTION / ANNOUNCEMENT / REPLY / GENERAL */
-  scene: string;
+  scene: GenerateContentParams['scene'];
   /** 生成结果回调（前端将文本填入目标字段） */
   onGenerate: (content: string) => void;
   /** 补充上下文（可选） */

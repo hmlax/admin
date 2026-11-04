@@ -1,17 +1,22 @@
-import type { AppRouteObject } from '../types';
+import { isAppRoute, type AppRouteObject } from '../types';
+import { isRecord } from '@/utils/value';
 
 /**
  * 展平模块导出（兼容 default / 具名导出）
  * 纯函数，无副作用，可单元测试
  */
-export const extractRoutes = (module: any): AppRouteObject[] => {
-  if (Array.isArray(module?.default)) return module.default;
+export const extractRoutes = (module: unknown): AppRouteObject[] => {
+  if (!isRecord(module)) return [];
+  const isRoute = (route: unknown): route is AppRouteObject =>
+    isAppRoute(route) ||
+    (isRecord(route) && (typeof route.path === 'string' || route.index === true));
+  if (Array.isArray(module.default)) return module.default.filter(isRoute);
 
   const namedExport = Object.values(module).find(
-    (val: any) => Array.isArray(val) && val.length > 0,
+    (val: unknown) => Array.isArray(val) && val.length > 0,
   );
 
-  return Array.isArray(namedExport) ? namedExport : [];
+  return Array.isArray(namedExport) ? namedExport.filter(isRoute) : [];
 };
 
 /**
@@ -41,7 +46,9 @@ export const filterRoutesByPermission = (
 ): AppRouteObject[] => {
   return routes.reduce<AppRouteObject[]>((acc, route) => {
     // 检查当前路由权限
-    const hasPerm = !route.meta?.authority?.length || route.meta.authority.some((code) => permissions.includes(code));
+    const hasPerm =
+      !route.meta?.authority?.length ||
+      route.meta.authority.some((code) => permissions.includes(code));
     if (!hasPerm && !route.meta?.menuVisibleWithForbidden) {
       return acc; // 无权限且不可见 = 过滤
     }

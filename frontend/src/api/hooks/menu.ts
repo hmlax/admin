@@ -1,3 +1,5 @@
+import { isValidElement, type ReactNode } from 'react';
+import { isRecord } from '@/utils/value';
 import {
   type CreateMenuRequest,
   type DeleteMenuRequest,
@@ -23,7 +25,7 @@ import { apiClient } from '@/api/client';
 
 export function useListMenus(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListMenuResponse, Error>,
+  options?: Omit<UseQueryOptions<ListMenuResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listMenus', query],
@@ -42,7 +44,7 @@ export async function fetchListMenus(params: PaginationQuery) {
 
 export function useGetMenu(
   req: GetMenuRequest,
-  options?: UseQueryOptions<Menu, Error>,
+  options?: Omit<UseQueryOptions<Menu, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getMenu', req],
@@ -52,7 +54,7 @@ export function useGetMenu(
 }
 
 export function useCreateMenu(
-  options?: UseMutationOptions<{}, Error, CreateMenuRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateMenuRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.menuService.Create(data),
@@ -61,13 +63,23 @@ export function useCreateMenu(
 }
 
 export function useUpdateMenu(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; values: NonNullable<Parameters<typeof apiClient.menuService.Update>[0]['data']> }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.menuService.Update>[0]['data']>;
+    }) =>
       apiClient.menuService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -75,7 +87,7 @@ export function useUpdateMenu(
 }
 
 export function useDeleteMenu(
-  options?: UseMutationOptions<{}, Error, DeleteMenuRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteMenuRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.menuService.Delete(data),
@@ -88,7 +100,7 @@ export function useDeleteMenu(
 // ==============================
 
 export function useSyncMenus(
-  options?: UseMutationOptions<{}, Error, SyncMenusRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, SyncMenusRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.menuService.SyncMenus(data),
@@ -116,9 +128,13 @@ for (const [key, mod] of Object.entries(eagerPageModules)) {
  * 不能只解析 loader 的源码字符串：prod 下 import 路径会被 vite 改写成 chunk 路径。
  */
 async function resolveComponentPath(element: unknown): Promise<string | undefined> {
-  const lazyType = (element as any)?.props?.children?.type;
-  const payload = lazyType?._payload;
-  if (!payload || payload._result == null) return undefined;
+  if (!isValidElement<{ children?: ReactNode }>(element)) return undefined;
+  const child = element.props.children;
+  if (!isValidElement(child)) return undefined;
+  const lazyType: unknown = child.type;
+  if (!isRecord(lazyType)) return undefined;
+  const payload = lazyType._payload;
+  if (!isRecord(payload) || payload._result == null) return undefined;
 
   let mod: unknown = payload._result;
   if (typeof mod === 'function') {
@@ -130,7 +146,13 @@ async function resolveComponentPath(element: unknown): Promise<string | undefine
     }
   }
   for (const [knownMod, path] of pageModuleToPath.entries()) {
-    if (knownMod === mod || (knownMod as any)?.default === (mod as any)?.default) {
+    if (
+      knownMod === mod ||
+      (isRecord(knownMod) &&
+        isRecord(mod) &&
+        knownMod.default !== undefined &&
+        knownMod.default === mod.default)
+    ) {
       return path;
     }
   }
@@ -147,8 +169,7 @@ async function routeToMenu(
 
   // 顶层目录节点补绝对路径，与 DefaultMenus 的 "/system" + 相对子路径约定一致
   const path = depth === 0 && !route.path.startsWith('/') ? `/${route.path}` : route.path;
-  const component =
-    depth === 0 ? 'BasicLayout' : await resolveComponentPath(route.element);
+  const component = depth === 0 ? 'BasicLayout' : await resolveComponentPath(route.element);
 
   const meta = route.meta;
   const menu: Menu = {
@@ -194,9 +215,9 @@ export async function buildSyncMenusRequest(
   routes: AppRouteObject[],
   t: (key: string) => string,
 ): Promise<SyncMenusRequest> {
-  const items = (
-    await Promise.all(routes.map((route) => routeToMenu(route, 0, t)))
-  ).filter((item): item is Menu => item !== null);
+  const items = (await Promise.all(routes.map((route) => routeToMenu(route, 0, t)))).filter(
+    (item): item is Menu => item !== null,
+  );
   // UI 固定走 MERGE（保 ID、不废角色授权）；REPLACE 仅保留在 API 层供全量重建使用
   return { items, mode: 'MERGE' };
 }

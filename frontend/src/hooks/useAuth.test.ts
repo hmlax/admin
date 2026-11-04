@@ -19,18 +19,22 @@ afterEach(() => vi.unstubAllGlobals());
 
 it('reloads API capabilities after a browser refresh even when persisted roles are present', async () => {
   const { useUserStore } = await import('@/stores/user');
-  localStorage.setItem(useUserStore.persist.getOptions().name!, JSON.stringify({
-    state: { userInfo: { id: 2, tenantId: 35, roles: ['tenant:manager'] } }, version: 0,
-  }));
+  localStorage.setItem(
+    useUserStore.persist.getOptions().name!,
+    JSON.stringify({
+      state: { userInfo: { id: 2, tenantId: 35, roles: ['tenant:manager'] } },
+      version: 0,
+    }),
+  );
   await useUserStore.persist.rehydrate();
   mocks.profile.mockResolvedValue({ id: 2, tenantId: 35, roles: ['tenant:manager'] });
   const apiPermissions = [{ method: 'POST', path: '/admin/v1/users' }];
   mocks.grants.mockResolvedValue({ codes: ['sys:tenant_manager'], apiPermissions });
-  const { useAuth } = await import('./useAuth');
-  await useAuth().getUserPermissionCodes();
+  const { createAuthActions } = await import('./useAuth');
+  await createAuthActions().getUserPermissionCodes();
   expect(mocks.grants).toHaveBeenCalledOnce();
   expect(useUserStore.getState().apiPermissions).toEqual(apiPermissions);
   expect(useUserStore.getState().isTenantUser()).toBe(true);
-  await useAuth().getUserPermissionCodes();
+  await createAuthActions().getUserPermissionCodes();
   expect(mocks.grants).toHaveBeenCalledOnce();
 });

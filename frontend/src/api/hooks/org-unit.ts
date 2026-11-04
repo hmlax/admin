@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListOrgUnits(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListOrgUnitResponse, Error>,
+  options?: Omit<UseQueryOptions<ListOrgUnitResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listOrgUnits', query],
@@ -39,7 +39,7 @@ export async function fetchListOrgUnits(params: PaginationQuery) {
 
 export function useGetOrgUnit(
   req: GetOrgUnitRequest,
-  options?: UseQueryOptions<OrgUnit, Error>,
+  options?: Omit<UseQueryOptions<OrgUnit, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getOrgUnit', req],
@@ -49,7 +49,7 @@ export function useGetOrgUnit(
 }
 
 export function useCreateOrgUnit(
-  options?: UseMutationOptions<{}, Error, CreateOrgUnitRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateOrgUnitRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.orgUnitService.Create(data),
@@ -58,13 +58,26 @@ export function useCreateOrgUnit(
 }
 
 export function useUpdateOrgUnit(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.orgUnitService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.orgUnitService.Update>[0]['data']>;
+    }) =>
       apiClient.orgUnitService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -72,7 +85,7 @@ export function useUpdateOrgUnit(
 }
 
 export function useDeleteOrgUnit(
-  options?: UseMutationOptions<{}, Error, DeleteOrgUnitRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteOrgUnitRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.orgUnitService.Delete(req),

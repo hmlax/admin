@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import ListTable from '@/components/common/ListTable';
@@ -10,12 +11,7 @@ import {
   ProFormSwitch,
 } from '@ant-design/pro-components';
 import { App, Button, Descriptions, Tag, Alert } from 'antd';
-import {
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type {
   CreateNotificationTemplateRequest,
@@ -58,7 +54,9 @@ const NotificationTemplatePage = () => {
 
   const [formOpen, setFormOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () => setFormOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () =>
+    setFormOpen(false),
+  );
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<NotificationTemplate | undefined>();
   const [renderTarget, setRenderTarget] = useState<NotificationTemplate | undefined>();
@@ -77,14 +75,14 @@ const NotificationTemplatePage = () => {
       await deleteMutation.mutateAsync({ id: record.id });
       message.success(t('deleteSuccess'));
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 原始错误必须留在控制台：用户可见的那句翻译不包含服务端的原因
       console.error('delete notification template failed', error);
-      message.error(error.message || t('deleteFailed'));
+      message.error(getErrorMessage(error) || t('deleteFailed'));
     }
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: NotificationTemplate) => {
     const data = {
       name: values.name,
       code: values.code,
@@ -111,9 +109,9 @@ const NotificationTemplatePage = () => {
       setFormOpen(false);
       refresh();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('save notification template failed', error);
-      message.error(error.message || t('saveFailed'));
+      message.error(getErrorMessage(error) || t('saveFailed'));
       return false;
     }
   };
@@ -125,7 +123,7 @@ const NotificationTemplatePage = () => {
     if (raw) {
       try {
         variables = JSON.parse(raw);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('parse template vars json failed', error);
         message.error(t('varsJsonInvalid'));
         return false;
@@ -140,9 +138,9 @@ const NotificationTemplatePage = () => {
       setRenderResult({ title: resp.title ?? '', content: resp.content ?? '' });
       // 返回 false 让弹窗保持打开：结果就地展示，用户看完手动关闭
       return false;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('render notification template failed', error);
-      message.error(error.message || t('renderFailed'));
+      message.error(getErrorMessage(error) || t('renderFailed'));
       return false;
     }
   };
@@ -176,7 +174,11 @@ const NotificationTemplatePage = () => {
       dataIndex: 'isEnabled',
       width: 90,
       render: (_, record) =>
-        record.isEnabled ? <Tag color="success">{t('enabledOn')}</Tag> : <Tag>{t('enabledOff')}</Tag>,
+        record.isEnabled ? (
+          <Tag color="success">{t('enabledOn')}</Tag>
+        ) : (
+          <Tag>{t('enabledOff')}</Tag>
+        ),
     },
     {
       title: t('updatedAt'),
@@ -250,7 +252,12 @@ const NotificationTemplatePage = () => {
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
             showSizeChanger: true,
           }}
-          options={{ density: true, fullScreen: true, setting: { settingIcon: <ColumnSlidersIcon /> }, reload: true }}
+          options={{
+            density: true,
+            fullScreen: true,
+            setting: { settingIcon: <ColumnSlidersIcon /> },
+            reload: true,
+          }}
           toolBarRender={() => [
             <Button
               key="create"
@@ -273,7 +280,11 @@ const NotificationTemplatePage = () => {
       </div>
 
       <DrawerForm
-        title={formMode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('common:modal.update', { moduleName: t('moduleName') })}
+        title={
+          formMode === 'create'
+            ? t('common:modal.create', { moduleName: t('moduleName') })
+            : t('common:modal.update', { moduleName: t('moduleName') })
+        }
         open={formOpen}
         onOpenChange={(v) => {
           // 关闭一律走 drawerProps.onClose 守卫；这里只放行打开
@@ -283,11 +294,7 @@ const NotificationTemplatePage = () => {
         drawerProps={{ destroyOnHidden: true, size: 600, onClose: guardClose }}
         submitTimeout={3000}
         onFinish={handleSubmit}
-        initialValues={
-          formMode === 'create'
-            ? { isEnabled: true }
-            : { ...selected }
-        }
+        initialValues={formMode === 'create' ? { isEnabled: true } : { ...selected }}
         layout="horizontal"
         labelCol={{ flex: '0 0 120px' }}
         wrapperCol={{ flex: 'auto' }}
@@ -302,7 +309,10 @@ const NotificationTemplatePage = () => {
         <ProFormText
           name="name"
           label={t('name')}
-          rules={[{ required: true, message: t('requiredName') }, { max: 100, message: t('maxChars', { max: 100 }) }]}
+          rules={[
+            { required: true, message: t('requiredName') },
+            { max: 100, message: t('maxChars', { max: 100 }) },
+          ]}
         />
         <ProFormText
           name="code"
@@ -318,21 +328,23 @@ const NotificationTemplatePage = () => {
           name="titleTemplate"
           label={t('titleTemplate')}
           placeholder={t('titleTemplatePlaceholder')}
-          rules={[{ required: true, message: t('requiredTitleTemplate') }, { max: 500, message: t('maxChars', { max: 500 }) }]}
+          rules={[
+            { required: true, message: t('requiredTitleTemplate') },
+            { max: 500, message: t('maxChars', { max: 500 }) },
+          ]}
         />
         <ProFormTextArea
           name="contentTemplate"
           label={t('contentTemplate')}
           placeholder={t('contentTemplatePlaceholder')}
-          rules={[{ required: true, message: t('requiredContentTemplate') }, { max: 20000, message: t('maxChars', { max: 20000 }) }]}
+          rules={[
+            { required: true, message: t('requiredContentTemplate') },
+            { max: 20000, message: t('maxChars', { max: 20000 }) },
+          ]}
           fieldProps={{ rows: 6, showCount: true }}
         />
         <ProFormSwitch name="isEnabled" label={t('isEnabled')} />
-        <ProFormTextArea
-          name="remark"
-          label={t('remark')}
-          fieldProps={{ rows: 2 }}
-        />
+        <ProFormTextArea name="remark" label={t('remark')} fieldProps={{ rows: 2 }} />
       </DrawerForm>
 
       <ModalForm<{ varsJson?: string }>

@@ -1,18 +1,7 @@
 import { useContext, useMemo } from 'react';
 import { matchRoutes, useNavigate, type RouteObject } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Avatar,
-  Button,
-  Card,
-  Col,
-  Empty,
-  List,
-  Row,
-  Spin,
-  Tag,
-  Typography,
-} from 'antd';
+import { Avatar, Button, Card, Col, Empty, List, Row, Spin, Tag, Typography } from 'antd';
 import {
   BookOutlined,
   ClockCircleOutlined,
@@ -45,10 +34,25 @@ const QUICK_LINKS = [
   { path: '/permission/roles', api: '/admin/v1/roles', labelKey: 'roles', icon: <TeamOutlined /> },
   { path: '/permission/menus', api: '/admin/v1/menus', labelKey: 'menus', icon: <MenuOutlined /> },
   { path: '/system/dict', api: '/admin/v1/dict/types', labelKey: 'dict', icon: <BookOutlined /> },
-  { path: '/system/tasks', api: '/admin/v1/tasks', labelKey: 'tasks', icon: <ClockCircleOutlined /> },
+  {
+    path: '/system/tasks',
+    api: '/admin/v1/tasks',
+    labelKey: 'tasks',
+    icon: <ClockCircleOutlined />,
+  },
   { path: '/system/files', api: '/admin/v1/files', labelKey: 'files', icon: <FolderOutlined /> },
-  { path: '/system/online-sessions', api: '/admin/v1/online-session/sessions', labelKey: 'online-sessions', icon: <GlobalOutlined /> },
-  { path: '/log/login-audit-logs', api: '/admin/v1/login-audit-logs', labelKey: 'login-audit-log', icon: <FileSearchOutlined /> },
+  {
+    path: '/system/online-sessions',
+    api: '/admin/v1/online-session/sessions',
+    labelKey: 'online-sessions',
+    icon: <GlobalOutlined />,
+  },
+  {
+    path: '/log/login-audit-logs',
+    api: '/admin/v1/login-audit-logs',
+    labelKey: 'login-audit-log',
+    icon: <FileSearchOutlined />,
+  },
 ];
 
 /** 按本地时段返回问候语 key（与 en/zh 各四条文案一一对应） */
@@ -232,9 +236,7 @@ const Workspace = () => {
                           height: 6,
                           borderRadius: '50%',
                           flexShrink: 0,
-                          background: unread
-                            ? 'var(--ant-color-primary)'
-                            : 'transparent',
+                          background: unread ? 'var(--ant-color-primary)' : 'transparent',
                         }}
                       />
                       <span
@@ -251,7 +253,7 @@ const Workspace = () => {
                         {item.title || '-'}
                       </span>
                       <Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
-                        {formatDateTime(item.createdAt as any)}
+                        {formatDateTime(item.createdAt)}
                       </Text>
                     </List.Item>
                   );
@@ -305,13 +307,11 @@ const Workspace = () => {
                           ? tSession('clientApp')
                           : tSession('clientAdmin')}
                       </Tag>
-                      {item.current && (
-                        <Tag color="green">{tSession('currentSession')}</Tag>
-                      )}
+                      {item.current && <Tag color="green">{tSession('currentSession')}</Tag>}
                       <Text style={{ fontSize: 13 }}>{item.ipAddress || '-'}</Text>
                     </div>
                     <Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
-                      {formatDateTime(item.loginAt as any)}
+                      {formatDateTime(item.loginAt)}
                     </Text>
                   </List.Item>
                 )}

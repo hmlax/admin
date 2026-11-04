@@ -18,8 +18,9 @@ export const getIconFromName = (iconName?: string): React.ReactNode => {
   }
 
   // 向后兼容：Ant Design 图标
-  const IconComponent = (Icons as any)[iconName];
-  if (IconComponent) {
+  if (!(iconName in Icons)) return null;
+  const IconComponent = Icons[iconName as keyof typeof Icons];
+  if (typeof IconComponent === 'object' && 'render' in IconComponent) {
     return React.createElement(IconComponent);
   }
 

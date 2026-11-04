@@ -1,3 +1,4 @@
+import type { PermissionGroup as PermissionGroupRecord } from '@/api/generated/admin/v1';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -42,16 +43,16 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [editingGroup, setEditingGroup] = useState<PermissionGroupRecord | null>(null);
 
   // 树形展开控制
-  const [treeData, setTreeData] = useState<any[]>([]);
+  const [treeData, setTreeData] = useState<PermissionGroupRecord[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly React.Key[]>([]);
 
   const statusMap = getStatusMap(t);
 
   // 清理 API 返回树形数据中的空 children 数组
-  const cleanEmptyChildren = (nodes: any[]): void => {
+  const cleanEmptyChildren = (nodes: PermissionGroupRecord[]): void => {
     nodes.forEach((n) => {
       if (n.children) {
         if (n.children.length === 0) {
@@ -76,9 +77,9 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
   });
 
   // 展开全部
-  const handleExpandAll = (data: any[]) => {
+  const handleExpandAll = (data: PermissionGroupRecord[]) => {
     const keys: React.Key[] = [];
-    const collectKeys = (items: any[]) => {
+    const collectKeys = (items: PermissionGroupRecord[]) => {
       items.forEach((item) => {
         keys.push(item.id as number);
         if (item.children?.length) collectKeys(item.children);
@@ -94,7 +95,7 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
   };
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<PermissionGroupRecord>[] = [
     {
       title: t('name'),
       dataIndex: 'name',
@@ -153,29 +154,31 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
-        <ListTable<any>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
+        <ListTable<PermissionGroupRecord>
           actionRef={actionRef}
           columns={columns}
           headerTitle={false}
           request={async (params) => {
             const query = new PaginationQuery({
               formValues: Object.fromEntries(
-                Object.entries(params).filter(
-                  ([key]) => !['current', 'pageSize'].includes(key),
-                ),
+                Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
               ),
             });
 
             const response = await fetchListPermissionGroups(query);
-            const items = (response.items || []) as any[];
+            const items = (response.items || []) as PermissionGroupRecord[];
             // API 已返回树形结构，只需清理空 children
             cleanEmptyChildren(items);
             setTreeData(items);
 
             // 默认展开全部
             const keys: React.Key[] = [];
-            const collectKeys = (nodes: any[]) => {
+            const collectKeys = (nodes: PermissionGroupRecord[]) => {
               nodes.forEach((n) => {
                 keys.push(n.id as number);
                 if (n.children?.length) collectKeys(n.children);
@@ -186,19 +189,25 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
 
             return {
               data: items,
-              total: (response as any).total ?? items.length,
+              total: response.total ?? items.length,
               success: true,
             };
           }}
           rowKey="id"
-          search={{ optionRender: searchOptionRender,
+          search={{
+            optionRender: searchOptionRender,
             labelWidth: 'auto',
             defaultCollapsed: false,
             span: 12,
           }}
           pagination={false}
           toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListPermissionGroups} columns={columns} filename="permission-groups" />,
+            <TableExportButton
+              key="export"
+              fetcher={fetchListPermissionGroups}
+              columns={columns}
+              filename="permission-groups"
+            />,
             <Button
               key="expandAll"
               icon={<NodeExpandOutlined />}
@@ -245,7 +254,7 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
           }}
           onRow={(record) => ({
             onClick: () => {
-              onGroupSelect(record.id);
+              if (record.id !== undefined) onGroupSelect(record.id);
             },
             className: record.id === currentGroupId ? 'ant-table-row-selected' : undefined,
             style: {
@@ -258,7 +267,7 @@ const PermissionGroupList: React.FC<PermissionGroupListProps> = ({
       <PermissionGroupDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingGroup}
+        data={editingGroup ?? undefined}
         onClose={() => {
           setDrawerOpen(false);
           setEditingGroup(null);

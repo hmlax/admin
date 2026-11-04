@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '@/utils/error';
+import { useCallback, useState } from 'react';
 import { Button, Checkbox, TimePicker, Spin, Switch, Typography, App } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +7,7 @@ import { apiClient } from '@/api/client';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const { Text, Title } = Typography;
+const EMPTY_CATEGORY_IDS: number[] = [];
 
 /**
  * 个人中心「通知偏好」：实时推送静音时段 + 站内信分类退订（仅全员广播）。
@@ -40,19 +42,17 @@ const NotificationPreference = () => {
     queryFn: () => apiClient.notificationPreferenceService.ListMyNotificationCategories({}),
   });
 
-  const [quietEnabled, setQuietEnabled] = useState<boolean>(false);
-  const [quietStart, setQuietStart] = useState<Dayjs | undefined>(minutesToDayjs(1320));
-  const [quietEnd, setQuietEnd] = useState<Dayjs | undefined>(minutesToDayjs(480));
-  const [mutedCategoryIds, setMutedCategoryIds] = useState<number[]>([]);
-
-  useEffect(() => {
-    const pref = prefQuery.data;
-    if (!pref) return;
-    setQuietEnabled(!!pref.quietEnabled);
-    setQuietStart(minutesToDayjs(pref.quietStartMinute ?? 1320));
-    setQuietEnd(minutesToDayjs(pref.quietEndMinute ?? 480));
-    setMutedCategoryIds(pref.mutedCategoryIds ?? []);
-  }, [prefQuery.data]);
+  const [draft, setDraft] = useState<{
+    quietEnabled?: boolean;
+    quietStart?: Dayjs;
+    quietEnd?: Dayjs;
+    mutedCategoryIds?: number[];
+  }>({});
+  const quietEnabled = draft.quietEnabled ?? !!prefQuery.data?.quietEnabled;
+  const quietStart = draft.quietStart ?? minutesToDayjs(prefQuery.data?.quietStartMinute ?? 1320);
+  const quietEnd = draft.quietEnd ?? minutesToDayjs(prefQuery.data?.quietEndMinute ?? 480);
+  const mutedCategoryIds =
+    draft.mutedCategoryIds ?? prefQuery.data?.mutedCategoryIds ?? EMPTY_CATEGORY_IDS;
 
   const handleSave = useCallback(async () => {
     const startMinute = dayjsToMinutes(quietStart);
@@ -75,10 +75,11 @@ const NotificationPreference = () => {
         mutedCategoryIds,
       });
       message.success(t('notification.saveSuccess'));
-      prefQuery.refetch();
-    } catch (error: any) {
+      await prefQuery.refetch();
+      setDraft({});
+    } catch (error: unknown) {
       console.error('Failed to save notification preferences:', error);
-      message.error(error.message || t('notification.saveFailed'));
+      message.error(getErrorMessage(error) || t('notification.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -95,12 +96,14 @@ const NotificationPreference = () => {
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <Title level={5} style={{ marginBottom: 4 }}>{t('notification.quietTitle')}</Title>
+      <Title level={5} style={{ marginBottom: 4 }}>
+        {t('notification.quietTitle')}
+      </Title>
       <Text type="secondary">{t('notification.quietDesc')}</Text>
       <div style={{ marginTop: 12, marginBottom: 16 }}>
         <Switch
           checked={quietEnabled}
-          onChange={(checked) => setQuietEnabled(checked)}
+          onChange={(checked) => setDraft((prev) => ({ ...prev, quietEnabled: checked }))}
           checkedChildren={t('notification.on')}
           unCheckedChildren={t('notification.off')}
         />
@@ -115,7 +118,9 @@ const NotificationPreference = () => {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <TimePicker
               value={quietStart}
-              onChange={(value) => setQuietStart(value ?? undefined)}
+              onChange={(value) =>
+                setDraft((prev) => ({ ...prev, quietStart: value ?? undefined }))
+              }
               format="HH:mm"
               minuteStep={5}
               allowClear={false}
@@ -125,7 +130,7 @@ const NotificationPreference = () => {
             <span>-</span>
             <TimePicker
               value={quietEnd}
-              onChange={(value) => setQuietEnd(value ?? undefined)}
+              onChange={(value) => setDraft((prev) => ({ ...prev, quietEnd: value ?? undefined }))}
               format="HH:mm"
               minuteStep={5}
               allowClear={false}
@@ -136,14 +141,16 @@ const NotificationPreference = () => {
         </div>
       )}
 
-      <Title level={5} style={{ marginBottom: 4, marginTop: 24 }}>{t('notification.muteTitle')}</Title>
+      <Title level={5} style={{ marginBottom: 4, marginTop: 24 }}>
+        {t('notification.muteTitle')}
+      </Title>
       <Text type="secondary">{t('notification.muteDesc')}</Text>
       <div style={{ marginTop: 12, marginBottom: 16 }}>
         {categoryOptions.length > 0 ? (
           <Checkbox.Group
             options={categoryOptions}
             value={mutedCategoryIds}
-            onChange={(values) => setMutedCategoryIds(values as number[])}
+            onChange={(values) => setDraft((prev) => ({ ...prev, mutedCategoryIds: values }))}
             style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}
           />
         ) : (

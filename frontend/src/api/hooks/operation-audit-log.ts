@@ -13,7 +13,7 @@ import { apiClient } from '@/api/client';
 
 export function useListOperationAuditLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListOperationAuditLogResponse, Error>,
+  options?: Omit<UseQueryOptions<ListOperationAuditLogResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listOperationAuditLogs', query],
@@ -32,7 +32,7 @@ export async function fetchListOperationAuditLogs(params: PaginationQuery) {
 
 export function useGetOperationAuditLog(
   req: GetOperationAuditLogRequest,
-  options?: UseQueryOptions<OperationAuditLog, Error>,
+  options?: Omit<UseQueryOptions<OperationAuditLog, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getOperationAuditLog', req],

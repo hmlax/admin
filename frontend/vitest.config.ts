@@ -10,13 +10,6 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: [
-      'src/router/**/*.test.ts',
-      'src/core/preferences/**/*.test.ts',
-      'src/core/access/**/*.test.ts',
-      'build/**/*.test.ts',
-      'src/config/**/*.test.ts',
-      'src/hooks/**/*.test.ts',
-    ],
+    include: ['src/**/*.test.{ts,tsx}', 'build/**/*.test.ts'],
   },
 });

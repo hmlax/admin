@@ -4,12 +4,7 @@ import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Tag, Button, App } from 'antd';
-import {
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, CopyOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { PrintTemplate as PrintTemplate } from '@/api/generated/admin/v1';
@@ -181,16 +176,14 @@ const PrintTemplateManagement = () => {
           <ListTable<PrintTemplate>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, sorter, _filter) => {
+            request={async (params, sorter) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || 10,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -209,7 +202,8 @@ const PrintTemplateManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}

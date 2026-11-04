@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useState } from 'react';
 import { App, Button, Modal, Upload } from 'antd';
 import { DownloadOutlined, InboxOutlined } from '@ant-design/icons';
@@ -14,7 +15,7 @@ export interface ImportModalProps {
   /** 可导入字段（label 即模板表头） */
   fields: ImportField[];
   /** 单行落库动作（页面既有 create mutation 的 mutateAsync） */
-  createRow: (values: Record<string, any>) => Promise<any>;
+  createRow: (values: Record<string, unknown>) => Promise<unknown>;
   onClose: () => void;
   onSuccess?: (imported: number) => void;
 }
@@ -28,7 +29,7 @@ export default function ImportModal({
 }: ImportModalProps) {
   const { t } = useTranslation('common');
   const { message } = App.useApp();
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<(File & { uid: string }) | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleDownloadTemplate = async () => {
@@ -55,8 +56,9 @@ export default function ImportModal({
       reset();
       onSuccess?.(imported);
       onClose();
-    } catch (err: any) {
-      message.error(`${t('import.importFailed')}：${err?.message ?? ''}`);
+    } catch (err: unknown) {
+      console.error('Operation failed:', err);
+      message.error(`${t('import.importFailed')}：${getErrorMessage(err) ?? ''}`);
     } finally {
       setSubmitting(false);
     }
@@ -89,7 +91,7 @@ export default function ImportModal({
           return false; // 手动控制：选择即停，提交时统一解析
         }}
         onRemove={() => setFile(null)}
-        fileList={file ? [file as any] : []}
+        fileList={file ? [file] : []}
       >
         <p className="ant-upload-drag-icon">
           <InboxOutlined />

@@ -8,12 +8,13 @@ import { type LoginRequest } from '@/api/generated/admin/v1';
 import { useUserStore } from '@/stores/user';
 import { fetchUserProfile, fetchGenerateCaptcha } from '@/api/hooks';
 import { fetchMyPermissionCode } from '@/api/hooks/admin-portal';
+import { useMemo } from 'react';
 
 /**
  * 认证业务 Hook
  * 提供完整的认证操作入口，组合 store 状态 + API 调用
  */
-export function useAuth() {
+export function createAuthActions() {
   const authStore = useAuthStore;
 
   /**
@@ -21,7 +22,20 @@ export function useAuth() {
    */
   async function fetchUserInfo() {
     try {
-      return (await fetchUserProfile()) as unknown as UserInfo;
+      const profile = await fetchUserProfile();
+      if (!profile?.id) throw new Error('User profile is missing its ID');
+      return {
+        ...profile,
+        id: profile.id,
+        tenantId: profile.tenantId ?? 0,
+        avatar: profile.avatar ?? '',
+        nickname: profile.nickname ?? '',
+        realname: profile.realname ?? '',
+        username: profile.username ?? '',
+        description: profile.description ?? '',
+        homePath: '',
+        token: '',
+      } satisfies UserInfo;
     } catch (error) {
       console.error('fetchUserInfo failed:', error);
       return null;
@@ -102,4 +116,11 @@ export function useAuth() {
     /** 获取角色码和权限码（分开存储） */
     getUserPermissionCodes,
   };
+}
+
+/** Reactive component facade; non-component code uses createAuthActions. */
+export function useAuth() {
+  const loginLoading = useAuthStore((state) => state.loginLoading);
+  const actions = useMemo(() => createAuthActions(), []);
+  return { ...actions, loginLoading };
 }

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -51,7 +52,7 @@ const PolicyEvaluationLog = () => {
   const { t } = useTranslation('policy-evaluation-log');
   const actionRef = useRef<ActionType>(null);
   // 最近一次列表查询参数：导出 CSV 时沿用当前搜索/排序条件
-  const latestParamsRef = useRef<Record<string, any>>({});
+  const latestParamsRef = useRef<Record<string, unknown>>({});
   const { message } = App.useApp();
   const [detailRecord, setDetailRecord] = useState<PolicyEvaluationLog | null>(null);
 
@@ -146,9 +147,7 @@ const PolicyEvaluationLog = () => {
         ]),
       ),
       render: (_, record) => (
-        <Tag color={resultToColor(record.result)}>
-          {resultToName(t, record.result)}
-        </Tag>
+        <Tag color={resultToColor(record.result)}>{resultToName(t, record.result)}</Tag>
       ),
     },
     {
@@ -265,7 +264,7 @@ const PolicyEvaluationLog = () => {
     },
   ];
 
-        // 按当前搜索条件导出 CSV（客户端分页聚合，上限 1 万行；全量归档走后端 JSONL 任务）
+  // 按当前搜索条件导出 CSV（客户端分页聚合，上限 1 万行；全量归档走后端 JSONL 任务）
   // 服务端全量导出（XLSX，上限 50 万行）：当前搜索条件透传给后端，
   // 突破客户端聚合导出的 1 万行上限
   const handleServerExport = async () => {
@@ -284,9 +283,9 @@ const PolicyEvaluationLog = () => {
         }),
       );
       message.success(t('exportServerSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('server-side audit export failed', error);
-      message.error(error?.message || t('exportServerFailed'));
+      message.error(getErrorMessage(error) || t('exportServerFailed'));
     }
   };
 
@@ -298,14 +297,18 @@ const PolicyEvaluationLog = () => {
         title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
       }));
     try {
-      await exportAuditLogs({
-        fetcher: (q) => fetchListPolicyEvaluationLogs(q),
-        filename: `policy-evaluation-logs-${Date.now()}.csv`,
-        columns: exportColumns,
-        params: latestParamsRef.current,
-      }, format);
-    } catch (error: any) {
-      message.error(error?.message || 'Export failed');
+      await exportAuditLogs(
+        {
+          fetcher: (q) => fetchListPolicyEvaluationLogs(q),
+          filename: `policy-evaluation-logs-${Date.now()}.csv`,
+          columns: exportColumns,
+          params: latestParamsRef.current,
+        },
+        format,
+      );
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || 'Export failed');
     }
   };
   return (
@@ -323,9 +326,7 @@ const PolicyEvaluationLog = () => {
                   pageSize: params.pageSize || 20,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -344,7 +345,8 @@ const PolicyEvaluationLog = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -375,7 +377,6 @@ const PolicyEvaluationLog = () => {
                 <Button>{t('export')}</Button>
               </Dropdown>,
             ]}
-
             options={{
               density: true,
               fullScreen: true,

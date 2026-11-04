@@ -27,7 +27,7 @@ export const useLocaleSync = () => {
       document.documentElement.lang = locale;
       document.documentElement.dir = 'ltr';
     }
-  }, [locale]);
+  }, [locale, i18n]);
 
   // i18n 初始化后，只在第一次反向同步到 store
   useEffect(() => {
@@ -36,7 +36,7 @@ export const useLocaleSync = () => {
       const detected = i18n.language as SupportedLocale;
       setPreferences({ app: { locale: detected } });
     }
-  }, [i18n.isInitialized, locale, setPreferences]);
+  }, [i18n, i18n.language, i18n.isInitialized, locale, setPreferences]);
 
   // 便捷切换方法
   const changeLocale = useCallback(

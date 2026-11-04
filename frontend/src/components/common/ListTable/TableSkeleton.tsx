@@ -8,7 +8,7 @@ const BAR_WIDTHS = ['78%', '62%', '84%', '54%', '70%'];
 
 const SKELETON_ROW_KEY = '__listTableSkeletonRow__';
 
-export interface TableSkeletonProps<RecordType extends Record<string, any>> {
+export interface TableSkeletonProps<RecordType extends object> {
   columns?: ProColumns<RecordType>[];
   rows: number;
   size?: TableProps<RecordType>['size'];
@@ -30,7 +30,7 @@ export interface TableSkeletonProps<RecordType extends Record<string, any>> {
  * columns 与组件主题供给，占位条只替换单元格 render——自画一份灰块会跟真实表格对不齐，
  * 尤其在有 fixed 列 / scroll.x / bordered 的页面上。
  */
-export function TableSkeleton<RecordType extends Record<string, any>>({
+export function TableSkeleton<RecordType extends object>({
   columns = [],
   rows,
   size,
@@ -46,8 +46,9 @@ export function TableSkeleton<RecordType extends Record<string, any>>({
         .map((column, columnIndex) => {
           // 剥掉 ListTable 注入的列宽拖拽参数：骨架是裸 Table，onHeaderCell 返回的自定义
           // props 会被直接铺到原生 <th> 上，触发 React 未知 DOM 属性告警
-          const { onHeaderCell: _onHeaderCell, resizable: _resizable, ...restColumn } =
-            column as typeof column & Record<string, unknown>;
+          const restColumn = { ...column };
+          delete restColumn.onHeaderCell;
+          if ('resizable' in restColumn) delete restColumn.resizable;
           return {
             ...restColumn,
             key: String(column.key ?? column.dataIndex ?? columnIndex),
@@ -65,9 +66,13 @@ export function TableSkeleton<RecordType extends Record<string, any>>({
 
   const dataSource = useMemo(
     () =>
-      Array.from({ length: rows }, (_, index) => ({
-        [SKELETON_ROW_KEY]: index,
-      }) as unknown as RecordType),
+      Array.from(
+        { length: rows },
+        (_, index) =>
+          ({
+            [SKELETON_ROW_KEY]: index,
+          }) as unknown as RecordType,
+      ),
     [rows],
   );
 

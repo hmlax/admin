@@ -1,4 +1,9 @@
-import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { type PaginationQuery, queryClient } from '@/core';
 import { makeUpdateMask } from '@/core/transport/rest/utils';
@@ -36,13 +41,26 @@ export async function fetchListAiConversations(params: PaginationQuery) {
 
 // useUpdateAiConversation — 改标题
 export function useUpdateAiConversation(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiConversationService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiConversationService.Update>[0]['data']>;
+    }) =>
       apiClient.aiConversationService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       } as UpdateAiConversationRequest),
     ...options,
@@ -51,7 +69,7 @@ export function useUpdateAiConversation(
 
 // useDeleteAiConversation — 后端级联删除会话内全部消息
 export function useDeleteAiConversation(
-  options?: UseMutationOptions<{}, Error, { id: number }>,
+  options?: UseMutationOptions<Record<string, never>, Error, { id: number }>,
 ) {
   return useMutation({
     mutationFn: ({ id }: { id: number }) => apiClient.aiConversationService.Delete({ id }),
@@ -87,9 +105,7 @@ export async function fetchListAiMessages(params: PaginationQuery) {
 // useSendChat — 发起一轮对话。
 // 增量 token 经 SSE `ai_chat_chunk` 事件实时推送（订阅见聊天页），
 // 本 mutation 的响应携带完整回复（含会话与 tokens 用量），是最终事实。
-export function useSendChat(
-  options?: UseMutationOptions<ChatResponse, Error, ChatRequest>,
-) {
+export function useSendChat(options?: UseMutationOptions<ChatResponse, Error, ChatRequest>) {
   return useMutation({ mutationFn: (req) => apiClient.aiChatService.Chat(req), ...options });
 }
 

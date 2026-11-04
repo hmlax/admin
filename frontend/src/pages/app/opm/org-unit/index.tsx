@@ -61,7 +61,7 @@ const OrgUnitManagement = () => {
   });
 
   // 清理 API 返回树形数据中的空 children 数组
-  const cleanEmptyChildren = (nodes: any[]): void => {
+  const cleanEmptyChildren = (nodes: OrgUnit[]): void => {
     nodes.forEach((n) => {
       if (n.children) {
         if (n.children.length === 0) {
@@ -81,8 +81,8 @@ const OrgUnitManagement = () => {
     const collectKeys = (items: OrgUnit[]) => {
       items.forEach((item) => {
         keys.push(item.id as number);
-        if ((item as any).children?.length) {
-          collectKeys((item as any).children);
+        if (item.children?.length) {
+          collectKeys(item.children);
         }
       });
     };
@@ -208,35 +208,39 @@ const OrgUnitManagement = () => {
           <ListTable<OrgUnit>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
               const response = await fetchListOrgUnits(query);
               const items = (response.items || []) as OrgUnit[];
               // API 已返回树形结构，只需清理空 children
-              cleanEmptyChildren(items as any[]);
+              cleanEmptyChildren(items);
               setTreeData(items);
 
               return {
                 data: items,
-                total: (response as any).total ?? items.length,
+                total: response.total ?? items.length,
                 success: true,
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListOrgUnits} columns={columns} filename="org-units" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListOrgUnits}
+                columns={columns}
+                filename="org-units"
+              />,
               <Button
                 key="expandAll"
                 icon={<NodeExpandOutlined />}

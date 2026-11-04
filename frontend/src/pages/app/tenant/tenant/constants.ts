@@ -3,7 +3,7 @@
  * 页面和 Drawer 共用
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 const TENANT_CODE_LENGTH = 32;
 const TENANT_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -147,6 +147,8 @@ export function getTenantStatusOptions(t: TFn) {
 export const SELECT_FILTER_PROPS = {
   showSearch: true,
   allowClear: true,
-  filterOption: (input: string, option: any) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+  filterOption: (input: string, option?: { label?: unknown }) =>
+    String(option?.label ?? '')
+      .toLowerCase()
+      .includes(input.toLowerCase()),
 };

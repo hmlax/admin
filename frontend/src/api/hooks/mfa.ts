@@ -28,15 +28,10 @@ export function useGetMfaStatus(enabled = true) {
  * 开始注册 TOTP（后端返回 secret + otpauth URI + QR dataURI + operation_id）。
  */
 export function useStartEnrollMfa(
-  options?: UseMutationOptions<
-    StartEnrollMethodResponse,
-    Error,
-    StartEnrollMethodRequest
-  >,
+  options?: UseMutationOptions<StartEnrollMethodResponse, Error, StartEnrollMethodRequest>,
 ) {
   return useMutation({
-    mutationFn: (req: StartEnrollMethodRequest) =>
-      apiClient.mfaService.StartEnrollMethod(req),
+    mutationFn: (req: StartEnrollMethodRequest) => apiClient.mfaService.StartEnrollMethod(req),
     ...options,
   });
 }
@@ -45,15 +40,10 @@ export function useStartEnrollMfa(
  * 确认注册 TOTP：提交首码完成绑定。
  */
 export function useConfirmEnrollMfa(
-  options?: UseMutationOptions<
-    ConfirmEnrollMethodResponse,
-    Error,
-    ConfirmEnrollMethodRequest
-  >,
+  options?: UseMutationOptions<ConfirmEnrollMethodResponse, Error, ConfirmEnrollMethodRequest>,
 ) {
   return useMutation({
-    mutationFn: (req: ConfirmEnrollMethodRequest) =>
-      apiClient.mfaService.ConfirmEnrollMethod(req),
+    mutationFn: (req: ConfirmEnrollMethodRequest) => apiClient.mfaService.ConfirmEnrollMethod(req),
     ...options,
   });
 }
@@ -62,11 +52,10 @@ export function useConfirmEnrollMfa(
  * 禁用/移除当前用户的 MFA 凭证。
  */
 export function useDisableMfa(
-  options?: UseMutationOptions<{}, Error, DisableMFARequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DisableMFARequest>,
 ) {
   return useMutation({
-    mutationFn: (req: DisableMFARequest) =>
-      apiClient.mfaService.DisableMFA(req),
+    mutationFn: (req: DisableMFARequest) => apiClient.mfaService.DisableMFA(req),
     ...options,
   });
 }
@@ -76,11 +65,10 @@ export function useDisableMfa(
  * 仅平台管理员可调用（后端强制校验）。
  */
 export function useAdminResetMfa(
-  options?: UseMutationOptions<{}, Error, DisableMFARequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DisableMFARequest>,
 ) {
   return useMutation({
-    mutationFn: (req: DisableMFARequest) =>
-      apiClient.mfaService.DisableMFA(req),
+    mutationFn: (req: DisableMFARequest) => apiClient.mfaService.DisableMFA(req),
     ...options,
   });
 }

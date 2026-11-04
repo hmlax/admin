@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import ListTable from '@/components/common/ListTable';
@@ -10,7 +11,13 @@ import {
   ProFormSwitch,
 } from '@ant-design/pro-components';
 import { Button, Tag, App } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, ApartmentOutlined, HistoryOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ApartmentOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { AiAgentApp as AiAgentApp } from '@/api/generated/admin/v1';
@@ -45,7 +52,9 @@ const AiAgentAppManagement = () => {
 
   const [formOpen, setFormOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () => setFormOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () =>
+    setFormOpen(false),
+  );
   const [editing, setEditing] = useState<AiAgentApp | undefined>();
   const [canvasApp, setCanvasApp] = useState<AiAgentApp | undefined>();
   const [runsApp, setRunsApp] = useState<AiAgentApp | undefined>();
@@ -65,20 +74,21 @@ const AiAgentAppManagement = () => {
       await deleteMutation.mutateAsync({ id: record.id });
       message.success(t('deleteSuccess'));
       refresh();
-    } catch (error: any) {
-      message.error(error.message || t('deleteFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('deleteFailed'));
     }
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: AiAgentApp) => {
     try {
       if (!editing?.id) {
-        await createMutation.mutateAsync({ data: values as AiAgentApp });
+        await createMutation.mutateAsync({ data: values });
         message.success(t('createSuccess'));
       } else {
         await updateMutation.mutateAsync({
           id: editing.id,
-          data: { id: editing.id, ...values } as AiAgentApp,
+          data: { id: editing.id, ...values },
           updateMask: 'name,description,enabled',
         });
         message.success(t('updateSuccess'));
@@ -86,8 +96,9 @@ const AiAgentAppManagement = () => {
       setFormOpen(false);
       refresh();
       return true;
-    } catch (error: any) {
-      message.error(error.message || t('saveFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('saveFailed'));
       return false;
     }
   };
@@ -181,9 +192,19 @@ const AiAgentAppManagement = () => {
           rowKey="id"
           search={false}
           pagination={{ defaultPageSize: TABLE.DEFAULT_PAGE_SIZE, showSizeChanger: true }}
-          options={{ density: true, fullScreen: true, setting: { settingIcon: <ColumnSlidersIcon /> }, reload: true }}
+          options={{
+            density: true,
+            fullScreen: true,
+            setting: { settingIcon: <ColumnSlidersIcon /> },
+            reload: true,
+          }}
           toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListAiAgentApps} columns={columns} filename="ai-agent-apps" />,
+            <TableExportButton
+              key="export"
+              fetcher={fetchListAiAgentApps}
+              columns={columns}
+              filename="ai-agent-apps"
+            />,
             <Button
               key="create"
               color="primary"
@@ -204,7 +225,11 @@ const AiAgentAppManagement = () => {
       </div>
 
       <DrawerForm
-        title={editing ? t('common:modal.update', { moduleName: t('moduleName') }) : t('common:modal.create', { moduleName: t('moduleName') })}
+        title={
+          editing
+            ? t('common:modal.update', { moduleName: t('moduleName') })
+            : t('common:modal.create', { moduleName: t('moduleName') })
+        }
         open={formOpen}
         onOpenChange={(v) => {
           // 关闭一律走 drawerProps.onClose 守卫；这里只放行打开
@@ -223,15 +248,18 @@ const AiAgentAppManagement = () => {
           label={t('name')}
           rules={[{ required: true, message: t('requiredName') }]}
         />
-        <ProFormTextArea
-          name="description"
-          label={t('description')}
-          fieldProps={{ rows: 2 }}
-        />
+        <ProFormTextArea name="description" label={t('description')} fieldProps={{ rows: 2 }} />
         <ProFormSwitch name="enabled" label={t('enabled')} />
       </DrawerForm>
 
-      <AgentCanvas open={!!canvasApp} app={canvasApp} onClose={() => { setCanvasApp(undefined); refresh(); }} />
+      <AgentCanvas
+        open={!!canvasApp}
+        app={canvasApp}
+        onClose={() => {
+          setCanvasApp(undefined);
+          refresh();
+        }}
+      />
       <AgentRunsDrawer open={!!runsApp} app={runsApp} onClose={() => setRunsApp(undefined)} />
     </ContentContainer>
   );

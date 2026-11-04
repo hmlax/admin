@@ -20,6 +20,7 @@ import { useUserStore, useAuthStore, usePageRefreshStore, useLockStore } from '@
 import { useAccess } from '@/core/access';
 import { usePreferencesStore } from '@/core/preferences/store';
 import { useThemeConfig } from '@/core/preferences/hooks/useThemeConfig';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { startThemeViewTransition } from '@/core/preferences/theme-transition';
 import { PreferencesPanel } from '@/core/preferences/components';
 
@@ -60,43 +61,12 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
 
   // Theme
   const themeConfig = useThemeConfig();
-  const [isDark, setIsDark] = useState(() => {
-    const { theme } = preferences;
-    if (theme.mode === 'dark') return true;
-    if (theme.mode === 'light') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  // 监听系统主题变化
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => {
-      const { theme } = preferences;
-      if (theme.mode === 'auto') {
-        setIsDark(mediaQuery.matches);
-      }
-    };
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, [preferences.theme.mode]);
-
-  // 监听偏好设置变化
-  useEffect(() => {
-    const { theme } = preferences;
-    if (theme.mode === 'dark') setIsDark(true);
-    else if (theme.mode === 'light') setIsDark(false);
-    else setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, [preferences.theme.mode]);
+  const systemIsDark = useMediaQuery('(prefers-color-scheme: dark)');
+  const isDark =
+    preferences.theme.mode === 'auto' ? systemIsDark : preferences.theme.mode === 'dark';
 
   // 布局状态
-  const {
-    collapsed: _collapsed,
-    setCollapsed: _setCollapsed,
-    isMobile,
-    setIsMobile,
-    openKeys,
-    setOpenKeys,
-  } = useLayoutState();
+  const { isMobile, setIsMobile, openKeys, setOpenKeys } = useLayoutState();
 
   // 使用 preferences.sidebar.hidden 控制侧边栏显示/隐藏
   const sidebarHidden = preferences.sidebar?.hidden ?? false;
@@ -110,7 +80,8 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
   // 菜单数据：mountedRoutes 取自 AccessibleRoutesContext（实际挂载的路由树）——
   // 后端模式下侧栏必须镜像后端下发路由，回退静态全量表会造成未授权菜单可见、点击 404
   const permissions = useMemo(() => getAllPermissions(), [getAllPermissions]);
-  const mountedRoutes = dynamicRoutes ?? useContext(AccessibleRoutesContext) ?? undefined;
+  const contextRoutes = useContext(AccessibleRoutesContext);
+  const mountedRoutes = dynamicRoutes ?? contextRoutes ?? undefined;
   const menuData = useMenuData({
     staticRoutes: allRoutes,
     dynamicRoutes: mountedRoutes,
@@ -161,7 +132,7 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
   // 根据当前路径和菜单数据计算应该展开的菜单项
   useEffect(() => {
     const calculateOpenKeys = (
-      menuItems: any[],
+      menuItems: ReturnType<typeof useMenuData>,
       targetPath: string,
       parentKeys: string[] = [],
       parentPath: string = '',
@@ -190,7 +161,7 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
           }
           // 如果子项中直接匹配到目标路径，也要展开当前项
           if (
-            item.children.some((child: any) => {
+            item.children.some((child) => {
               const childPath = child.path?.startsWith('/')
                 ? child.path
                 : `${itemPath}/${child.path}`.replace(/\/+/g, '/');
@@ -259,7 +230,18 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
         }}
       />
     );
-  }, [userInfo, sidebarHidden, isFullscreen, logout, isDark, setPreferences, triggerPageRefresh, preferences.widget, menuData]);
+  }, [
+    setSidebarHidden,
+    userInfo,
+    sidebarHidden,
+    isFullscreen,
+    logout,
+    isDark,
+    setPreferences,
+    triggerPageRefresh,
+    preferences.widget,
+    menuData,
+  ]);
 
   // 主题切换
   useCallback(() => {

@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useEffect, useRef, useState } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
@@ -71,7 +72,7 @@ export default function AccessKeyDrawer({
     onSuccess();
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: AccessKey) => {
     setConfirmLoading(true);
     try {
       if (mode === 'create') {
@@ -80,7 +81,7 @@ export default function AccessKeyDrawer({
             name: values.name,
             expiresAt: values.expiresAt ?? undefined,
           },
-        } as any);
+        });
         queryClient.invalidateQueries({ queryKey: ['listAccessKeys'] });
         setCreatedSecret(resp.secret ?? null);
         markClean(); // Secret 已生成即已保存成功，后续关闭不再确认
@@ -98,8 +99,9 @@ export default function AccessKeyDrawer({
       resetAndClose();
       onSuccess();
       return true;
-    } catch (error: any) {
-      message.error(error?.message || t('fetchFailed'));
+    } catch (error: unknown) {
+      console.error('Save access key failed:', error);
+      message.error(getErrorMessage(error) || t('fetchFailed'));
       return false;
     } finally {
       setConfirmLoading(false);
@@ -157,9 +159,7 @@ export default function AccessKeyDrawer({
         cancelButtonProps={{ style: { display: 'none' } }}
         width={560}
       >
-        <Typography.Paragraph type="warning">
-          {t('secretDialogHint')}
-        </Typography.Paragraph>
+        <Typography.Paragraph type="warning">{t('secretDialogHint')}</Typography.Paragraph>
         <Typography.Paragraph copyable={{ text: createdSecret ?? '' }}>
           <Typography.Text code style={{ wordBreak: 'break-all' }}>
             {createdSecret}

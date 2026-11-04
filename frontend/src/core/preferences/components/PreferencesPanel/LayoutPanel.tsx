@@ -75,68 +75,12 @@ export const LayoutPanel: React.FC = () => {
                 className={`layout-item ${preferences.app.layout === option.value ? 'active' : ''}`}
               >
                 <div className="layout-preview">
-                {/* 渲染真实的布局示意图 */}
-                {option.value === 'sidebar-nav' && (
-                  <div className="layout-visual sidebar-nav">
-                    <div className="sidebar" />
-                    <div className="main-content">
-                      <div className="header-bar gray" />
-                      <div className="content-area">
-                        <div className="block-row">
-                          <div className="block" />
-                          <div className="block" />
-                        </div>
-                        <div className="block" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {option.value === 'sidebar-mixed-nav' && (
-                  <div className="layout-visual sidebar-mixed-nav">
-                    <div className="sidebar thin primary" />
-                    <div className="sidebar thin gray" />
-                    <div className="main-content">
-                      <div className="header-bar gray" />
-                      <div className="content-area">
-                        <div className="block-row">
-                          <div className="block" />
-                          <div className="block" />
-                        </div>
-                        <div className="block" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {option.value === 'header-nav' && (
-                  <div className="layout-visual header-nav">
-                    <div className="content-wrapper">
-                      <div className="header-bar full-width">
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                      </div>
-                      <div className="content-area">
-                        <div className="block-row">
-                          <div className="block" />
-                          <div className="block" />
-                        </div>
-                        <div className="block" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {option.value === 'mixed-nav' && (
-                  <div className="layout-visual mixed-nav">
-                    <div className="content-wrapper">
-                      <div className="header-bar full-width">
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                        <div className="menu-item" />
-                      </div>
+                  {/* 渲染真实的布局示意图 */}
+                  {option.value === 'sidebar-nav' && (
+                    <div className="layout-visual sidebar-nav">
+                      <div className="sidebar" />
                       <div className="main-content">
-                        <div className="sidebar thin gray" />
+                        <div className="header-bar gray" />
                         <div className="content-area">
                           <div className="block-row">
                             <div className="block" />
@@ -146,19 +90,75 @@ export const LayoutPanel: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                {option.value === 'full-content' && (
-                  <div className="layout-visual full-content">
-                    <div className="content-area full-width">
-                      <div className="block-row">
-                        <div className="block" />
+                  )}
+                  {option.value === 'sidebar-mixed-nav' && (
+                    <div className="layout-visual sidebar-mixed-nav">
+                      <div className="sidebar thin primary" />
+                      <div className="sidebar thin gray" />
+                      <div className="main-content">
+                        <div className="header-bar gray" />
+                        <div className="content-area">
+                          <div className="block-row">
+                            <div className="block" />
+                            <div className="block" />
+                          </div>
+                          <div className="block" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {option.value === 'header-nav' && (
+                    <div className="layout-visual header-nav">
+                      <div className="content-wrapper">
+                        <div className="header-bar full-width">
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                        </div>
+                        <div className="content-area">
+                          <div className="block-row">
+                            <div className="block" />
+                            <div className="block" />
+                          </div>
+                          <div className="block" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {option.value === 'mixed-nav' && (
+                    <div className="layout-visual mixed-nav">
+                      <div className="content-wrapper">
+                        <div className="header-bar full-width">
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                          <div className="menu-item" />
+                        </div>
+                        <div className="main-content">
+                          <div className="sidebar thin gray" />
+                          <div className="content-area">
+                            <div className="block-row">
+                              <div className="block" />
+                              <div className="block" />
+                            </div>
+                            <div className="block" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {option.value === 'full-content' && (
+                    <div className="layout-visual full-content">
+                      <div className="content-area full-width">
+                        <div className="block-row">
+                          <div className="block" />
+                          <div className="block" />
+                        </div>
                         <div className="block" />
                       </div>
-                      <div className="block" />
                     </div>
-                  </div>
-                )}
+                  )}
                 </div>
               </div>
               <div className="layout-label">
@@ -184,7 +184,9 @@ export const LayoutPanel: React.FC = () => {
                 className={`content-compact-item ${preferences.app.contentCompact === option.value ? 'active' : ''}`}
               >
                 <div className="content-preview">
-                <div className={`preview-bar ${option.value === 'compact' ? 'narrow' : 'wide'}`} />
+                  <div
+                    className={`preview-bar ${option.value === 'compact' ? 'narrow' : 'wide'}`}
+                  />
                 </div>
               </div>
               <span>{t(option.label)}</span>
@@ -263,7 +265,9 @@ export const LayoutPanel: React.FC = () => {
               { label: t('layout.headerModes.static'), value: 'static' },
             ]}
             value={preferences.header.mode}
-            onChange={(value) => setPreferences({ header: { mode: value as any } })}
+            onChange={(value) =>
+              setPreferences({ header: { mode: value as typeof preferences.header.mode } })
+            }
           />
         </div>
       </section>
@@ -279,7 +283,11 @@ export const LayoutPanel: React.FC = () => {
               { label: t('layout.menuStyles.plain'), value: 'plain' },
             ]}
             value={preferences.navigation.styleType}
-            onChange={(value) => setPreferences({ navigation: { styleType: value as any } })}
+            onChange={(value) =>
+              setPreferences({
+                navigation: { styleType: value as typeof preferences.navigation.styleType },
+              })
+            }
           />
         </div>
         <div className="preference-item">
@@ -337,7 +345,11 @@ export const LayoutPanel: React.FC = () => {
               { label: t('layout.breadcrumbStyles.background'), value: 'background' },
             ]}
             value={preferences.breadcrumb.styleType}
-            onChange={(value) => setPreferences({ breadcrumb: { styleType: value as any } })}
+            onChange={(value) =>
+              setPreferences({
+                breadcrumb: { styleType: value as typeof preferences.breadcrumb.styleType },
+              })
+            }
           />
         </div>
       </section>
@@ -398,7 +410,7 @@ export const LayoutPanel: React.FC = () => {
               { label: t('layout.tabbarStyles.plain'), value: 'plain' },
             ]}
             value={preferences.tabbar.styleType}
-            onChange={(value) => setPreferences({ tabbar: { styleType: value as any } })}
+            onChange={(value) => setPreferences({ tabbar: { styleType: value } })}
           />
         </div>
       </section>
@@ -472,9 +484,7 @@ export const LayoutPanel: React.FC = () => {
               { label: t('layout.positions.hidden'), value: 'hidden' },
             ]}
             value={preferences.app.preferencesButtonPosition}
-            onChange={(value) =>
-              setPreferences({ app: { preferencesButtonPosition: value as any } })
-            }
+            onChange={(value) => setPreferences({ app: { preferencesButtonPosition: value } })}
           />
         </div>
       </section>

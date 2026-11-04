@@ -1,11 +1,7 @@
+import type { DictType as DictTypeRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormDigit,
-  ProFormRadio,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormDigit, ProFormRadio } from '@ant-design/pro-components';
 import { App } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +13,7 @@ import { enableBoolRadioOptions } from './constants';
 interface DictTypeDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: DictTypeRecord;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -83,7 +79,7 @@ const DictTypeDrawer: React.FC<DictTypeDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: DictTypeRecord) => {
     try {
       setConfirmLoading(true);
       if (mode === 'edit' && data?.id) {
@@ -92,7 +88,8 @@ const DictTypeDrawer: React.FC<DictTypeDrawerProps> = ({
         await createMutation.mutateAsync({ data: values });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);

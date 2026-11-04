@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPositions(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPositionResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPositionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPositions', query],
@@ -39,7 +39,7 @@ export async function fetchListPositions(params: PaginationQuery) {
 
 export function useGetPosition(
   req: GetPositionRequest,
-  options?: UseQueryOptions<Position, Error>,
+  options?: Omit<UseQueryOptions<Position, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPosition', req],
@@ -49,7 +49,7 @@ export function useGetPosition(
 }
 
 export function useCreatePosition(
-  options?: UseMutationOptions<{}, Error, CreatePositionRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePositionRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.positionService.Create(data),
@@ -58,10 +58,23 @@ export function useCreatePosition(
 }
 
 export function useUpdatePosition(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.positionService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.positionService.Update>[0]['data']>;
+    }) =>
       apiClient.positionService.Update({
         id,
         data: { ...values },
@@ -72,7 +85,7 @@ export function useUpdatePosition(
 }
 
 export function useDeletePosition(
-  options?: UseMutationOptions<{}, Error, DeletePositionRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePositionRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.positionService.Delete(req),

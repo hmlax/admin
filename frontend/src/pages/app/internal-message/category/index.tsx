@@ -130,12 +130,10 @@ const InternalMessageCategoryManagement = () => {
           <ListTable<Category>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
@@ -148,13 +146,19 @@ const InternalMessageCategoryManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListMessageCategories} columns={columns} filename="im-categories" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListMessageCategories}
+                columns={columns}
+                filename="im-categories"
+              />,
               <Button
                 key="create"
                 color="primary"

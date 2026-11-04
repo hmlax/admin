@@ -1,4 +1,9 @@
-import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import {
   type GetAiAgentRunRequest,
   type ListAiAgentRunsResponse,
@@ -16,7 +21,7 @@ const RUNS_KEY = 'listAiAgentRuns';
 export function useListAiAgentRuns(
   appId: number | undefined,
   query: PaginationQuery,
-  options?: UseQueryOptions<ListAiAgentRunsResponse, Error>,
+  options?: Omit<UseQueryOptions<ListAiAgentRunsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [RUNS_KEY, appId, query],

@@ -27,6 +27,17 @@ import {
   normalizeAuthority,
 } from '../constants';
 
+type MenuFormValues = Menu & {
+  [K in keyof NonNullable<Menu['meta']> as `meta.${K & string}`]?: NonNullable<Menu['meta']>[K];
+};
+
+interface MenuSelectNode {
+  title: string;
+  value: number;
+  key: number;
+  children?: MenuSelectNode[];
+}
+
 interface MenuDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
@@ -79,8 +90,8 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
   useEffect(() => {
     if (open && mode === 'edit' && data) {
       // 将 meta 内部字段展开到表单顶级
-      const meta = (data as any).meta || {};
-      const formValues: Record<string, any> = {
+      const meta = data.meta || {};
+      const formValues: Record<string, unknown> = {
         type: data.type || 'MENU',
         status: data.status || 'ON',
         path: data.path || '',
@@ -104,13 +115,16 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
   }, [open, mode, data]);
 
   // 构建菜单树（用于父级菜单选择）
-  const buildMenuTree = (items: any[], parentId: number | string | undefined): any[] => {
+  const buildMenuTree = (
+    items: Menu[],
+    parentId: number | string | undefined,
+  ): MenuSelectNode[] => {
     return items
-      .filter((item) => item.parentId === parentId)
+      .filter((item) => item.parentId === parentId && item.id !== undefined)
       .map((item) => ({
         title: item.meta?.title || item.path || '',
-        value: item.id,
-        key: item.id,
+        value: item.id!,
+        key: item.id!,
         children: buildMenuTree(items, item.id),
       }));
   };
@@ -131,12 +145,12 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
   };
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: MenuFormValues) => {
     setConfirmLoading(true);
 
     try {
       // 将 meta 字段重新聚合
-      const payload: Record<string, any> = {
+      const payload: Menu = {
         type: values.type,
         status: values.status,
         path: values.path,
@@ -158,7 +172,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       };
 
       if (mode === 'create') {
-        await createMutation.mutateAsync({ data: payload as any });
+        await createMutation.mutateAsync({ data: payload });
       } else if (data?.id) {
         await updateMutation.mutateAsync({ id: data.id, values: payload });
       }
@@ -335,9 +349,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       <ProFormDependency name={['type']}>
         {({ type }) => {
           if (isButton(type) || type === 'LINK') return null;
-          return (
-            <Divider titlePlacement="left">{t('advancedSettings')}</Divider>
-          );
+          return <Divider titlePlacement="left">{t('advancedSettings')}</Divider>;
         }}
       </ProFormDependency>
 
@@ -345,11 +357,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       <ProFormDependency name={['type']}>
         {({ type }) => {
           if (!isMenu(type)) return null;
-          return (
-            <ProFormCheckbox name="meta.keepAlive">
-              {t('keepAlive')}
-            </ProFormCheckbox>
-          );
+          return <ProFormCheckbox name="meta.keepAlive">{t('keepAlive')}</ProFormCheckbox>;
         }}
       </ProFormDependency>
 
@@ -357,11 +365,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       <ProFormDependency name={['type']}>
         {({ type }) => {
           if (!isMenu(type) && !isEmbedded(type)) return null;
-          return (
-            <ProFormCheckbox name="meta.affixTab">
-              {t('affixTab')}
-            </ProFormCheckbox>
-          );
+          return <ProFormCheckbox name="meta.affixTab">{t('affixTab')}</ProFormCheckbox>;
         }}
       </ProFormDependency>
 
@@ -369,11 +373,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       <ProFormDependency name={['type']}>
         {({ type }) => {
           if (isButton(type)) return null;
-          return (
-            <ProFormCheckbox name="meta.hideInMenu">
-              {t('hideInMenu')}
-            </ProFormCheckbox>
-          );
+          return <ProFormCheckbox name="meta.hideInMenu">{t('hideInMenu')}</ProFormCheckbox>;
         }}
       </ProFormDependency>
 
@@ -394,9 +394,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
         {({ type }) => {
           if (isButton(type) || type === 'LINK') return null;
           return (
-            <ProFormCheckbox name="meta.hideInBreadcrumb">
-              {t('hideInBreadcrumb')}
-            </ProFormCheckbox>
+            <ProFormCheckbox name="meta.hideInBreadcrumb">{t('hideInBreadcrumb')}</ProFormCheckbox>
           );
         }}
       </ProFormDependency>
@@ -405,11 +403,7 @@ const MenuDrawer: React.FC<MenuDrawerProps> = ({ open, mode, data, onClose, onSu
       <ProFormDependency name={['type']}>
         {({ type }) => {
           if (isButton(type) || type === 'LINK') return null;
-          return (
-            <ProFormCheckbox name="meta.hideInTab">
-              {t('hideInTab')}
-            </ProFormCheckbox>
-          );
+          return <ProFormCheckbox name="meta.hideInTab">{t('hideInTab')}</ProFormCheckbox>;
         }}
       </ProFormDependency>
     </DrawerForm>

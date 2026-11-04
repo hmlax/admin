@@ -26,7 +26,7 @@ const UserProfile = () => {
 
   // 获取当前用户信息
   const { data: userData } = useGetUserProfile();
-  const user = userData as any;
+  const user = userData;
 
   // 租户自助用量：租户管理员可见本租户套餐用量与配额（平台用户不展示）
   const accessStore = useAuthStore((st) => st.accessToken);
@@ -69,11 +69,13 @@ const UserProfile = () => {
       children: <NotificationPreference />,
     },
     ...(isTenantUser
-      ? [{
-          key: '7',
-          label: t('tab.tenantUsage'),
-          children: <TenantUsagePanel usageQuery={usageQuery} />,
-        }]
+      ? [
+          {
+            key: '7',
+            label: t('tab.tenantUsage'),
+            children: <TenantUsagePanel usageQuery={usageQuery} />,
+          },
+        ]
       : []),
   ];
 

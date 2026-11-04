@@ -16,7 +16,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { Menu as Menu } from '@/api/generated/admin/v1';
 import { PaginationQuery } from '@/core';
-import { fetchListMenus, useDeleteMenu, useSyncMenus, buildSyncMenusRequest } from '@/api/hooks/menu';
+import {
+  fetchListMenus,
+  useDeleteMenu,
+  useSyncMenus,
+  buildSyncMenusRequest,
+} from '@/api/hooks/menu';
 import { businessRoutes } from '@/router/business-routes';
 import { useProTableScrollY } from '@/hooks/useProTableScrollY';
 import ContentContainer from '@/layouts/components/PageContainer/ContentContainer';
@@ -181,8 +186,8 @@ const MenuManagement = () => {
     const collectKeys = (items: Menu[]) => {
       items.forEach((item) => {
         keys.push(item.id as number);
-        if ((item as any).children?.length) {
-          collectKeys((item as any).children);
+        if (item.children?.length) {
+          collectKeys(item.children);
         }
       });
     };
@@ -210,11 +215,10 @@ const MenuManagement = () => {
       fixed: 'left',
       hideInSearch: true,
       render: (_, record) => {
-        const meta = (record as any).meta || {};
+        const meta = record.meta || {};
         // 译文展示（对齐 vben/ele 的 $t）：库里的 key / 源语言文本翻成当前语言；
         // meta 缺失（如直接 API 创建的菜单）时回退展示 name，避免整列显示 "-"
-        const titleText =
-          translateMenuTitle(meta.title) || (record as any).name || '-';
+        const titleText = translateMenuTitle(meta.title) || record.name || '-';
         return (
           <Space>
             <span>{titleText}</span>
@@ -245,7 +249,7 @@ const MenuManagement = () => {
       dataIndex: 'meta.authority',
       hideInSearch: true,
       render: (_, record) => {
-        const meta = (record as any).meta || {};
+        const meta = record.meta || {};
         const authorities = normalizeAuthority(meta.authority);
         if (authorities.length === 0) return '-';
         return (
@@ -301,7 +305,7 @@ const MenuManagement = () => {
       width: 70,
       hideInSearch: true,
       render: (_, record) => {
-        const meta = (record as any).meta || {};
+        const meta = record.meta || {};
         return meta.order ?? '-';
       },
     },
@@ -331,7 +335,7 @@ const MenuManagement = () => {
               confirm: {
                 title: t('deleteConfirmTitle'),
                 description: t('deleteConfirmDesc', {
-                  name: (record as any).meta?.title || record.path || '',
+                  name: record.meta?.title || record.path || '',
                 }),
               },
               onClick: () => record.id && deleteMutation.mutate({ id: record.id }),
@@ -349,7 +353,7 @@ const MenuManagement = () => {
           <ListTable<Menu>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               // 标题走前端过滤（见 filterMenusByTitle），服务端只收 status；
               // pageSize 拉满确保全量行都在前端过滤范围内
               const query = new PaginationQuery({
@@ -365,7 +369,7 @@ const MenuManagement = () => {
               const response = await fetchListMenus(query);
               const items = filterMenusByTitle(
                 (response.items || []) as Menu[],
-                params.menuName,
+                typeof params.menuName === 'string' ? params.menuName : undefined,
                 translateMenuTitle,
               );
               const treeData = buildMenuTree(items);
@@ -378,13 +382,19 @@ const MenuManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListMenus} columns={columns} filename="menus" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListMenus}
+                columns={columns}
+                filename="menus"
+              />,
               <Button
                 key="expandAll"
                 icon={<NodeExpandOutlined />}
@@ -392,11 +402,7 @@ const MenuManagement = () => {
               >
                 {t('expandAll')}
               </Button>,
-              <Button
-                key="collapseAll"
-                icon={<NodeCollapseOutlined />}
-                onClick={handleCollapseAll}
-              >
+              <Button key="collapseAll" icon={<NodeCollapseOutlined />} onClick={handleCollapseAll}>
                 {t('collapseAll')}
               </Button>,
               <Popconfirm
@@ -407,7 +413,12 @@ const MenuManagement = () => {
                 okText={t('common:button.ok')}
                 cancelText={t('common:button.cancel')}
               >
-                <Button color="orange" variant="outlined" icon={<SyncOutlined />} loading={syncing || syncMutation.isPending}>
+                <Button
+                  color="orange"
+                  variant="outlined"
+                  icon={<SyncOutlined />}
+                  loading={syncing || syncMutation.isPending}
+                >
                   {t('sync')}
                 </Button>
               </Popconfirm>,

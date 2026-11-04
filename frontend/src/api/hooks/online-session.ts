@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import {
   type ForceLogoutSessionRequest,
   type ForceLogoutSessionResponse,
@@ -23,7 +29,7 @@ export type OnlineSessionListParams = {
 
 export function useListOnlineSessions(
   params: OnlineSessionListParams,
-  options?: UseQueryOptions<ListOnlineSessionResponse, Error>,
+  options?: Omit<UseQueryOptions<ListOnlineSessionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [LIST_KEY, params],
@@ -47,7 +53,7 @@ export async function fetchListOnlineSessions(params: OnlineSessionListParams) {
 const MY_KEY = 'listMyOnlineSessions';
 
 export function useListMyOnlineSessions(
-  options?: UseQueryOptions<ListOnlineSessionResponse, Error>,
+  options?: Omit<UseQueryOptions<ListOnlineSessionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [MY_KEY],
@@ -57,11 +63,7 @@ export function useListMyOnlineSessions(
 }
 
 export function useRevokeMyOnlineSession(
-  options?: UseMutationOptions<
-    RevokeMyOnlineSessionResponse,
-    Error,
-    RevokeMyOnlineSessionRequest
-  >,
+  options?: UseMutationOptions<RevokeMyOnlineSessionResponse, Error, RevokeMyOnlineSessionRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -75,11 +77,7 @@ export function useRevokeMyOnlineSession(
 }
 
 export function useForceLogoutSession(
-  options?: UseMutationOptions<
-    ForceLogoutSessionResponse,
-    Error,
-    ForceLogoutSessionRequest
-  >,
+  options?: UseMutationOptions<ForceLogoutSessionResponse, Error, ForceLogoutSessionRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({

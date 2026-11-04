@@ -59,7 +59,7 @@ const ApiDrawer: React.FC<ApiDrawerProps> = ({ open, mode, data, onClose, onSucc
   });
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Api) => {
     setConfirmLoading(true);
 
     try {
@@ -142,7 +142,9 @@ const ApiDrawer: React.FC<ApiDrawerProps> = ({ open, mode, data, onClose, onSucc
         fieldProps={{
           showSearch: true,
           filterOption: (input, option) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
     </DrawerForm>

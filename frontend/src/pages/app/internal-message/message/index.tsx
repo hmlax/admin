@@ -9,10 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { InternalMessage as InternalMessage } from '@/api/generated/admin/v1';
 import { PaginationQuery } from '@/core';
-import {
-  fetchListInternalMessages,
-  useDeleteInternalMessage,
-} from '@/api/hooks/internal-message';
+import { fetchListInternalMessages, useDeleteInternalMessage } from '@/api/hooks/internal-message';
 import { useProTableScrollY } from '@/hooks/useProTableScrollY';
 import ContentContainer from '@/layouts/components/PageContainer/ContentContainer';
 import { getStatusMap, getStatusOptions, getTypeMap, getTypeOptions } from './constants';
@@ -84,7 +81,7 @@ const InternalMessageList = () => {
         options: getTypeOptions(t),
       },
       render: (_, record) => {
-        const type = (record as any).type as keyof typeof typeMap;
+        const type = record.type as keyof typeof typeMap;
         const config = typeMap[type] || { text: type, color: 'default' };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
@@ -143,8 +140,8 @@ const InternalMessageList = () => {
           <ListTable<InternalMessage>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
-              const formValues: Record<string, any> = {};
+            request={async (params) => {
+              const formValues: Record<string, unknown> = {};
               // 过滤搜索参数
               Object.entries(params).forEach(([key, value]) => {
                 if (!['current', 'pageSize'].includes(key) && value !== undefined) {
@@ -165,13 +162,19 @@ const InternalMessageList = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
             pagination={false}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListInternalMessages} columns={columns} filename="im-messages" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListInternalMessages}
+                columns={columns}
+                filename="im-messages"
+              />,
               <Button
                 key="create"
                 color="primary"

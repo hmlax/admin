@@ -162,9 +162,7 @@ const ApiLogPage: React.FC<ApiLogPageProps> = ({ userId }) => {
         };
         // Tag 预设色名不能当 CSS color 用：'success' 这类不是 <color>，整条声明被浏览器丢弃
         return (
-          <Tag color={colorMap[record.httpMethod || ''] || 'default'}>
-            {record.httpMethod}
-          </Tag>
+          <Tag color={colorMap[record.httpMethod || ''] || 'default'}>{record.httpMethod}</Tag>
         );
       },
     },
@@ -186,7 +184,7 @@ const ApiLogPage: React.FC<ApiLogPageProps> = ({ userId }) => {
       width: 180,
       hideInSearch: true,
       render: (_, record) => {
-        const info = record.deviceInfo as any;
+        const info = record.deviceInfo;
         if (!info) return '-';
         return `${info.osName || ''} ${info.browserName || ''}`.trim() || '-';
       },
@@ -197,7 +195,7 @@ const ApiLogPage: React.FC<ApiLogPageProps> = ({ userId }) => {
       width: 150,
       hideInSearch: true,
       render: (_, record) => {
-        const geo = record.geoLocation as any;
+        const geo = record.geoLocation;
         if (!geo) return '-';
         return `${geo.province || ''} ${geo.city || ''}`.trim() || '-';
       },
@@ -218,7 +216,7 @@ const ApiLogPage: React.FC<ApiLogPageProps> = ({ userId }) => {
         actionRef={actionRef}
         columns={columns}
         request={async (params) => {
-          const formValues: Record<string, any> = {};
+          const formValues: Record<string, unknown> = {};
           Object.entries(params).forEach(([key, value]) => {
             if (!['current', 'pageSize'].includes(key) && value !== undefined) {
               formValues[key] = value;
@@ -247,10 +245,7 @@ const ApiLogPage: React.FC<ApiLogPageProps> = ({ userId }) => {
           };
         }}
         rowKey="id"
-        search={{ optionRender: searchOptionRender,
-          labelWidth: 'auto',
-          defaultCollapsed: false,
-        }}
+        search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: false }}
         pagination={{
           defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
           showSizeChanger: true,

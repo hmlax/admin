@@ -1,8 +1,10 @@
+import type { OrgUnit } from '@/api/generated/admin/v1';
+import type { SelectionNode } from '@/types/selection';
 /**
  * 职位模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 职位状态（ON/OFF） ==========
 
@@ -63,11 +65,12 @@ export function getPositionTypeOptions(t: TFn) {
 /**
  * 将 API 返回的树形组织数据转为 TreeSelect 格式
  */
-export function buildOrgTreeData(items: any[]): any[] {
-  const result: any[] = [];
+export function buildOrgTreeData(items: OrgUnit[]): SelectionNode[] {
+  const result: SelectionNode[] = [];
 
   for (const item of items) {
-    const node: any = {
+    if (item.id === undefined) continue;
+    const node: SelectionNode = {
       id: item.id,
       key: item.id,
       value: item.id,

@@ -11,7 +11,7 @@ interface UseBreadcrumbOptions {
   manual?: BreadcrumbItem[] | false;
 
   /** 当前路由对象（用于获取 meta 信息） */
-  route?: any;
+  route?: { meta?: { title?: string } };
 
   /** 是否显示首页图标 */
   showHomeIcon?: boolean;
@@ -30,13 +30,11 @@ export const useBreadcrumb = ({
   const matches = useMatches();
   const { t } = useI18n('common');
 
-  // 手动传入优先
-  if (manual === false) return false;
-  if (manual?.length) return manual;
-
   // 自动计算：基于 react-router-dom useMatches
 
   return useMemo(() => {
+    if (manual === false) return false;
+    if (manual?.length) return manual;
     // 类型定义：为 handle 扩展类型
     type MatchWithHandle = {
       pathname: string;
@@ -45,9 +43,7 @@ export const useBreadcrumb = ({
       handle?: {
         title?: string;
         icon?: string;
-        [key: string]: any;
       };
-      [key: string]: any;
     };
 
     const typedMatches = matches as MatchWithHandle[];
@@ -58,7 +54,7 @@ export const useBreadcrumb = ({
       .map((match: MatchWithHandle, index: number, arr: MatchWithHandle[]) => {
         const isLast = index === arr.length - 1;
         const title = match.handle?.title || route?.meta?.title || t('pageContainer.defaultTitle');
-        
+
         // 将图标字符串转换为 React 组件（支持 Iconify 和 Ant Design）
         let icon: React.ReactNode = undefined;
         if (showIcon && match.handle?.icon) {
@@ -85,5 +81,5 @@ export const useBreadcrumb = ({
     }
 
     return items;
-  }, [matches, route?.meta?.title, navigate, showHomeIcon, showIcon]);
+  }, [manual, matches, route?.meta?.title, navigate, showHomeIcon, showIcon, t]);
 };

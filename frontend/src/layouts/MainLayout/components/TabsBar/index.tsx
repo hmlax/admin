@@ -1,3 +1,4 @@
+import { isRecord } from '@/utils/value';
 import { applicationStorageKey } from '@/config/application';
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { Tabs, Dropdown, Button, Space, type MenuProps, type TabsProps } from 'antd';
@@ -149,19 +150,37 @@ export const Index = () => {
 
   // 当前标签
   const currentTab = useMemo(() => {
-    const lastMatch = matches.at(-1) as any;
-    const rawTitle = lastMatch?.handle?.title || lastMatch?.data?.title || t('unknownPage');
+    const lastMatch = matches.at(-1);
+    const handle = isRecord(lastMatch?.handle) ? lastMatch.handle : {};
+    const data = isRecord(lastMatch?.data) ? lastMatch.data : {};
+    const rawTitle =
+      typeof handle.title === 'string'
+        ? handle.title
+        : typeof data.title === 'string'
+          ? data.title
+          : t('unknownPage');
 
     // 翻译标题
     const title = translateTitle(rawTitle);
 
     // 从 handle 中获取图标字符串（已经通过 transformMetaToHandle 转换）
-    const icon = lastMatch?.handle?.icon || lastMatch?.data?.icon;
+    const icon =
+      typeof handle.icon === 'string'
+        ? handle.icon
+        : typeof data.icon === 'string'
+          ? data.icon
+          : undefined;
 
     // 获取 hideInTab 配置
-    const hideInTab = lastMatch?.handle?.hideInTab || lastMatch?.data?.hideInTab || false;
+    const hideInTab = handle.hideInTab === true || data.hideInTab === true;
 
-    console.log('TabsBar - currentTab:', { rawTitle, title, icon, hideInTab, handle: lastMatch?.handle });
+    console.log('TabsBar - currentTab:', {
+      rawTitle,
+      title,
+      icon,
+      hideInTab,
+      handle: lastMatch?.handle,
+    });
 
     return {
       key: location.pathname,
@@ -219,7 +238,7 @@ export const Index = () => {
       ),
       closable: tab.closable,
     }));
-  }, [tabs, tabbarConfig.showIcon, i18n.language, translateTitle]);
+  }, [tabs, tabbarConfig.showIcon]);
 
   // 处理标签切换
   const handleTabChange = useCallback(
@@ -483,13 +502,12 @@ export const Index = () => {
   ]);
 
   // 自定义渲染 TabBar，添加右键菜单和拖拽功能
-  const renderTabBar: TabsProps['renderTabBar'] = useCallback(
-    (props: any, DefaultTabBar: React.ComponentType<any>) => {
+  const renderTabBar = useCallback<NonNullable<TabsProps['renderTabBar']>>(
+    (props, DefaultTabBar) => {
       // 如果启用了拖拽，添加拖拽相关的事件处理
       if (tabbarConfig.draggable) {
         return (
-          <DefaultTabBar
-            {...props}
+          <div
             onDragStart={(e: React.DragEvent) => {
               const target = e.target as HTMLElement;
               const tabElement = target.closest('.ant-tabs-tab');
@@ -544,7 +562,9 @@ export const Index = () => {
                 el.classList.remove('drag-over');
               });
             }}
-          />
+          >
+            <DefaultTabBar {...props} />
+          </div>
         );
       }
 

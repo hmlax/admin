@@ -23,7 +23,9 @@ interface LockScreenProps {
 export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
   const { t } = useI18n('common');
   const locale = usePreferencesStore((state) => state.preferences.app.locale);
-  const lockScreenEnabled = usePreferencesStore((state) => state.preferences.widget?.lockScreen ?? true);
+  const lockScreenEnabled = usePreferencesStore(
+    (state) => state.preferences.widget?.lockScreen ?? true,
+  );
 
   const isLockScreen = useLockStore((state) => state.isLockScreen);
   const lockScreenPassword = useLockStore((state) => state.lockScreenPassword);
@@ -38,7 +40,6 @@ export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
 
   useEffect(() => {
     if (!visible) return;
-    setNow(dayjs());
     const timer = window.setInterval(() => setNow(dayjs()), 1000);
     return () => window.clearInterval(timer);
   }, [visible]);
@@ -57,7 +58,9 @@ export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
   const hour = now.format('HH');
   const minute = now.format('mm');
   const meridiem = now.format('A');
-  const date = locale.startsWith('zh') ? now.locale('zh-cn').format('YYYY-MM-DD dddd') : now.format('YYYY-MM-DD dddd');
+  const date = locale.startsWith('zh')
+    ? now.locale('zh-cn').format('YYYY-MM-DD dddd')
+    : now.format('YYYY-MM-DD dddd');
 
   const submit = () => {
     if (!password) return;
@@ -113,15 +116,35 @@ export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
             <LockOutlined style={{ fontSize: 20 }} />
             <span style={labelStyle}>{t('lockScreen.unlock')}</span>
           </div>
-          <div style={{ position: 'relative', fontSize: 160, fontWeight: 700, lineHeight: 1, color: 'var(--ant-color-text)' }}>
+          <div
+            style={{
+              position: 'relative',
+              fontSize: 160,
+              fontWeight: 700,
+              lineHeight: 1,
+              color: 'var(--ant-color-text)',
+            }}
+          >
             {hour}:{minute}
-            <span style={{ position: 'absolute', top: 12, marginLeft: 16, fontSize: 24, fontWeight: 500, color: 'var(--ant-color-text-secondary)' }}>
+            <span
+              style={{
+                position: 'absolute',
+                top: 12,
+                marginLeft: 16,
+                fontSize: 24,
+                fontWeight: 500,
+                color: 'var(--ant-color-text-secondary)',
+              }}
+            >
               {meridiem}
             </span>
           </div>
         </>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 300 }} onKeyDown={(e) => e.key === 'Enter' && submit()}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 300 }}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+        >
           <Avatar src={avatar} size={80} />
           <Input.Password
             autoFocus
@@ -134,7 +157,13 @@ export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
               setError('');
             }}
           />
-          {error && <div style={{ width: '100%', marginTop: 8, fontSize: 12, color: 'var(--ant-color-error)' }}>{error}</div>}
+          {error && (
+            <div
+              style={{ width: '100%', marginTop: 8, fontSize: 12, color: 'var(--ant-color-error)' }}
+            >
+              {error}
+            </div>
+          )}
           <Button type="primary" block style={{ marginTop: 16 }} onClick={submit}>
             {t('lockScreen.entry')}
           </Button>
@@ -147,7 +176,15 @@ export const LockScreen = ({ avatar, onToLogin }: LockScreenProps) => {
         </div>
       )}
 
-      <div style={{ position: 'absolute', bottom: 24, width: '100%', textAlign: 'center', color: 'var(--ant-color-text-secondary)' }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          width: '100%',
+          textAlign: 'center',
+          color: 'var(--ant-color-text-secondary)',
+        }}
+      >
         {showUnlockForm && (
           <div style={{ fontSize: 28, marginBottom: 4, color: 'var(--ant-color-text)' }}>
             {hour}:{minute} <span style={{ fontSize: 16 }}>{meridiem}</span>

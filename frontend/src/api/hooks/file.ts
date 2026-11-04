@@ -21,7 +21,7 @@ import { apiClient } from '@/api/client';
 
 export function useListFiles(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListFileResponse, Error>,
+  options?: Omit<UseQueryOptions<ListFileResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listFiles', query],
@@ -40,7 +40,7 @@ export async function fetchListFiles(params: PaginationQuery) {
 
 export function useGetFile(
   req: GetFileRequest,
-  options?: UseQueryOptions<File, Error>,
+  options?: Omit<UseQueryOptions<File, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getFile', req],
@@ -50,7 +50,7 @@ export function useGetFile(
 }
 
 export function useCreateFile(
-  options?: UseMutationOptions<{}, Error, CreateFileRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateFileRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.fileService.Create(data),
@@ -59,10 +59,20 @@ export function useCreateFile(
 }
 
 export function useUpdateFile(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; values: NonNullable<Parameters<typeof apiClient.fileService.Update>[0]['data']> }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.fileService.Update>[0]['data']>;
+    }) =>
       apiClient.fileService.Update({
         id,
         data: { ...values },
@@ -73,7 +83,7 @@ export function useUpdateFile(
 }
 
 export function useDeleteFile(
-  options?: UseMutationOptions<{}, Error, DeleteFileRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteFileRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.fileService.Delete(data),

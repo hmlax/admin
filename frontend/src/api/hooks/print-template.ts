@@ -1,7 +1,4 @@
-import {
-  useMutation,
-  type UseMutationOptions,
-} from '@tanstack/react-query';
+import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import {
   type CreatePrintTemplateRequest,
   type DeletePrintTemplateRequest,
@@ -22,7 +19,7 @@ export async function fetchListPrintTemplates(params: PaginationQuery) {
 }
 
 export function useCreatePrintTemplate(
-  options?: UseMutationOptions<{}, Error, CreatePrintTemplateRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePrintTemplateRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.printTemplateService.Create(data),
@@ -31,13 +28,26 @@ export function useCreatePrintTemplate(
 }
 
 export function useUpdatePrintTemplate(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.printTemplateService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.printTemplateService.Update>[0]['data']>;
+    }) =>
       apiClient.printTemplateService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -45,7 +55,7 @@ export function useUpdatePrintTemplate(
 }
 
 export function useDeletePrintTemplate(
-  options?: UseMutationOptions<{}, Error, DeletePrintTemplateRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePrintTemplateRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.printTemplateService.Delete(req),

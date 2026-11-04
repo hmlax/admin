@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListRoles(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListRoleResponse, Error>,
+  options?: Omit<UseQueryOptions<ListRoleResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listRoles', query],
@@ -39,7 +39,7 @@ export async function fetchListRoles(params: PaginationQuery) {
 
 export function useGetRole(
   req: GetRoleRequest,
-  options?: UseQueryOptions<Role, Error>,
+  options?: Omit<UseQueryOptions<Role, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getRole', req],
@@ -49,7 +49,7 @@ export function useGetRole(
 }
 
 export function useCreateRole(
-  options?: UseMutationOptions<{}, Error, CreateRoleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateRoleRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.roleService.Create(data),
@@ -58,13 +58,23 @@ export function useCreateRole(
 }
 
 export function useUpdateRole(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; values: NonNullable<Parameters<typeof apiClient.roleService.Update>[0]['data']> }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.roleService.Update>[0]['data']>;
+    }) =>
       apiClient.roleService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -72,7 +82,7 @@ export function useUpdateRole(
 }
 
 export function useDeleteRole(
-  options?: UseMutationOptions<{}, Error, DeleteRoleRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteRoleRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.roleService.Delete(req),

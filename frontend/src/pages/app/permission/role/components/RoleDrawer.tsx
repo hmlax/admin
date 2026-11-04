@@ -18,7 +18,14 @@ import { fetchListPermissionGroups } from '@/api/hooks/permission-group';
 import { fetchListPermissions } from '@/api/hooks/permission';
 import { fetchListOrgUnits } from '@/api/hooks/org-unit';
 import { PaginationQuery } from '@/core';
-import { getStatusOptions, getDataScopeOptions, buildPermissionTree, extractLeafIds, buildOrgUnitTree, ROLE_FIELD_RESOURCES } from '../constants';
+import {
+  getStatusOptions,
+  getDataScopeOptions,
+  buildPermissionTree,
+  extractLeafIds,
+  buildOrgUnitTree,
+  ROLE_FIELD_RESOURCES,
+} from '../constants';
 import AiGenerateButton from '@/components/common/AiGenerateButton';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
 import { useApiAccess } from '@/core/access';
@@ -34,7 +41,7 @@ interface RoleDrawerProps {
 /**
  * 角色编辑/创建抽屉组件
  */
-const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
+const RoleDrawerContent: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
   const { t } = useTranslation('role');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -46,23 +53,31 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
   const canReadPermissionGroups = canAccess('GET', '/admin/v1/permission-groups');
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [treeData, setTreeData] = useState<any[]>([]);
-  const [checkedKeys, setCheckedKeys] = useState<number[]>([]);
+  const [treeData, setTreeData] = useState<ReturnType<typeof buildPermissionTree>>([]);
+  const [checkedKeys, setCheckedKeys] = useState<number[]>(() =>
+    mode === 'edit' ? (data?.permissions ?? []) : [],
+  );
   const [permissionsChanged, setPermissionsChanged] = useState(false);
   const [treeVersion, setTreeVersion] = useState(0);
-  const [treeLoading, setTreeLoading] = useState(false);
-  const [unitTreeData, setUnitTreeData] = useState<any[]>([]);
-  const [unitCheckedKeys, setUnitCheckedKeys] = useState<number[]>([]);
+  const [treeLoading, setTreeLoading] = useState(open);
+  const [unitTreeData, setUnitTreeData] = useState<ReturnType<typeof buildOrgUnitTree>>([]);
+  const [unitCheckedKeys, setUnitCheckedKeys] = useState<number[]>(() =>
+    mode === 'edit' && data?.dataScope === 'SELECTED_UNITS' ? (data.orgUnits ?? []) : [],
+  );
   const [unitTreeVersion, setUnitTreeVersion] = useState(0);
   // 字段权限：User 资源上勾选隐藏的字段（json_name）
   // 字段权限：资源名 → 隐藏字段集（多资源，按 ROLE_FIELD_RESOURCES 登记渲染）
-  const [hiddenByResource, setHiddenByResource] = useState<Record<string, string[]>>({});
+  const [hiddenByResource, setHiddenByResource] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(
+      (mode === 'edit' ? (data?.fieldPermissions ?? []) : [])
+        .filter((entry) => entry.resource)
+        .map((entry) => [entry.resource!, entry.hiddenFields ?? []]),
+    ),
+  );
 
   // 加载权限树数据
   useEffect(() => {
     if (open) {
-      setPermissionsChanged(false);
-      setTreeLoading(true);
       Promise.all([
         canReadPermissionGroups
           ? fetchListPermissionGroups(new PaginationQuery({ formValues: { status: 'ON' } }))
@@ -74,10 +89,12 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
           const permissions = permRes?.items || [];
           if (groups.length === 0 && permissions.length > 0) {
             // 无权限组时，直接罗列权限（平铺，不嵌套）
-            setTreeData(permissions.map((p) => ({
-              key: Number(p.id),
-              title: p.name || p.code || String(p.id),
-            })));
+            setTreeData(
+              permissions.map((p) => ({
+                key: Number(p.id),
+                title: p.name || p.code || String(p.id),
+              })),
+            );
           } else {
             setTreeData(buildPermissionTree(groups, permissions));
           }
@@ -90,14 +107,14 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
         })
         .finally(() => setTreeLoading(false));
     }
-  }, [open, canReadPermissionGroups]);
+  }, [open, canReadPermissionGroups, message, t]);
 
   // 加载组织单元树（SELECTED_UNITS 自定义授权集配置用）
   useEffect(() => {
     if (open) {
       fetchListOrgUnits(new PaginationQuery({ formValues: { status: 'ON' } }))
         .then((res) => {
-          setUnitTreeData(buildOrgUnitTree((res?.items || []) as any[]));
+          setUnitTreeData(buildOrgUnitTree(res?.items || []));
           setUnitTreeVersion((v) => v + 1);
         })
         .catch((error) => {
@@ -114,38 +131,12 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
         formRef.current?.setFieldsValue({
           name: data.name || '',
           code: data.code || '',
-          sortOrder: (data as any).sortOrder ?? 1,
+          sortOrder: data.sortOrder ?? 1,
           status: data.status || 'ON',
           dataScope: data.dataScope || 'ALL',
-          description: (data as any).description || '',
+          description: data.description || '',
         });
       }, 0);
-      // 设置已勾选的权限
-      const perms = (data as any).permissions;
-      if (Array.isArray(perms)) {
-        setCheckedKeys(perms.filter((v: any) => typeof v === 'number'));
-      }
-      // SELECTED_UNITS 时回填已配置的授权单元集
-      if (data.dataScope === 'SELECTED_UNITS') {
-        const units = (data as any).orgUnits;
-        if (Array.isArray(units)) {
-          setUnitCheckedKeys(units.filter((v: any) => typeof v === 'number'));
-        }
-      }
-      // 回填字段权限（多资源：fieldPermissions 数组逐资源回填隐藏字段集）
-      const byResource: Record<string, string[]> = {};
-      if (Array.isArray((data as any).fieldPermissions)) {
-        for (const e of (data as any).fieldPermissions) {
-          if (e?.resource && Array.isArray(e.hiddenFields)) {
-            byResource[e.resource] = e.hiddenFields.filter((v: any) => typeof v === 'string');
-          }
-        }
-      }
-      setHiddenByResource(byResource);
-    } else if (open && mode === 'create') {
-      setCheckedKeys([]);
-      setUnitCheckedKeys([]);
-      setHiddenByResource({});
     }
   }, [open, mode, data]);
 
@@ -173,7 +164,7 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Role) => {
     setConfirmLoading(true);
     try {
       const payload = {
@@ -195,7 +186,7 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
       payload.fieldPermissions = ROLE_FIELD_RESOURCES.map(({ resource }) => ({
         resource,
         hiddenFields: hiddenByResource[resource] ?? [],
-      })).filter((e: any) => e.hiddenFields.length > 0);
+      })).filter((e) => e.hiddenFields.length > 0);
 
       if (mode === 'create') {
         await createMutation.mutateAsync({ data: payload });
@@ -388,4 +379,6 @@ const RoleDrawer: React.FC<RoleDrawerProps> = ({ open, mode, data, onClose, onSu
   );
 };
 
-export default RoleDrawer;
+export default function RoleDrawer(props: RoleDrawerProps) {
+  return <RoleDrawerContent key={`${props.open}-${props.mode}-${props.data?.id}`} {...props} />;
+}

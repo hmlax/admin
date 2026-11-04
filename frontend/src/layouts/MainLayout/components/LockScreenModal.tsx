@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Avatar, Button, Input, Modal } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
@@ -13,13 +13,15 @@ interface LockScreenModalProps {
 }
 
 /** 锁定屏幕前的设密弹窗（行为基准：vue-vben lock-screen-modal.vue） */
-export const LockScreenModal = ({ open, avatar, text, onCancel, onSubmit }: LockScreenModalProps) => {
+const LockScreenModalContent = ({
+  open,
+  avatar,
+  text,
+  onCancel,
+  onSubmit,
+}: LockScreenModalProps) => {
   const { t } = useI18n('common');
   const [password, setPassword] = useState('');
-
-  useEffect(() => {
-    if (open) setPassword('');
-  }, [open]);
 
   const submit = () => {
     if (!password) return;
@@ -63,12 +65,22 @@ export const LockScreenModal = ({ open, avatar, text, onCancel, onSubmit }: Lock
           onChange={(e) => setPassword(e.target.value)}
           onPressEnter={submit}
         />
-        <Button type="primary" block style={{ marginTop: 12 }} disabled={!password} onClick={submit}>
+        <Button
+          type="primary"
+          block
+          style={{ marginTop: 12 }}
+          disabled={!password}
+          onClick={submit}
+        >
           {t('lockScreen.lock')}
         </Button>
       </div>
     </Modal>
   );
 };
+
+export function LockScreenModal(props: LockScreenModalProps) {
+  return <LockScreenModalContent key={`${props.open}`} {...props} />;
+}
 
 export default LockScreenModal;

@@ -29,7 +29,13 @@ const MODEL_TYPE_OPTIONS = (t: (k: string) => string) => [
   { label: t('modelTypeLocal'), value: 'LOCAL' },
 ];
 
-export default function AiProviderDrawer({ open, mode, data, onClose, onSuccess }: AiProviderDrawerProps) {
+export default function AiProviderDrawer({
+  open,
+  mode,
+  data,
+  onClose,
+  onSuccess,
+}: AiProviderDrawerProps) {
   const { t } = useTranslation('aiProvider');
   const { message } = App.useApp();
   const queryClient = useQueryClient();
@@ -72,15 +78,15 @@ export default function AiProviderDrawer({ open, mode, data, onClose, onSuccess 
     return () => clearTimeout(timer);
   }, [open, mode, data]);
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: AiProvider) => {
     try {
       if (mode === 'create') {
-        await createMutation.mutateAsync({ data: values as any });
+        await createMutation.mutateAsync({ data: values });
         message.success(t('createSuccess'));
       } else {
         // api_key 未填则不进 values（useUpdateAiProvider 会按传入键构建 updateMask），
         // 避免空值经 FieldMask 被当成"显式清空"把已存的 Key 抹掉
-        const payload: Record<string, any> = { ...values };
+        const payload: AiProvider = { ...values };
         if (!payload.apiKey) {
           delete payload.apiKey;
         }
@@ -101,11 +107,18 @@ export default function AiProviderDrawer({ open, mode, data, onClose, onSuccess 
   return (
     <DrawerForm
       formRef={formRef}
-      title={mode === 'create' ? t('common:modal.create', { moduleName: t('moduleName') }) : t('common:modal.update', { moduleName: t('moduleName') })}
+      title={
+        mode === 'create'
+          ? t('common:modal.create', { moduleName: t('moduleName') })
+          : t('common:modal.update', { moduleName: t('moduleName') })
+      }
       open={open}
       onValuesChange={handleValuesChange}
       onFinish={handleSubmit}
-      submitter={{ submitButtonProps: { loading: createMutation.isPending || updateMutation.isPending }, resetButtonProps: { onClick: guardClose } }}
+      submitter={{
+        submitButtonProps: { loading: createMutation.isPending || updateMutation.isPending },
+        resetButtonProps: { onClick: guardClose },
+      }}
       drawerProps={{ destroyOnHidden: true, onClose: guardClose, size: 600 }}
       layout="horizontal"
       labelCol={{ flex: '0 0 120px' }}
@@ -133,8 +146,19 @@ export default function AiProviderDrawer({ open, mode, data, onClose, onSuccess 
         {({ modelType }) =>
           modelType === 'LOCAL' ? (
             <>
-              <ProFormText name="localHost" label={t('localHost')} placeholder={t('localHostPlaceholder')} />
-              <ProFormDigit name="localPort" label={t('localPort')} min={1} max={65535} fieldProps={{ precision: 0 }} placeholder={t('localPortPlaceholder')} />
+              <ProFormText
+                name="localHost"
+                label={t('localHost')}
+                placeholder={t('localHostPlaceholder')}
+              />
+              <ProFormDigit
+                name="localPort"
+                label={t('localPort')}
+                min={1}
+                max={65535}
+                fieldProps={{ precision: 0 }}
+                placeholder={t('localPortPlaceholder')}
+              />
             </>
           ) : (
             <>
@@ -186,11 +210,7 @@ export default function AiProviderDrawer({ open, mode, data, onClose, onSuccess 
         ]}
         rules={[{ required: true }]}
       />
-      <ProFormTextArea
-        name="remark"
-        label={t('remark')}
-        fieldProps={{ rows: 2 }}
-      />
+      <ProFormTextArea name="remark" label={t('remark')} fieldProps={{ rows: 2 }} />
     </DrawerForm>
   );
 }

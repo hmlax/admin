@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPermissionGroups(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPermissionGroupResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPermissionGroupResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPermissionGroups', query],
@@ -39,7 +39,7 @@ export async function fetchListPermissionGroups(params: PaginationQuery) {
 
 export function useGetPermissionGroup(
   req: GetPermissionGroupRequest,
-  options?: UseQueryOptions<PermissionGroup, Error>,
+  options?: Omit<UseQueryOptions<PermissionGroup, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPermissionGroup', req],
@@ -49,7 +49,7 @@ export function useGetPermissionGroup(
 }
 
 export function useCreatePermissionGroup(
-  options?: UseMutationOptions<{}, Error, CreatePermissionGroupRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePermissionGroupRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.permissionGroupService.Create(data),
@@ -58,13 +58,26 @@ export function useCreatePermissionGroup(
 }
 
 export function useUpdatePermissionGroup(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.permissionGroupService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.permissionGroupService.Update>[0]['data']>;
+    }) =>
       apiClient.permissionGroupService.Update({
         id,
-        data: { ...values, children: [] } as any,
+        data: { ...values, children: [] },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -72,7 +85,7 @@ export function useUpdatePermissionGroup(
 }
 
 export function useDeletePermissionGroup(
-  options?: UseMutationOptions<{}, Error, DeletePermissionGroupRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePermissionGroupRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.permissionGroupService.Delete(req),

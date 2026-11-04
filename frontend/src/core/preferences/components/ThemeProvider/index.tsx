@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo } from 'react';
 
 import { ConfigProvider, Watermark, theme as antdTheme, type ThemeConfig } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
@@ -7,6 +7,7 @@ import enUS from 'antd/locale/en_US';
 import { ProConfigProvider, enUSIntl, zhCNIntl } from '@ant-design/pro-components';
 import i18n from 'i18next';
 
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { usePreferencesStore } from '../../store';
 import {
   DARK_PALETTE,
@@ -24,7 +25,7 @@ export interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
-const localeMap: Record<SupportedLanguagesType, any> = {
+const localeMap: Record<SupportedLanguagesType, typeof zhCN> = {
   'zh-CN': zhCN,
   'en-US': enUS,
 };
@@ -39,17 +40,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const appPrefs = usePreferencesStore((state) => state.preferences.app);
 
   // 2. 系统主题监听（仅当 mode === 'auto' 时生效）
-  const [systemIsDark, setSystemIsDark] = useState(false);
-  useEffect(() => {
-    if (themePrefs.mode !== 'auto') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setSystemIsDark(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => setSystemIsDark(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [themePrefs.mode]);
+  const systemIsDark = useMediaQuery('(prefers-color-scheme: dark)');
 
   // 计算最终生效的主题模式
   const effectiveMode = useMemo(() => {
@@ -115,14 +106,12 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
     // 根背景写各自动态画布档：暗色 L0，浅色 §2.2 canvas（原先硬编码 antd 的 #f5f5f5，
     // 与 lightThemeTokens.colorBgLayout 不一致会让首帧/回弹处露出旧画布色）
-    const bgLayout =
-      effectiveMode === 'dark' ? DARK_PALETTE.bgLayout : LIGHT_PALETTE.bgLayout;
+    const bgLayout = effectiveMode === 'dark' ? DARK_PALETTE.bgLayout : LIGHT_PALETTE.bgLayout;
     root.style.backgroundColor = bgLayout;
     body.style.backgroundColor = bgLayout;
 
-    const colorText = effectiveMode === 'dark'
-      ? 'rgba(230, 237, 243, 0.92)'
-      : 'rgba(0, 0, 0, 0.85)';
+    const colorText =
+      effectiveMode === 'dark' ? 'rgba(230, 237, 243, 0.92)' : 'rgba(0, 0, 0, 0.85)';
     root.style.color = colorText;
 
     // 标记主题模式，供 CSS 选择器使用
@@ -156,7 +145,12 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
       root.style.removeProperty('--app-color-warning');
       root.style.removeProperty('--app-color-destructive');
     };
-  }, [themePrefs.colorPrimary, themePrefs.colorSuccess, themePrefs.colorWarning, themePrefs.colorDestructive]);
+  }, [
+    themePrefs.colorPrimary,
+    themePrefs.colorSuccess,
+    themePrefs.colorWarning,
+    themePrefs.colorDestructive,
+  ]);
 
   // 5. 应用 CSS 滤镜（色弱 / 灰色模式）
   useEffect(() => {
@@ -191,9 +185,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   // 8. 水印颜色（跟随主题）
   const watermarkColor = useMemo(() => {
-    return effectiveMode === 'dark'
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'rgba(0, 0, 0, 0.15)';
+    return effectiveMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.15)';
   }, [effectiveMode]);
 
   return (

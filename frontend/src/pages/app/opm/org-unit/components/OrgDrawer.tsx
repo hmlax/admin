@@ -1,3 +1,4 @@
+import type { SelectionNode } from '@/types/selection';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
@@ -40,7 +41,7 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
   const { message } = App.useApp();
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [parentTreeData, setParentTreeData] = useState<any[]>([]);
+  const [parentTreeData, setParentTreeData] = useState<SelectionNode[]>([]);
   const [leaderOptions, setLeaderOptions] = useState<{ label: string; value: number }[]>([]);
 
   // 加载上级组织树和用户列表
@@ -51,23 +52,29 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
         .then((res) => {
           const items = res?.items || [];
           // 构建树形选择数据
-          const treeData = buildOrgTreeSelect(items as any[], data?.id);
+          const treeData = buildOrgTreeSelect(items, data?.id);
           setParentTreeData(treeData);
         })
-        .catch(() => setParentTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setParentTreeData([]);
+        });
 
       // 加载用户列表（负责人）
       fetchListUsers(new PaginationQuery({}))
         .then((res) => {
           const items = res?.items || [];
           setLeaderOptions(
-            items.map((u: any) => ({
+            items.map((u) => ({
               label: u.nickname || u.username || String(u.id),
               value: u.id as number,
             })),
           );
         })
-        .catch(() => setLeaderOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setLeaderOptions([]);
+        });
     }
   }, [open, data?.id]);
 
@@ -79,17 +86,17 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
         formRef.current?.setFieldsValue({
           name: data.name || '',
           code: data.code || '',
-          parentId: (data as any).parentId || undefined,
-          leaderId: (data as any).leaderId || undefined,
+          parentId: data.parentId || undefined,
+          leaderId: data.leaderId || undefined,
           type: data.type || undefined,
-          sortOrder: (data as any).sortOrder ?? 1,
+          sortOrder: data.sortOrder ?? 1,
           status: data.status || 'ON',
-          isLegalEntity: (data as any).isLegalEntity ?? false,
-          registrationNumber: (data as any).registrationNumber || '',
-          taxId: (data as any).taxId || '',
-          address: (data as any).address || '',
-          description: (data as any).description || '',
-          remark: (data as any).remark || '',
+          isLegalEntity: data.isLegalEntity ?? false,
+          registrationNumber: data.registrationNumber || '',
+          taxId: data.taxId || '',
+          address: data.address || '',
+          description: data.description || '',
+          remark: data.remark || '',
         });
       }, 0);
     }
@@ -119,7 +126,7 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: OrgUnit) => {
     setConfirmLoading(true);
     try {
       if (mode === 'create') {
@@ -175,10 +182,7 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
         fieldProps={{ allowClear: true }}
       />
 
-      <Form.Item
-        name="parentId"
-        label={t('parentId')}
-      >
+      <Form.Item name="parentId" label={t('parentId')}>
         <TreeSelect
           showSearch
           allowClear
@@ -196,8 +200,10 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
         fieldProps={{
           showSearch: true,
           allowClear: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -210,8 +216,10 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
         fieldProps={{
           showSearch: true,
           allowClear: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -275,14 +283,15 @@ const OrgDrawer: React.FC<OrgDrawerProps> = ({ open, mode, data, onClose, onSucc
  * 将 API 返回的树形组织数据转为 TreeSelect 格式，
  * 并排除当前编辑节点及其子节点，防止循环引用
  */
-function buildOrgTreeSelect(items: any[], excludeId?: number | string): any[] {
-  const result: any[] = [];
+function buildOrgTreeSelect(items: OrgUnit[], excludeId?: number | string): SelectionNode[] {
+  const result: SelectionNode[] = [];
 
   for (const item of items) {
+    if (item.id === undefined) continue;
     // 排除当前编辑节点
     if (excludeId && item.id === Number(excludeId)) continue;
 
-    const node: any = {
+    const node: SelectionNode = {
       id: item.id,
       key: item.id,
       value: item.id,

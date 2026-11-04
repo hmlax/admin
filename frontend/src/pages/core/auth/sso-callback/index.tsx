@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Result, Spin, Typography } from 'antd';
@@ -14,7 +15,9 @@ const SsoCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const ranRef = useRef(false);
-  const [error, setError] = useState<string | null>(null);
+  const code = searchParams.get('code') || '';
+  const state = searchParams.get('state') || '';
+  const [requestError, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // StrictMode 下 effect 双跑：登录是幂等的（state 单次有效），
@@ -22,37 +25,26 @@ const SsoCallback: React.FC = () => {
     if (ranRef.current) return;
     ranRef.current = true;
 
-    const code = searchParams.get('code') || '';
-    const state = searchParams.get('state') || '';
-
-    if (!code || !state) {
-      setError('missing code or state');
-      return;
-    }
+    if (!code || !state) return;
 
     completeSsoLogin(code, state, () => {
       navigate('/', { replace: true });
-    }).catch((err: any) => {
+    }).catch((err: unknown) => {
       // 原始错误必须留在控制台：展示给用户的是归一化文案
       console.error('sso callback login failed', err);
-      setError(err?.message || 'SSO login failed');
+      setError(getErrorMessage(err) || 'SSO login failed');
     });
-  }, [searchParams, navigate]);
+  }, [code, state, navigate]);
 
+  const error = !code || !state ? 'missing code or state' : requestError;
   if (error) {
     return (
       <ContentContainer heightMode="auto" padding="24px">
         <Result
           status="error"
           title="SSO 登录失败"
-          subTitle={
-            <Text type="secondary">{error}</Text>
-          }
-          extra={
-            <a onClick={() => navigate('/auth/login', { replace: true })}>
-              返回登录页
-            </a>
-          }
+          subTitle={<Text type="secondary">{error}</Text>}
+          extra={<a onClick={() => navigate('/auth/login', { replace: true })}>返回登录页</a>}
         />
       </ContentContainer>
     );
@@ -60,7 +52,15 @@ const SsoCallback: React.FC = () => {
 
   return (
     <ContentContainer heightMode="auto" padding="24px">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 80, gap: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: 80,
+          gap: 16,
+        }}
+      >
         <Spin size="large" />
         <Text type="secondary">SSO 登录中，即将跳转…</Text>
       </div>

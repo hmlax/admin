@@ -26,7 +26,7 @@ class InterceptorManager {
     this.axiosInstance.interceptors.request.use(fulfilled, rejected);
   }
 
-  addResponseInterceptor<T = any>({
+  addResponseInterceptor<T = unknown>({
     fulfilled,
     rejected,
   }: ResponseInterceptorConfig<T> = defaultResponseInterceptorConfig) {

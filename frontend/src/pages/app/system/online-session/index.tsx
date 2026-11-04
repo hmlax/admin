@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import ListTable from '@/components/common/ListTable';
@@ -5,13 +6,8 @@ import TableActions from '@/components/common/TableActions';
 import { App, Tag, Tooltip } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type {
-  OnlineSession as OnlineSession,
-} from '@/api/generated/admin/v1';
-import {
-  fetchListOnlineSessions,
-  useForceLogoutSession,
-} from '@/api/hooks/online-session';
+import type { OnlineSession as OnlineSession } from '@/api/generated/admin/v1';
+import { fetchListOnlineSessions, useForceLogoutSession } from '@/api/hooks/online-session';
 import TableExportButton from '@/components/common/TableExportButton';
 import { TABLE } from '@/config/constants';
 import { useProTableScrollY } from '@/hooks/useProTableScrollY';
@@ -48,8 +44,9 @@ const OnlineSessionPage = () => {
         userId: record.userId,
         jti: record.jti,
       });
-    } catch (error: any) {
-      message.error(error.message || t('forceLogoutFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('forceLogoutFailed'));
     }
   };
 
@@ -67,11 +64,7 @@ const OnlineSessionPage = () => {
       width: 90,
       hideInSearch: true,
       render: (_, record) =>
-        (record.tenantId ?? 0) === 0 ? (
-          <Tag>{t('platform')}</Tag>
-        ) : (
-          `#${record.tenantId}`
-        ),
+        (record.tenantId ?? 0) === 0 ? <Tag>{t('platform')}</Tag> : `#${record.tenantId}`,
     },
     {
       title: t('clientType'),
@@ -189,10 +182,7 @@ const OnlineSessionPage = () => {
             />,
           ]}
           rowKey={(record) => `${record.clientType}-${record.userId}-${record.jti}`}
-          search={{ optionRender: searchOptionRender,
-            labelWidth: 'auto',
-            defaultCollapsed: false,
-          }}
+          search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: false }}
           polling={30}
           pagination={{
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,

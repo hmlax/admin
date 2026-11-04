@@ -3,9 +3,14 @@ import { Button, Empty, Input, Modal, Popconfirm, Table, Tag, Typography, Upload
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, FileAddOutlined, UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AiDoc as AiDoc, AiKnowledgeBase as AiKnowledgeBase } from '@/api/generated/admin/v1';
-import { fetchListAiDocs, useDeleteAiDoc, useUploadAiDoc, useUploadDocFile } from '@/api/hooks/ai-knowledge';
+import {
+  fetchListAiDocs,
+  useDeleteAiDoc,
+  useUploadAiDoc,
+  useUploadDocFile,
+} from '@/api/hooks/ai-knowledge';
 
 // 大文件安全转 base64（分块避免 btoa 栈溢出）
 function bytesToBase64(buf: ArrayBuffer): string {
@@ -24,13 +29,11 @@ interface DocsDrawerProps {
   onClose: () => void;
 }
 
-export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
+function DocsDrawerContent({ open, data, onClose }: DocsDrawerProps) {
   const { t } = useTranslation('aiKnowledge');
   const { message } = App.useApp();
   const queryClient = useQueryClient();
 
-  const [docs, setDocs] = useState<AiDoc[]>([]);
-  const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [content, setContent] = useState('');
 
@@ -38,27 +41,19 @@ export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
   const uploadFileMutation = useUploadDocFile();
   const deleteMutation = useDeleteAiDoc();
 
-  const loadDocs = (baseId: number) => {
-    setLoading(true);
-    fetchListAiDocs(baseId)
-      .then((res) => setDocs((res.items ?? []) as AiDoc[]))
-      .catch((error: Error) => {
-        console.error('fetch ai docs failed:', error);
-        message.error(t('fetchFailed'));
-      })
-      .finally(() => setLoading(false));
-  };
-
+  const docsQuery = useQuery({
+    queryKey: ['listAiDocs', data?.id],
+    queryFn: () => fetchListAiDocs(data!.id!),
+    enabled: open && !!data?.id,
+  });
+  const docs = docsQuery.data?.items ?? [];
+  const loading = docsQuery.isFetching;
+  const loadDocs = () => void docsQuery.refetch();
   useEffect(() => {
-    if (open && data?.id) {
-      loadDocs(data.id);
-    }
-    if (!open) {
-      setName('');
-      setContent('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, data?.id]);
+    if (!docsQuery.error) return;
+    console.error('fetch ai docs failed:', docsQuery.error);
+    message.error(t('fetchFailed'));
+  }, [docsQuery.error, message, t]);
 
   const handleUpload = async () => {
     if (!data?.id || !name.trim() || !content.trim()) return;
@@ -67,7 +62,7 @@ export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
       message.success(t('uploadSuccess', { chunks: res.chunkCount ?? 0 }));
       setName('');
       setContent('');
-      loadDocs(data.id);
+      loadDocs();
       queryClient.invalidateQueries({ queryKey: ['listAiKnowledgeBases'] });
     } catch (error) {
       console.error('upload ai doc failed:', error);
@@ -80,7 +75,7 @@ export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
     try {
       await deleteMutation.mutateAsync({ baseId: data.id, id: doc.id! });
       message.success(t('deleteSuccess'));
-      loadDocs(data.id);
+      loadDocs();
       queryClient.invalidateQueries({ queryKey: ['listAiKnowledgeBases'] });
     } catch (error) {
       console.error('delete ai doc failed:', error);
@@ -99,7 +94,7 @@ export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
         contentBase64: b64,
       });
       message.success(t('uploadSuccess', { chunks: res.chunkCount ?? 0 }));
-      loadDocs(data.id);
+      loadDocs();
       queryClient.invalidateQueries({ queryKey: ['listAiKnowledgeBases'] });
     } catch (error) {
       console.error('upload ai doc file failed:', error);
@@ -191,8 +186,14 @@ export default function DocsDrawer({ open, data, onClose }: DocsDrawerProps) {
         columns={columns}
         dataSource={docs}
         pagination={false}
-        locale={{ emptyText: <Empty description={t('noDocs')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+        locale={{
+          emptyText: <Empty description={t('noDocs')} image={Empty.PRESENTED_IMAGE_SIMPLE} />,
+        }}
       />
     </Modal>
   );
+}
+
+export default function DocsDrawer(props: DocsDrawerProps) {
+  return <DocsDrawerContent key={`${props.open}-${props.data?.id}`} {...props} />;
 }

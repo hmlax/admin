@@ -4,12 +4,23 @@ import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Button, Popover, Switch, Tag, App } from 'antd';
-import { ApiOutlined, DeleteOutlined, EditOutlined, PlusOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import {
+  ApiOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  PlayCircleOutlined,
+} from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { Script as Script } from '@/api/generated/admin/v1';
 import { PaginationQuery } from '@/core';
-import { fetchListScripts, useDeleteScript, useUpdateScript, useListHookPoints } from '@/api/hooks/script';
+import {
+  fetchListScripts,
+  useDeleteScript,
+  useUpdateScript,
+  useListHookPoints,
+} from '@/api/hooks/script';
 import { useProTableScrollY } from '@/hooks/useProTableScrollY';
 import ContentContainer from '@/layouts/components/PageContainer/ContentContainer';
 import { TABLE } from '@/config/constants.ts';
@@ -98,7 +109,11 @@ const ScriptManagement = () => {
       render: (_, record) => {
         const lang = record.language;
         if (!lang) return '-';
-        return <Tag color={languageColorMap[lang]}>{lang === 'LUA' ? t('languageLua') : t('languageJavascript')}</Tag>;
+        return (
+          <Tag color={languageColorMap[lang]}>
+            {lang === 'LUA' ? t('languageLua') : t('languageJavascript')}
+          </Tag>
+        );
       },
     },
     {
@@ -218,16 +233,14 @@ const ScriptManagement = () => {
           <ListTable<Script>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
@@ -240,7 +253,8 @@ const ScriptManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -250,7 +264,12 @@ const ScriptManagement = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListScripts} columns={columns} filename="scripts" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListScripts}
+                columns={columns}
+                filename="scripts"
+              />,
               <Popover
                 key="hookPoints"
                 title={t('hookPointsTitle')}
@@ -272,7 +291,9 @@ const ScriptManagement = () => {
                               {hp.name}
                             </Tag>
                             {hp.description && (
-                              <span style={{ opacity: 0.65, marginRight: 8 }}>{hp.description}</span>
+                              <span style={{ opacity: 0.65, marginRight: 8 }}>
+                                {hp.description}
+                              </span>
                             )}
                             <span>{t('hookPointScriptCount', { count: hp.scriptCount ?? 0 })}</span>
                           </li>

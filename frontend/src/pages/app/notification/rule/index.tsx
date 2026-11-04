@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import ListTable from '@/components/common/ListTable';
@@ -86,7 +87,9 @@ const NotificationRulePage = () => {
 
   const [formOpen, setFormOpen] = useState(false);
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
-  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () => setFormOpen(false));
+  const { guardClose, handleValuesChange } = useDrawerCloseGuard(formOpen, () =>
+    setFormOpen(false),
+  );
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<NotificationRule | undefined>();
   const [testTarget, setTestTarget] = useState<NotificationRule | undefined>();
@@ -104,14 +107,14 @@ const NotificationRulePage = () => {
       await deleteMutation.mutateAsync({ id: record.id });
       message.success(t('deleteSuccess'));
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 原始错误必须留在控制台：用户可见的那句翻译不包含服务端的原因
       console.error('delete notification rule failed', error);
-      message.error(error.message || t('deleteFailed'));
+      message.error(getErrorMessage(error) || t('deleteFailed'));
     }
   };
 
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: NotificationRule) => {
     const data = {
       eventType: values.eventType,
       channel: values.channel,
@@ -137,9 +140,9 @@ const NotificationRulePage = () => {
       setFormOpen(false);
       refresh();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('save notification rule failed', error);
-      message.error(error.message || t('saveFailed'));
+      message.error(getErrorMessage(error) || t('saveFailed'));
       return false;
     }
   };
@@ -159,9 +162,9 @@ const NotificationRulePage = () => {
       );
       setTestTarget(undefined);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('test dispatch failed', error);
-      message.error(error.message || t('testDispatchFailed'));
+      message.error(getErrorMessage(error) || t('testDispatchFailed'));
       return false;
     }
   };
@@ -173,8 +176,7 @@ const NotificationRulePage = () => {
       width: 150,
       valueType: 'select',
       fieldProps: { options: eventTypeOptions(t) },
-      render: (_, record) =>
-        record.eventType ? t(`eventTypeMap.${record.eventType}`) : '-',
+      render: (_, record) => (record.eventType ? t(`eventTypeMap.${record.eventType}`) : '-'),
     },
     {
       title: t('channel'),
@@ -182,10 +184,7 @@ const NotificationRulePage = () => {
       width: 110,
       valueType: 'select',
       fieldProps: {
-        options: [
-          ...channelOptions(t),
-          ...extGroupedOptions(extSchemas),
-        ],
+        options: [...channelOptions(t), ...extGroupedOptions(extSchemas)],
       },
       render: (_, record) =>
         record.channel ? (
@@ -297,7 +296,12 @@ const NotificationRulePage = () => {
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
             showSizeChanger: true,
           }}
-          options={{ density: true, fullScreen: true, setting: { settingIcon: <ColumnSlidersIcon /> }, reload: true }}
+          options={{
+            density: true,
+            fullScreen: true,
+            setting: { settingIcon: <ColumnSlidersIcon /> },
+            reload: true,
+          }}
           toolBarRender={() => [
             <Button
               key="create"
@@ -320,7 +324,11 @@ const NotificationRulePage = () => {
       </div>
 
       <DrawerForm
-        title={formMode === 'create' ? t('common:modal.create', { moduleName: t('title') }) : t('common:modal.update', { moduleName: t('title') })}
+        title={
+          formMode === 'create'
+            ? t('common:modal.create', { moduleName: t('title') })
+            : t('common:modal.update', { moduleName: t('title') })
+        }
         open={formOpen}
         onOpenChange={(v) => {
           // 关闭一律走 drawerProps.onClose 守卫；这里只放行打开
@@ -359,11 +367,7 @@ const NotificationRulePage = () => {
           fieldProps={{ checkedChildren: t('isAsyncOn'), unCheckedChildren: t('isAsyncOff') }}
         />
         <ProFormSwitch name="isEnabled" label={t('isEnabled')} />
-        <ProFormTextArea
-          name="remark"
-          label={t('remark')}
-          fieldProps={{ rows: 2 }}
-        />
+        <ProFormTextArea name="remark" label={t('remark')} fieldProps={{ rows: 2 }} />
       </DrawerForm>
 
       <ModalForm<{ target?: string }>

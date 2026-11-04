@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -33,7 +34,7 @@ const LoginAuditLogPage = () => {
   const { t } = useTranslation('login-audit-log');
   const actionRef = useRef<ActionType>(null);
   // 最近一次列表查询参数：导出 CSV 时沿用当前搜索/排序条件
-  const latestParamsRef = useRef<Record<string, any>>({});
+  const latestParamsRef = useRef<Record<string, unknown>>({});
   const { message } = App.useApp();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -174,7 +175,7 @@ const LoginAuditLogPage = () => {
       width: 180,
       hideInSearch: true,
       render: (_, record) => {
-        const info = record.deviceInfo as any;
+        const info = record.deviceInfo;
         if (!info) return '-';
         return `${info.osName || ''} ${info.browserName || ''}`.trim() || '-';
       },
@@ -185,7 +186,7 @@ const LoginAuditLogPage = () => {
       width: 150,
       hideInSearch: true,
       render: (_, record) => {
-        const geo = record.geoLocation as any;
+        const geo = record.geoLocation;
         if (!geo) return '-';
         return `${geo.province || ''} ${geo.city || ''}`.trim() || '-';
       },
@@ -234,9 +235,9 @@ const LoginAuditLogPage = () => {
         }),
       );
       message.success(t('exportServerSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('server-side audit export failed', error);
-      message.error(error?.message || t('exportServerFailed'));
+      message.error(getErrorMessage(error) || t('exportServerFailed'));
     }
   };
 
@@ -248,14 +249,18 @@ const LoginAuditLogPage = () => {
         title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
       }));
     try {
-      await exportAuditLogs({
-        fetcher: (q) => fetchListLoginAuditLogs(q),
-        filename: `login-audit-logs-${Date.now()}.csv`,
-        columns: exportColumns,
-        params: latestParamsRef.current,
-      }, format);
-    } catch (error: any) {
-      message.error(error?.message || 'Export failed');
+      await exportAuditLogs(
+        {
+          fetcher: (q) => fetchListLoginAuditLogs(q),
+          filename: `login-audit-logs-${Date.now()}.csv`,
+          columns: exportColumns,
+          params: latestParamsRef.current,
+        },
+        format,
+      );
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || 'Export failed');
     }
   };
 
@@ -274,9 +279,7 @@ const LoginAuditLogPage = () => {
                   pageSize: params.pageSize || 20,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -295,7 +298,8 @@ const LoginAuditLogPage = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -326,7 +330,6 @@ const LoginAuditLogPage = () => {
                 <Button>{t('export')}</Button>
               </Dropdown>,
             ]}
-
             options={{
               density: true,
               fullScreen: true,

@@ -2,7 +2,7 @@
  * 登录审计日志模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 状态 ==========
 
@@ -50,9 +50,15 @@ export function getActionTypeMap(t: TFn) {
   return {
     LOGIN: { text: t('actionType.LOGIN'), color: ACTION_TYPE_COLORS.LOGIN },
     LOGOUT: { text: t('actionType.LOGOUT'), color: ACTION_TYPE_COLORS.LOGOUT },
-    SESSION_EXPIRED: { text: t('actionType.SESSION_EXPIRED'), color: ACTION_TYPE_COLORS.SESSION_EXPIRED },
+    SESSION_EXPIRED: {
+      text: t('actionType.SESSION_EXPIRED'),
+      color: ACTION_TYPE_COLORS.SESSION_EXPIRED,
+    },
     KICKED_OUT: { text: t('actionType.KICKED_OUT'), color: ACTION_TYPE_COLORS.KICKED_OUT },
-    PASSWORD_RESET: { text: t('actionType.PASSWORD_RESET'), color: ACTION_TYPE_COLORS.PASSWORD_RESET },
+    PASSWORD_RESET: {
+      text: t('actionType.PASSWORD_RESET'),
+      color: ACTION_TYPE_COLORS.PASSWORD_RESET,
+    },
   };
 }
 

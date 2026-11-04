@@ -1,7 +1,21 @@
+import type { LayoutMenuItem } from '@/core/router/utils/menu';
 import { applicationStorageKey } from '@/config/application';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import React from 'react';
-import { Avatar, Dropdown, Badge, Tooltip, Button, Breadcrumb, Input, Popover, Modal, Empty, Spin, App as AntdApp } from 'antd';
+import {
+  Avatar,
+  Dropdown,
+  Badge,
+  Tooltip,
+  Button,
+  Breadcrumb,
+  Input,
+  Popover,
+  Modal,
+  Empty,
+  Spin,
+  App as AntdApp,
+} from 'antd';
 import type { MenuProps } from 'antd';
 import {
   UserOutlined,
@@ -31,7 +45,7 @@ import { SettingBoltIcon } from '@/components/common/settingBoltIcon';
 import { useI18n } from '@/core/i18n';
 import { usePreferencesStore } from '@/core/preferences/store';
 import type { SupportedLanguagesType } from '@/core/preferences/types/layout';
-import { fetchListUserInbox, } from '@/api/hooks/internal-message';
+import { fetchListUserInbox } from '@/api/hooks/internal-message';
 import { apiClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { PaginationQuery, queryClient } from '@/core';
@@ -89,13 +103,7 @@ const MinimizeBracketsIcon = () => (
  * antd TranslationOutlined 自带方框外沿，tabler language 是描边文A，均与 ele 的实心文A不符。
  */
 const LanguageTranslateIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
-    fill="currentColor"
-    aria-hidden="true"
-  >
+  <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true">
     <path d="m18.5 10 4.4 11h-2.155l-1.201-3h-4.09l-1.199 3h-2.154L16.5 10h2zM10 2v2h6v2h-1.968a18.221 18.221 0 0 1-3.62 6.301 14.865 14.865 0 0 0 2.335 1.707l-.75 1.878A17.016 17.016 0 0 1 9 13.725a16.677 16.677 0 0 1-6.201 3.548l-.536-1.929a14.7 14.7 0 0 0 5.327-3.042A18.078 18.078 0 0 1 4.767 8h2.24A16.031 16.031 0 0 0 9 10.877a16.165 16.165 0 0 0 2.91-4.876L2 6V4h6V2h2zm7.5 10.885L16.253 16h2.492L17.5 12.885z" />
   </svg>
 );
@@ -222,7 +230,7 @@ interface HeaderContentProps {
   isDark: boolean;
   onToggleTheme: (event?: React.MouseEvent<HTMLElement>) => void;
   onOpenSettings: () => void;
-  menuData: any[];
+  menuData: LayoutMenuItem[];
   widgetConfig: {
     fullscreen: boolean;
     globalSearch: boolean;
@@ -326,7 +334,6 @@ export const HeaderContent = ({
     navigate,
     t,
     tRoutes,
-    i18n.language,
     breadcrumbPreferences?.showIcon,
     breadcrumbPreferences?.showHome,
   ]);
@@ -356,7 +363,9 @@ export const HeaderContent = ({
   // ===== 用户下拉菜单 =====
   // 条目口径三端统一（头部卡 / 个人中心 / 收件箱 / 锁定屏幕 / 退出登录），
   // 基准实现见 vue-vben framework/effects/layouts/widgets/user-dropdown。
-  const lockScreenEnabled = usePreferencesStore((state) => state.preferences.widget?.lockScreen ?? true);
+  const lockScreenEnabled = usePreferencesStore(
+    (state) => state.preferences.widget?.lockScreen ?? true,
+  );
   const shortcutKeys = usePreferencesStore((state) => state.preferences.shortcutKeys);
   const lockScreen = useLockStore((state) => state.lockScreen);
 
@@ -370,7 +379,9 @@ export const HeaderContent = ({
 
   // 菜单项右侧的键位提示：与下面的全局监听读同一份开关，避免"显示却按不动"
   const labeledItem = (text: string, shortcut?: string) => (
-    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+    <span
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}
+    >
       <span>{text}</span>
       {shortcut && <span style={searchHintKbdStyle}>{shortcut}</span>}
     </span>
@@ -511,6 +522,7 @@ export const HeaderContent = ({
       queryClient.invalidateQueries({ queryKey: ['inboxPreviewList', userInfo?.id] });
       queryClient.invalidateQueries({ queryKey: ['listUserInbox'] });
     } catch (error) {
+      console.error('Operation failed:', error);
       message.error((error as Error)?.message || tInbox('markAllReadFailed'));
     } finally {
       setMarkAllReadLoading(false);
@@ -530,7 +542,9 @@ export const HeaderContent = ({
           marginBottom: 4,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}
+        >
           {tInbox('pageTitle')}
           {unreadCount > 0 && (
             <span
@@ -600,9 +614,7 @@ export const HeaderContent = ({
                       style={{
                         fontSize: 13,
                         fontWeight: unread ? 600 : 400,
-                        color: unread
-                          ? 'var(--ant-color-text)'
-                          : 'var(--ant-color-text-secondary)',
+                        color: unread ? 'var(--ant-color-text)' : 'var(--ant-color-text-secondary)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -637,7 +649,7 @@ export const HeaderContent = ({
                 </div>
               );
             })}
-            </div>
+          </div>
         ) : (
           <Empty
             description={tInbox('noMessages')}
@@ -666,10 +678,19 @@ export const HeaderContent = ({
   // 规格见 docs/design-language.md「全局搜索面板」条）──
   const [semanticSearchOpen, setSemanticSearchOpen] = useState(false);
   const [semanticQuery, setSemanticQuery] = useState('');
-  const [semanticResults, setSemanticResults] = useState<{title: string; route: string}[]>([]);
+  const [semanticResults, setSemanticResults] = useState<{ title: string; route: string }[]>([]);
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [searchHistory, setSearchHistory] = useState<{title: string; path: string; icon?: string}[]>([]);
+  const [searchHistory, setSearchHistory] = useState<
+    { title: string; path: string; icon?: string }[]
+  >(() => {
+    try {
+      return JSON.parse(localStorage.getItem(applicationStorageKey('menu-search')) || '[]');
+    } catch (error) {
+      console.error('load search history failed:', error);
+      return [];
+    }
+  });
   const semanticTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const SEARCH_HISTORY_KEY = applicationStorageKey('menu-search');
@@ -684,7 +705,7 @@ export const HeaderContent = ({
   const searchableMenus = useMemo(() => {
     const excluded = ['/login', '/401', '/403', '/404', '/500'];
     const out: { title: string; path: string; icon?: string }[] = [];
-    const walk = (items: any[]) => {
+    const walk = (items: LayoutMenuItem[]) => {
       for (const item of items) {
         if (item.children?.length) {
           walk(item.children);
@@ -720,7 +741,7 @@ export const HeaderContent = ({
     [semanticQuery, localResults, semanticResults, searchHistory],
   );
 
-  const loadSearchHistory = () => {
+  const loadSearchHistory = useCallback(() => {
     try {
       const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
       setSearchHistory(raw ? JSON.parse(raw) : []);
@@ -728,13 +749,9 @@ export const HeaderContent = ({
       console.error('load search history failed:', error);
       setSearchHistory([]);
     }
-  };
+  }, [SEARCH_HISTORY_KEY]);
 
-  useEffect(() => {
-    loadSearchHistory();
-  }, []);
-
-  const saveSearchHistory = (list: {title: string; path: string; icon?: string}[]) => {
+  const saveSearchHistory = (list: { title: string; path: string; icon?: string }[]) => {
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list));
     setSearchHistory(list);
   };
@@ -756,11 +773,17 @@ export const HeaderContent = ({
     setSemanticQuery(query);
     setActiveIndex(-1);
     clearTimeout(semanticTimer.current);
-    if (!query.trim()) { setSemanticResults([]); return; }
+    if (!query.trim()) {
+      setSemanticResults([]);
+      return;
+    }
     semanticTimer.current = setTimeout(async () => {
       setSemanticLoading(true);
       try {
-        const resp = await apiClient.aiContentService.SemanticSearch({ query: query.trim(), limit: 8 });
+        const resp = await apiClient.aiContentService.SemanticSearch({
+          query: query.trim(),
+          limit: 8,
+        });
         setSemanticResults(
           (resp.items ?? [])
             .filter((item) => item?.route)
@@ -773,7 +796,9 @@ export const HeaderContent = ({
         // 不吞错：带出原始错误对象；语义搜索失败降级为仅本地结果
         console.error('semantic search failed:', error);
         setSemanticResults([]);
-      } finally { setSemanticLoading(false); }
+      } finally {
+        setSemanticLoading(false);
+      }
     }, 500);
   };
 
@@ -787,7 +812,10 @@ export const HeaderContent = ({
       path,
       icon: matched?.icon,
     };
-    const next = [entry, ...searchHistory.filter((h) => h.path !== path)].slice(0, SEARCH_HISTORY_MAX);
+    const next = [entry, ...searchHistory.filter((h) => h.path !== path)].slice(
+      0,
+      SEARCH_HISTORY_MAX,
+    );
     saveSearchHistory(next);
     closeSearch();
     navigate(path);
@@ -795,7 +823,9 @@ export const HeaderContent = ({
 
   // Ctrl+K / Cmd+K 呼出全局搜索（偏好里可关：shortcutKeys.enable + shortcutKeys.globalSearch）
   const shortcutEnabled = usePreferencesStore((s) => s.preferences.shortcutKeys?.enable ?? true);
-  const searchShortcutEnabled = usePreferencesStore((s) => s.preferences.shortcutKeys?.globalSearch ?? true);
+  const searchShortcutEnabled = usePreferencesStore(
+    (s) => s.preferences.shortcutKeys?.globalSearch ?? true,
+  );
   useEffect(() => {
     if (!widgetConfig.globalSearch || !shortcutEnabled || !searchShortcutEnabled) return undefined;
     const handler = (e: KeyboardEvent) => {
@@ -814,7 +844,7 @@ export const HeaderContent = ({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [widgetConfig.globalSearch, shortcutEnabled, searchShortcutEnabled]);
+  }, [widgetConfig.globalSearch, shortcutEnabled, searchShortcutEnabled, loadSearchHistory]);
 
   return (
     <div
@@ -876,7 +906,7 @@ export const HeaderContent = ({
                 }
               : undefined
           }
-          items={breadcrumbItems.map((item, _index) => ({
+          items={breadcrumbItems.map((item) => ({
             key: item.key,
             title: item.onClick ? (
               <a
@@ -943,7 +973,7 @@ export const HeaderContent = ({
               closable={false}
               centered
               destroyOnHidden
-              styles={{ body: { padding: 0 } }}
+              styles={{ container: { padding: 0 } }}
             >
               {/* 头部：搜索图标 + 无边框大输入 */}
               <div
@@ -955,7 +985,9 @@ export const HeaderContent = ({
                   borderBottom: '1px solid var(--ant-color-border-secondary)',
                 }}
               >
-                <SearchOutlined style={{ color: 'var(--ant-color-text-secondary)', fontSize: 16 }} />
+                <SearchOutlined
+                  style={{ color: 'var(--ant-color-text-secondary)', fontSize: 16 }}
+                />
                 <Input
                   variant="borderless"
                   className="global-search-input"
@@ -987,13 +1019,26 @@ export const HeaderContent = ({
               <div style={{ maxHeight: 450, overflowY: 'auto', padding: '8px' }}>
                 {/* 无关键词：最近搜索 */}
                 {!semanticQuery.trim() && searchHistory.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--ant-color-text-secondary)', fontSize: 13 }}>
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '24px 0',
+                      color: 'var(--ant-color-text-secondary)',
+                      fontSize: 13,
+                    }}
+                  >
                     {t('header.noHistory')}
                   </div>
                 )}
                 {!semanticQuery.trim() && searchHistory.length > 0 && (
                   <>
-                    <div style={{ fontSize: 12, color: 'var(--ant-color-text-secondary)', padding: '4px 10px 6px' }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: 'var(--ant-color-text-secondary)',
+                        padding: '4px 10px 6px',
+                      }}
+                    >
                       {t('header.searchRecent')}
                     </div>
                     {searchHistory.map((item, i) => (
@@ -1029,29 +1074,51 @@ export const HeaderContent = ({
                 {/* 有关键词：语义搜索小节（独立分区，失败降级不弹错） */}
                 {semanticQuery.trim() && (semanticLoading || semanticResults.length > 0) && (
                   <>
-                    <div style={{ fontSize: 12, color: 'var(--ant-color-text-secondary)', padding: '6px 10px 6px', marginTop: localResults.length > 0 ? 6 : 0 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: 'var(--ant-color-text-secondary)',
+                        padding: '6px 10px 6px',
+                        marginTop: localResults.length > 0 ? 6 : 0,
+                      }}
+                    >
                       {t('header.semanticTitle')}
                     </div>
                     {semanticLoading && (
-                      <div style={{ textAlign: 'center', padding: '12px 0', color: 'var(--ant-color-text-secondary)', fontSize: 13 }}>
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '12px 0',
+                          color: 'var(--ant-color-text-secondary)',
+                          fontSize: 13,
+                        }}
+                      >
                         {t('header.searching')}
                       </div>
                     )}
-                    {!semanticLoading && semanticResults.map((item, i) => (
-                      <SearchRow
-                        key={`${item.route}-${i}`}
-                        title={item.title}
-                        active={activeIndex === localResults.length + i}
-                        onMouseEnter={() => setActiveIndex(localResults.length + i)}
-                        onClick={() => goSearchItem(item)}
-                      />
-                    ))}
+                    {!semanticLoading &&
+                      semanticResults.map((item, i) => (
+                        <SearchRow
+                          key={`${item.route}-${i}`}
+                          title={item.title}
+                          active={activeIndex === localResults.length + i}
+                          onMouseEnter={() => setActiveIndex(localResults.length + i)}
+                          onClick={() => goSearchItem(item)}
+                        />
+                      ))}
                   </>
                 )}
 
                 {/* 有关键词且无任何结果 */}
                 {semanticQuery.trim() && !semanticLoading && combinedResults.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--ant-color-text-secondary)', fontSize: 13 }}>
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '24px 0',
+                      color: 'var(--ant-color-text-secondary)',
+                      fontSize: 13,
+                    }}
+                  >
                     {t('header.noResults')}
                   </div>
                 )}
@@ -1195,7 +1262,7 @@ export const HeaderContent = ({
             content={inboxContent}
             trigger="click"
             placement="bottomRight"
-            styles={{ body: { padding: '10px 10px 6px' } } as any}
+            styles={{ container: { padding: '10px 10px 6px' } }}
           >
             <Badge count={unreadCount} size="small" offset={[0, 4]}>
               <Tooltip title={t('header.notification')}>
@@ -1241,7 +1308,11 @@ export const HeaderContent = ({
                 }}
               >
                 <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
-                  <Avatar src={userInfo?.avatar || defaultAvatar || undefined} icon={<UserOutlined />} size={48} />
+                  <Avatar
+                    src={userInfo?.avatar || defaultAvatar || undefined}
+                    icon={<UserOutlined />}
+                    size={48}
+                  />
                   <span
                     style={{
                       position: 'absolute',
@@ -1251,7 +1322,8 @@ export const HeaderContent = ({
                       height: 10,
                       borderRadius: '50%',
                       backgroundColor: 'var(--ant-color-success)',
-                      border: '2px solid var(--ant-color-bg-elevated, var(--ant-color-bg-container))',
+                      border:
+                        '2px solid var(--ant-color-bg-elevated, var(--ant-color-bg-container))',
                     }}
                   />
                 </span>
@@ -1305,7 +1377,11 @@ export const HeaderContent = ({
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
-            <Avatar src={userInfo?.avatar || defaultAvatar || undefined} icon={<UserOutlined />} size="small" />
+            <Avatar
+              src={userInfo?.avatar || defaultAvatar || undefined}
+              icon={<UserOutlined />}
+              size="small"
+            />
             <span
               className="hidden md:inline"
               style={{

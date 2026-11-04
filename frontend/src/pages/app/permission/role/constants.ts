@@ -1,8 +1,9 @@
+import type { OrgUnit, PermissionGroup } from '@/api/generated/admin/v1';
 /**
  * 角色模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 角色状态（与菜单模块一致：ON/OFF） ==========
 
@@ -39,7 +40,7 @@ interface TreeNode {
  * 每个组节点下附加匹配的权限（通过 groupId 关联）。
  */
 export function buildPermissionTree(
-  groups: Array<{ id?: number | string; title?: string; name?: string; code?: string; children?: any[] }>,
+  groups: PermissionGroup[],
   permissions: Array<{
     id?: number | string;
     title?: string;
@@ -64,7 +65,7 @@ export function buildPermissionTree(
     const children = [...subGroups, ...matchedPerms];
     return {
       key: `g_${group.id}`,
-      title: group.title || group.name || group.code || String(group.id),
+      title: group.name || String(group.id),
       children: children.length > 0 ? children : undefined,
     };
   });
@@ -73,7 +74,7 @@ export function buildPermissionTree(
 /**
  * 从权限树勾选值中提取所有数字 ID（过滤掉非数字值）
  */
-export function filterNumbers(values: any[]): number[] {
+export function filterNumbers(values: unknown[]): number[] {
   if (!Array.isArray(values)) return [];
   return values
     .flat(Infinity)
@@ -89,12 +90,12 @@ export function filterNumbers(values: any[]): number[] {
  * 组/父菜单 ID 会被后端当作权限/菜单 ID 处理，可能造成越权绑定。
  * 这里用叶子集合对 checkedKeys 求交集，只保留真正的叶子 ID。
  */
-export function extractLeafIds(checkedKeys: any[], treeData: any[]): number[] {
+export function extractLeafIds(checkedKeys: unknown[], treeData: TreeNode[]): number[] {
   if (!Array.isArray(checkedKeys) || !Array.isArray(treeData)) return [];
   const leafIds = new Set<string | number>();
-  const collect = (nodes: any[]) => {
+  const collect = (nodes: TreeNode[]) => {
     for (const node of nodes) {
-      if (node.children?.length > 0) {
+      if (node.children && node.children.length > 0) {
         collect(node.children);
       } else {
         leafIds.add(node.key);
@@ -105,7 +106,7 @@ export function extractLeafIds(checkedKeys: any[], treeData: any[]): number[] {
   // 只返回数字 key（权限 ID），过滤字符串 key（权限组 g_xxx）
   return checkedKeys
     .flat(Infinity)
-    .filter((v) => leafIds.has(v) && typeof v === 'number')
+    .filter((v): v is number => typeof v === 'number' && leafIds.has(v))
     .map((v) => Number(v));
 }
 
@@ -177,7 +178,7 @@ interface OrgTreeNode {
  * 把组织单元 API 的嵌套树映射为 antd Tree 数据（key/title）。
  * 空 children 一律省略（children:[] 会渲染无效展开箭头）。
  */
-export function buildOrgUnitTree(items: any[]): OrgTreeNode[] {
+export function buildOrgUnitTree(items: OrgUnit[]): OrgTreeNode[] {
   const result: OrgTreeNode[] = [];
   for (const item of items || []) {
     const node: OrgTreeNode = {

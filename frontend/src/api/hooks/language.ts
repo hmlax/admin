@@ -21,7 +21,7 @@ import { apiClient } from '@/api/client';
 
 export function useListLanguages(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListLanguageResponse, Error>,
+  options?: Omit<UseQueryOptions<ListLanguageResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listLanguages', query],
@@ -40,7 +40,7 @@ export async function fetchListLanguages(params: PaginationQuery) {
 
 export function useGetLanguage(
   req: GetLanguageRequest,
-  options?: UseQueryOptions<Language, Error>,
+  options?: Omit<UseQueryOptions<Language, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getLanguage', req],
@@ -50,7 +50,7 @@ export function useGetLanguage(
 }
 
 export function useCreateLanguage(
-  options?: UseMutationOptions<{}, Error, CreateLanguageRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateLanguageRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.languageService.Create(data),
@@ -59,10 +59,23 @@ export function useCreateLanguage(
 }
 
 export function useUpdateLanguage(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.languageService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.languageService.Update>[0]['data']>;
+    }) =>
       apiClient.languageService.Update({
         id,
         data: { ...values },
@@ -73,7 +86,7 @@ export function useUpdateLanguage(
 }
 
 export function useDeleteLanguage(
-  options?: UseMutationOptions<{}, Error, DeleteLanguageRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteLanguageRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.languageService.Delete(data),
@@ -82,7 +95,7 @@ export function useDeleteLanguage(
 }
 
 export function useBatchCreateLanguages(
-  options?: UseMutationOptions<{}, Error, BatchCreateLanguagesRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, BatchCreateLanguagesRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.languageService.BatchCreate(data),

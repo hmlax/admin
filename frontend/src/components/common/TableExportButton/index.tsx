@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useMemo, useState } from 'react';
 import { App, Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
@@ -17,15 +18,20 @@ import { serverExportFile } from '@/utils/server-export';
  */
 export interface TableExportServerExport {
   /** 后端 :export 锚点（如 'admin/v1/ai/usage-logs:export'） */
-  url: string
+  url: string;
   /** 构造带当前搜索条件的查询（分页缺省=后端统一控行数） */
-  buildQuery: () => PaginationQuery
+  buildQuery: () => PaginationQuery;
 }
 
 export interface TableExportButtonProps {
-  fetcher: (query: PaginationQuery) => Promise<{ items?: any[]; total?: number }>;
+  fetcher: (query: PaginationQuery) => Promise<{ items?: unknown[]; total?: number }>;
   /** ProColumns[]（或 {title, dataIndex}[]），自动过滤出可导出列 */
-  columns: any[];
+  columns: Array<{
+    dataIndex?: unknown;
+    hideInTable?: boolean;
+    valueType?: unknown;
+    title?: unknown;
+  }>;
   filename?: string;
   maxRows?: number;
   /**
@@ -33,7 +39,7 @@ export interface TableExportButtonProps {
    * 导出走本组件自己的聚合查询、不经过表格 request，页面在闭包里塞的隐式过滤
    * 这里感知不到；不传会把隐私过滤一起丢掉，导出范围越权扩大。
    */
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   /** 可选：服务端全量导出锚点与查询构造（不提供则菜单不含该项） */
   serverExport?: TableExportServerExport;
 }
@@ -53,14 +59,10 @@ export default function TableExportButton({
   const exportColumns = useMemo(
     () =>
       (columns || [])
-        .filter(
-          (c: any) =>
-            c.dataIndex && !c.hideInTable && c.valueType !== 'option',
-        )
-        .map((c: any) => ({
+        .filter((c) => c.dataIndex && !c.hideInTable && c.valueType !== 'option')
+        .map((c) => ({
           key: String(c.dataIndex),
-          title:
-            typeof c.title === 'string' ? c.title : String(c.dataIndex),
+          title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
         })),
     [columns],
   );
@@ -73,8 +75,9 @@ export default function TableExportButton({
         format,
       );
       message.success(t('export.success', { count }));
-    } catch (err: any) {
-      message.error(`${t('export.failed')}：${err?.message ?? ''}`);
+    } catch (err: unknown) {
+      console.error('Operation failed:', err);
+      message.error(`${t('export.failed')}：${getErrorMessage(err) ?? ''}`);
     } finally {
       setExporting(false);
     }
@@ -85,8 +88,9 @@ export default function TableExportButton({
     try {
       await serverExportFile(serverExport!.url, serverExport!.buildQuery());
       message.success(t('export.serverSuccess'));
-    } catch (err: any) {
-      message.error(`${t('export.serverFailed')}：${err?.message ?? ''}`);
+    } catch (err: unknown) {
+      console.error('Operation failed:', err);
+      message.error(`${t('export.serverFailed')}：${getErrorMessage(err) ?? ''}`);
     } finally {
       setExporting(false);
     }
@@ -115,9 +119,7 @@ export default function TableExportButton({
         },
       }}
     >
-      <Button loading={exporting}>
-        {t('export.title')}
-      </Button>
+      <Button loading={exporting}>{t('export.title')}</Button>
     </Dropdown>
   );
 }

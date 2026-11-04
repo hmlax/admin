@@ -1,17 +1,16 @@
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormSelect,
-  ProFormRadio,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormSelect, ProFormRadio } from '@ant-design/pro-components';
 import { App, TreeSelect, Form } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { InternalMessage as InternalMessage } from '@/api/generated/admin/v1';
 import { PaginationQuery } from '@/core';
-import { useUpdateInternalMessage, useSendMessage, fetchListMessageCategories } from '@/api/hooks/internal-message';
+import {
+  useUpdateInternalMessage,
+  useSendMessage,
+  fetchListMessageCategories,
+} from '@/api/hooks/internal-message';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
 import { fetchListUsers } from '@/api/hooks/user';
 import { Editor, EditorType } from '@/components/common/Editor';
@@ -28,7 +27,13 @@ interface MessageDrawerProps {
 /**
  * 内部消息编辑/创建抽屉组件
  */
-const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
+const MessageDrawerContent: React.FC<MessageDrawerProps> = ({
+  open,
+  mode,
+  data,
+  onClose,
+  onSuccess,
+}) => {
   const { t } = useTranslation('internal-message');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -38,15 +43,12 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
   const { message } = App.useApp();
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [categoryTreeData, setCategoryTreeData] = useState<any[]>([]);
+  const [categoryTreeData, setCategoryTreeData] = useState<
+    { key: number; id: number; value: number; title: string; label: string }[]
+  >([]);
   // 发送范围：控制 targetUserIds 选择框的显隐，抽屉每次打开重置回全员
-  const [sendScope, setSendScope] = useState<'ALL' | 'USERS'>('ALL');
-
-  useEffect(() => {
-    if (open) {
-      setSendScope('ALL');
-    }
-  }, [open]);
+  const [form] = Form.useForm();
+  const sendScope = Form.useWatch('sendScope', form) ?? 'ALL';
 
   // 加载分类列表
   useEffect(() => {
@@ -58,16 +60,21 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
           const items = res?.items || [];
           // 分类是平级列表，转为 select 选项
           setCategoryTreeData(
-            items.map((c: any) => ({
-              id: c.id,
-              key: c.id,
-              value: c.id,
-              title: c.name || String(c.id),
-              label: c.name || String(c.id),
-            })),
+            items
+              .filter((c): c is typeof c & { id: number } => c.id !== undefined)
+              .map((c) => ({
+                id: c.id,
+                key: c.id,
+                value: c.id,
+                title: c.name || String(c.id),
+                label: c.name || String(c.id),
+              })),
           );
         })
-        .catch(() => setCategoryTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setCategoryTreeData([]);
+        });
     }
   }, [open]);
 
@@ -77,10 +84,10 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
       setTimeout(() => {
         formRef.current?.setFieldsValue({
           status: data.status || 'DRAFT',
-          type: (data as any).type || 'NOTIFICATION',
-          categoryId: (data as any).categoryId || undefined,
+          type: data.type || 'NOTIFICATION',
+          categoryId: data.categoryId || undefined,
           title: data.title || '',
-          content: (data as any).content || '',
+          content: data.content || '',
         });
       }, 0);
     }
@@ -110,7 +117,9 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (
+    values: InternalMessage & { sendScope?: 'ALL' | 'USERS'; targetUserIds?: number[] },
+  ) => {
     setConfirmLoading(true);
     try {
       if (mode === 'create') {
@@ -129,6 +138,7 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
 
   return (
     <DrawerForm
+      form={form}
       formRef={formRef}
       title={mode === 'create' ? t('drawerCreate') : t('drawerUpdate')}
       open={open}
@@ -136,6 +146,7 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
       initialValues={{
         status: 'DRAFT',
         type: 'NOTIFICATION',
+        content: '',
       }}
       onFinish={handleSubmit}
       submitter={{
@@ -161,8 +172,10 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
         rules={[{ required: true, message: t('requiredStatus') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -174,8 +187,10 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
         rules={[{ required: true, message: t('requiredType') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -190,9 +205,7 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
               { label: t('sendScopeAll'), value: 'ALL' },
               { label: t('sendScopeUsers'), value: 'USERS' },
             ]}
-            fieldProps={{
-              onChange: (e) => setSendScope(e.target.value),
-            }}
+            fieldProps={{}}
           />
 
           {sendScope === 'USERS' && (
@@ -203,7 +216,7 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
               mode="multiple"
               request={async () => {
                 const res = await fetchListUsers(new PaginationQuery({}));
-                return (res?.items || []).map((u: any) => ({
+                return (res?.items || []).map((u) => ({
                   label: u.nickname ? `${u.nickname}(${u.username})` : u.username,
                   value: u.id,
                 }));
@@ -211,8 +224,10 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
               rules={[{ required: true, message: t('requiredTargetUsers') }]}
               fieldProps={{
                 showSearch: true,
-                filterOption: (input: string, option: any) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+                filterOption: (input, option) =>
+                  String(option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase()),
                 optionFilterProp: 'label',
               }}
             />
@@ -246,6 +261,9 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
       {/* 消息内容 - Tiptap 富文本编辑器；富文本属复杂控件按规范标签在上通栏 */}
       <Form.Item
         name="content"
+        getValueFromEvent={(value: string) =>
+          value.replace(/<p>(?:<br\s*\/?>)?<\/p>/g, '').trim() === '' ? '' : value
+        }
         label={t('content')}
         labelCol={{ span: 24 }}
         wrapperCol={{ span: 24 }}
@@ -263,4 +281,6 @@ const MessageDrawer: React.FC<MessageDrawerProps> = ({ open, mode, data, onClose
   );
 };
 
-export default MessageDrawer;
+export default function MessageDrawer(props: MessageDrawerProps) {
+  return <MessageDrawerContent key={`${props.open}-${props.mode}-${props.data?.id}`} {...props} />;
+}

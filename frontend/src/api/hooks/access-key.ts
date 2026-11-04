@@ -21,11 +21,7 @@ export async function fetchListAccessKeys(params: PaginationQuery) {
 
 /** 创建凭证：响应含一次性明文 secret */
 export function useCreateAccessKey(
-  options?: UseMutationOptions<
-    CreateAccessKeyResponse,
-    Error,
-    CreateAccessKeyRequest
-  >,
+  options?: UseMutationOptions<CreateAccessKeyResponse, Error, CreateAccessKeyRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.accessKeyService.Create(data),
@@ -35,13 +31,26 @@ export function useCreateAccessKey(
 
 /** 更新凭证（名称/状态/过期时间）；服务端黑名单保护 access_key/secret_hash/tenant_id */
 export function useUpdateAccessKey(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.accessKeyService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.accessKeyService.Update>[0]['data']>;
+    }) =>
       apiClient.accessKeyService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -49,7 +58,7 @@ export function useUpdateAccessKey(
 }
 
 export function useDeleteAccessKey(
-  options?: UseMutationOptions<{}, Error, DeleteAccessKeyRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteAccessKeyRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.accessKeyService.Delete(req),
@@ -59,11 +68,7 @@ export function useDeleteAccessKey(
 
 /** 重置密钥：生成新 SK 明文返回一次（旧 SK 立即失效于交换） */
 export function useResetAccessKeySecret(
-  options?: UseMutationOptions<
-    CreateAccessKeyResponse,
-    Error,
-    ResetAccessKeySecretRequest
-  >,
+  options?: UseMutationOptions<CreateAccessKeyResponse, Error, ResetAccessKeySecretRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.accessKeyService.ResetSecret(req),

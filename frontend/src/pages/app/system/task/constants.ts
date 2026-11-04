@@ -2,7 +2,7 @@
  * 任务模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 任务类型 ==========
 

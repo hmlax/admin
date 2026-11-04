@@ -1,5 +1,18 @@
+import { getErrorMessage } from '@/utils/error';
 import { useState } from 'react';
-import { Form, Input, Select, Button, Avatar, Row, Col, Descriptions, Tag, App, Upload } from 'antd';
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Avatar,
+  Row,
+  Col,
+  Descriptions,
+  Tag,
+  App,
+  Upload,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import type { User as User } from '@/api/generated/admin/v1';
@@ -64,9 +77,9 @@ const BaseSetting = () => {
         await uploadAvatar({ imageBase64: base64 });
         await queryClient.refetchQueries({ queryKey: ['getMe'] });
         message.success(t('avatarUploadSuccess'));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to upload avatar:', error);
-        message.error(error?.message || t('avatarUploadFailed'));
+        message.error(getErrorMessage(error) || t('avatarUploadFailed'));
       }
     });
     reader.addEventListener('error', () => {
@@ -96,9 +109,9 @@ const BaseSetting = () => {
       await deleteAvatar();
       await queryClient.refetchQueries({ queryKey: ['getMe'] });
       message.success(t('avatarDeleted'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete avatar:', error);
-      message.error(error?.message || t('avatarDeleteFailed'));
+      message.error(getErrorMessage(error) || t('avatarDeleteFailed'));
     }
   };
 
@@ -107,142 +120,156 @@ const BaseSetting = () => {
   return (
     <div style={{ overflowX: 'hidden' }}>
       <Row gutter={24}>
-      <Col span={14}>
-        <Form
-          form={form}
-          layout="horizontal"
-          labelCol={{ flex: '0 0 120px' }}
-          wrapperCol={{ flex: 'auto' }}
-          initialValues={{
-            nickname: user?.nickname || '',
-            realname: user?.realname || '',
-            email: user?.email || '',
-            mobile: user?.mobile || '',
-            telephone: user?.telephone || '',
-            gender: user?.gender,
-            region: user?.region || '',
-            address: user?.address || '',
-            description: user?.description || '',
-            locale: user?.locale || '',
-          }}
-        >
-          <Form.Item name="nickname" label={t('field.nickname')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="realname" label={t('field.realname')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="email" label={t('field.email')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="mobile" label={t('field.mobile')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="telephone" label={t('field.telephone')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="gender" label={t('field.gender')}>
-            <Select placeholder={t('common:placeholder.select')} allowClear options={[
-              { value: 'MALE', label: t('genderMap.MALE') },
-              { value: 'FEMALE', label: t('genderMap.FEMALE') },
-              { value: 'SECRET', label: t('genderMap.SECRET') },
-            ]} />
-          </Form.Item>
-          <Form.Item name="region" label={t('field.region')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="address" label={t('field.address')}>
-            <Input placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="description" label={t('field.description')}>
-            <Input.TextArea rows={3} placeholder={t('common:placeholder.input')} />
-          </Form.Item>
-          <Form.Item name="locale" label={t('field.locale')}>
-            <Select placeholder={t('common:placeholder.select')} allowClear options={[
-              { value: 'zh-CN', label: '中文' },
-              { value: 'en-US', label: 'English' },
-            ]} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" loading={saving} onClick={handleSave}>
-              {t('save')}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Col>
-
-      <Col span={10}>
-        <div style={{ paddingTop: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 16 }}>{t('field.avatar')}</div>
-          <Avatar
-            src={user?.avatar || undefined}
-            size={96}
-            style={!user?.avatar ? { backgroundColor: avatarColor, fontSize: 40, fontWeight: 700 } : {}}
+        <Col span={14}>
+          <Form
+            form={form}
+            layout="horizontal"
+            labelCol={{ flex: '0 0 120px' }}
+            wrapperCol={{ flex: 'auto' }}
+            initialValues={{
+              nickname: user?.nickname || '',
+              realname: user?.realname || '',
+              email: user?.email || '',
+              mobile: user?.mobile || '',
+              telephone: user?.telephone || '',
+              gender: user?.gender,
+              region: user?.region || '',
+              address: user?.address || '',
+              description: user?.description || '',
+              locale: user?.locale || '',
+            }}
           >
-            {firstChar}
-          </Avatar>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <Upload
-              showUploadList={false}
-              accept="image/*"
-              beforeUpload={beforeAvatarUpload}
-              customRequest={({ file }) => handleUploadAvatar(file as File)}
-            >
-              <Button type="primary">{t('button.uploadAvatar')}</Button>
-            </Upload>
-            {user?.avatar && (
-              <Button danger onClick={handleDeleteAvatar}>{t('button.deleteAvatar')}</Button>
-            )}
-          </div>
-        </div>
+            <Form.Item name="nickname" label={t('field.nickname')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="realname" label={t('field.realname')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="email" label={t('field.email')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="mobile" label={t('field.mobile')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="telephone" label={t('field.telephone')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="gender" label={t('field.gender')}>
+              <Select
+                placeholder={t('common:placeholder.select')}
+                allowClear
+                options={[
+                  { value: 'MALE', label: t('genderMap.MALE') },
+                  { value: 'FEMALE', label: t('genderMap.FEMALE') },
+                  { value: 'SECRET', label: t('genderMap.SECRET') },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="region" label={t('field.region')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="address" label={t('field.address')}>
+              <Input placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="description" label={t('field.description')}>
+              <Input.TextArea rows={3} placeholder={t('common:placeholder.input')} />
+            </Form.Item>
+            <Form.Item name="locale" label={t('field.locale')}>
+              <Select
+                placeholder={t('common:placeholder.select')}
+                allowClear
+                options={[
+                  { value: 'zh-CN', label: '中文' },
+                  { value: 'en-US', label: 'English' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" loading={saving} onClick={handleSave}>
+                {t('save')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </Col>
 
-        {/* 账号归属信息（只读） */}
-        <Descriptions column={1} size="small" style={{ marginTop: 24 }}>
-          <Descriptions.Item label={t('info.username')}>
-            {user?.username || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.roleNames')}>
-            {user?.roleNames?.length ? (
-              user.roleNames.map((role) => (
-                <Tag key={role} color={getRandomColor(role)} style={{ marginRight: 4 }}>
-                  {role}
-                </Tag>
-              ))
-            ) : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.orgUnitNames')}>
-            {user?.orgUnitNames?.length ? (
-              user.orgUnitNames.map((org) => (
-                <Tag key={org} color={getRandomColor(org)} style={{ marginRight: 4 }}>
-                  {org}
-                </Tag>
-              ))
-            ) : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.positionNames')}>
-            {user?.positionNames?.length ? (
-              user.positionNames.map((pos) => (
-                <Tag key={pos} color={getRandomColor(pos)} style={{ marginRight: 4 }}>
-                  {pos}
-                </Tag>
-              ))
-            ) : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.tenantName')}>
-            {user?.tenantName || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.lastLoginAt')}>
-            {formatDateTime(user?.lastLoginAt ?? '') || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.lastLoginIp')}>
-            {user?.lastLoginIp || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label={t('info.createdAt')}>
-            {formatDateTime(user?.createdAt ?? '') || '-'}
-          </Descriptions.Item>
-        </Descriptions>
-      </Col>
-    </Row>
+        <Col span={10}>
+          <div style={{ paddingTop: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
+              {t('field.avatar')}
+            </div>
+            <Avatar
+              src={user?.avatar || undefined}
+              size={96}
+              style={
+                !user?.avatar ? { backgroundColor: avatarColor, fontSize: 40, fontWeight: 700 } : {}
+              }
+            >
+              {firstChar}
+            </Avatar>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <Upload
+                showUploadList={false}
+                accept="image/*"
+                beforeUpload={beforeAvatarUpload}
+                customRequest={({ file }) => handleUploadAvatar(file as File)}
+              >
+                <Button type="primary">{t('button.uploadAvatar')}</Button>
+              </Upload>
+              {user?.avatar && (
+                <Button danger onClick={handleDeleteAvatar}>
+                  {t('button.deleteAvatar')}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* 账号归属信息（只读） */}
+          <Descriptions column={1} size="small" style={{ marginTop: 24 }}>
+            <Descriptions.Item label={t('info.username')}>
+              {user?.username || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.roleNames')}>
+              {user?.roleNames?.length
+                ? user.roleNames.map((role) => (
+                    <Tag key={role} color={getRandomColor(role)} style={{ marginRight: 4 }}>
+                      {role}
+                    </Tag>
+                  ))
+                : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.orgUnitNames')}>
+              {user?.orgUnitNames?.length
+                ? user.orgUnitNames.map((org) => (
+                    <Tag key={org} color={getRandomColor(org)} style={{ marginRight: 4 }}>
+                      {org}
+                    </Tag>
+                  ))
+                : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.positionNames')}>
+              {user?.positionNames?.length
+                ? user.positionNames.map((pos) => (
+                    <Tag key={pos} color={getRandomColor(pos)} style={{ marginRight: 4 }}>
+                      {pos}
+                    </Tag>
+                  ))
+                : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.tenantName')}>
+              {user?.tenantName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.lastLoginAt')}>
+              {formatDateTime(user?.lastLoginAt ?? '') || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.lastLoginIp')}>
+              {user?.lastLoginIp || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('info.createdAt')}>
+              {formatDateTime(user?.createdAt ?? '') || '-'}
+            </Descriptions.Item>
+          </Descriptions>
+        </Col>
+      </Row>
     </div>
   );
 };

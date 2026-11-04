@@ -3,7 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefau
 import axios from 'axios';
 import { applicationHeaders, TENANT_CODE_HEADER } from '@/config/application';
 
-import { merge, bindMethods } from '@/utils';
+import { bindMethods } from '@/utils';
 
 import { FileDownloader } from './modules/downloader';
 import { InterceptorManager } from './modules/interceptor';
@@ -74,7 +74,11 @@ class RequestClient {
       withCredentials: true,
     };
     const { ...axiosConfig } = options;
-    const requestConfig = merge(axiosConfig, defaultConfig);
+    const requestConfig = {
+      ...defaultConfig,
+      ...axiosConfig,
+      headers: { ...defaultConfig.headers, ...axiosConfig.headers },
+    };
     this.instance = axios.create(requestConfig);
     this.instance.interceptors.request.use((config) => {
       config.headers.delete(TENANT_CODE_HEADER);
@@ -121,11 +125,7 @@ class RequestClient {
     this.useTokenInterceptor(callbacks);
     this.useRequestIdInterceptor();
     this.useLocaleInterceptor(callbacks);
-    // responseData 必须在 auth 之前（vben/ele 同序）。401 走 rejected 链，
-    // auth 拿到的仍是完整 AxiosError；反过来 auth 在前时，刷新成功后的重试
-    // 结果（已解包的响应体）会再流经 responseData.fulfilled 被二次解包：
-    // status 为 undefined 落入 throw 分支，最终 `errAny.response.data` 把
-    // 字面量 undefined 当错误抛给页面，UI 在恢复成功时必现失败态。
+    // 拦截器始终保留完整 AxiosResponse，统一在 request 中解包，重试不会二次解包。
     this.useResponseDataInterceptor();
     this.useAuthInterceptor(callbacks);
     this.useErrorMessageInterceptor(callbacks);
@@ -141,7 +141,7 @@ class RequestClient {
           const token = callbacks.getToken();
           config.headers.Authorization = this.formatToken(token);
         }
-        return config as never;
+        return config;
       },
     });
   }
@@ -153,10 +153,10 @@ class RequestClient {
     this.addRequestInterceptor({
       fulfilled: (config) => {
         const requestId = config.headers['X-Request-ID'] || defaultIdGenerator();
-        (config as any)._requestId = requestId;
+        config._requestId = String(requestId);
         config.headers['X-Request-ID'] = requestId;
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
-        return config as never;
+        return config;
       },
     });
   }
@@ -170,7 +170,7 @@ class RequestClient {
         if (callbacks.getLocale) {
           config.headers['Accept-Language'] = callbacks.getLocale();
         }
-        return config as never;
+        return config;
       },
     });
   }
@@ -184,7 +184,7 @@ class RequestClient {
         const { data: responseData, status } = response;
 
         if (status >= 200 && status < 400) {
-          return responseData;
+          return response;
         }
 
         throw Object.assign({}, responseData, { response });
@@ -249,35 +249,35 @@ class RequestClient {
   /**
    * POST请求方法
    */
-  public post<T = never>(url: string, data?: never, config?: AxiosRequestConfig): Promise<T> {
+  public post<T = never>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.request<T>(url, { ...config, data, method: 'POST' });
   }
 
   /**
    * PUT请求方法
    */
-  public put<T = never>(url: string, data?: never, config?: AxiosRequestConfig): Promise<T> {
+  public put<T = never>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.request<T>(url, { ...config, data, method: 'PUT' });
   }
 
   /**
    * 通用的请求方法
    */
+  public requestResponse<T = unknown>(
+    url: string,
+    config: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    return this.instance.request<T>({ url, ...config });
+  }
+
   public async request<T>(url: string, config: AxiosRequestConfig): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await this.instance({
-        url,
-        ...config,
-      });
-      return response as T;
+      const response = await this.requestResponse<T>(url, config);
+      return response.data;
     } catch (error: unknown) {
       // 已由认证拦截器处理的错误（如 token 过期跳转登录页）必须原样抛出，
       // 保留 __handledByAuthInterceptor 标记，避免被下方逻辑误判。
-      if (
-        error &&
-        typeof error === 'object' &&
-        '__handledByAuthInterceptor' in error
-      ) {
+      if (error && typeof error === 'object' && '__handledByAuthInterceptor' in error) {
         throw error;
       }
 
@@ -285,18 +285,14 @@ class RequestClient {
       // 用翻译后的文案覆盖抛出对象的 message，使所有读取 .message 的调用方
       // 都得到本地化文本，同时保留其余字段（如 code/reason）供业务逻辑判断。
       const msg = this.getErrorMsg(error);
-      // error 为 unknown；用 any 访问 response.data 以兼容拦截器解包后的结构
-      const errAny = error as any;
       const thrown: unknown =
-        errAny && typeof errAny === 'object' && errAny.response
-          ? (errAny.response.data as unknown)
-          : error;
+        axios.isAxiosError<unknown>(error) && error.response ? error.response.data : error;
       try {
         if (thrown && typeof thrown === 'object') {
           (thrown as { message?: string }).message = msg;
         }
       } catch {
-        // 忽略只读属性等赋值异常
+        // 纯本地 best-effort：只读错误对象无法附加翻译时保留原错误。
       }
       throw thrown;
     }

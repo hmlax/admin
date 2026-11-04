@@ -70,12 +70,12 @@ const LoginPolicyDrawer: React.FC<LoginPolicyDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: LoginPolicy) => {
     setConfirmLoading(true);
 
     try {
       // target_id 是 proto uint32：留空不传，避免空串/undefined 触发 protojson 400
-      const payload: any = { ...values };
+      const payload: LoginPolicy = { ...values };
       if (payload.targetId === undefined || payload.targetId === null) {
         delete payload.targetId;
       }
@@ -137,8 +137,10 @@ const LoginPolicyDrawer: React.FC<LoginPolicyDrawerProps> = ({
         rules={[{ required: true, message: t('requiredType') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -150,8 +152,10 @@ const LoginPolicyDrawer: React.FC<LoginPolicyDrawerProps> = ({
         rules={[{ required: true, message: t('requiredMethod') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 

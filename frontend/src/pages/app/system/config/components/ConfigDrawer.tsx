@@ -1,11 +1,6 @@
 import { useRef, useState } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormSelect,
-  ProFormSwitch,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormSelect, ProFormSwitch } from '@ant-design/pro-components';
 import { App } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -25,13 +20,7 @@ interface ConfigDrawerProps {
 /**
  * 参数编辑/创建抽屉组件
  */
-const ConfigDrawer: React.FC<ConfigDrawerProps> = ({
-  open,
-  mode,
-  data,
-  onClose,
-  onSuccess,
-}) => {
+const ConfigDrawer: React.FC<ConfigDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
   const { t } = useTranslation('config');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -69,7 +58,7 @@ const ConfigDrawer: React.FC<ConfigDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Config) => {
     setConfirmLoading(true);
 
     try {
@@ -165,10 +154,7 @@ const ConfigDrawer: React.FC<ConfigDrawerProps> = ({
         }}
       />
 
-      <ProFormSwitch
-        name="isBuiltIn"
-        label={t('isBuiltIn')}
-      />
+      <ProFormSwitch name="isBuiltIn" label={t('isBuiltIn')} />
     </DrawerForm>
   );
 };

@@ -4,12 +4,7 @@ import TableExportButton from '@/components/common/TableExportButton';
 import TableActions from '@/components/common/TableActions';
 import ListTable from '@/components/common/ListTable';
 import { Button, Tag, App } from 'antd';
-import {
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { Position as Position } from '@/api/generated/admin/v1';
@@ -192,16 +187,14 @@ const PositionManagement = () => {
           <ListTable<Position>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || 20,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
@@ -214,7 +207,8 @@ const PositionManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -224,12 +218,13 @@ const PositionManagement = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListPositions} columns={columns} filename="positions" />,
-              <Button
-                key="import"
-                icon={<UploadOutlined />}
-                onClick={() => setImportOpen(true)}
-              >
+              <TableExportButton
+                key="export"
+                fetcher={fetchListPositions}
+                columns={columns}
+                filename="positions"
+              />,
+              <Button key="import" icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>
                 {t('common:import.title')}
               </Button>,
               <Button

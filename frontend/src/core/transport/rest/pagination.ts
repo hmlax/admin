@@ -24,7 +24,7 @@ export class PaginationQuery {
    */
   private static removeNullUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
     return Object.fromEntries(
-      Object.entries(obj).filter(([_, v]) => v !== null && v !== undefined && v !== ''),
+      Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && v !== ''),
     ) as Partial<T>;
   }
 
@@ -44,21 +44,73 @@ export class PaginationQuery {
     const idx = key.lastIndexOf('__');
     if (idx === -1) return false;
     return [
-      'eq', 'equal', 'equals',
-      'ne', 'neq', 'not', 'not_equal', 'not_equals', 'not-equal',
-      'gt', 'greater_than', 'greater-than',
-      'gte', 'greater_than_or_equal', 'greater_equals', 'greater_or_equal', 'greater-or-equal',
-      'lt', 'less_than', 'less-than',
-      'lte', 'less_than_or_equal', 'less_equals', 'less_or_equal', 'less-or-equal',
-      'like', 'ilike', 'i_like', 'not_like', 'notlike',
-      'in', 'nin', 'not_in', 'notin',
-      'is_null', 'isnull', 'is_not_null', 'isnot_null', 'isnotnull', 'not_isnull',
-      'between', 'range',
-      'regexp', 'regex', 'iregexp', 'i_regexp', 'iregex',
-      'contains', 'icontains', 'i_contains',
-      'starts_with', 'startswith', 'istarts_with', 'i_starts_with', 'istartswith',
-      'ends_with', 'endswith', 'iends_with', 'i_ends_with', 'iendswith',
-      'json_contains', 'array_contains', 'exists', 'search', 'exact', 'iexact', 'i_exact',
+      'eq',
+      'equal',
+      'equals',
+      'ne',
+      'neq',
+      'not',
+      'not_equal',
+      'not_equals',
+      'not-equal',
+      'gt',
+      'greater_than',
+      'greater-than',
+      'gte',
+      'greater_than_or_equal',
+      'greater_equals',
+      'greater_or_equal',
+      'greater-or-equal',
+      'lt',
+      'less_than',
+      'less-than',
+      'lte',
+      'less_than_or_equal',
+      'less_equals',
+      'less_or_equal',
+      'less-or-equal',
+      'like',
+      'ilike',
+      'i_like',
+      'not_like',
+      'notlike',
+      'in',
+      'nin',
+      'not_in',
+      'notin',
+      'is_null',
+      'isnull',
+      'is_not_null',
+      'isnot_null',
+      'isnotnull',
+      'not_isnull',
+      'between',
+      'range',
+      'regexp',
+      'regex',
+      'iregexp',
+      'i_regexp',
+      'iregex',
+      'contains',
+      'icontains',
+      'i_contains',
+      'starts_with',
+      'startswith',
+      'istarts_with',
+      'i_starts_with',
+      'istartswith',
+      'ends_with',
+      'endswith',
+      'iends_with',
+      'i_ends_with',
+      'iendswith',
+      'json_contains',
+      'array_contains',
+      'exists',
+      'search',
+      'exact',
+      'iexact',
+      'i_exact',
     ].includes(key.slice(idx + 2).toLowerCase());
   }
 
@@ -112,7 +164,9 @@ export class PaginationQuery {
 
     if (needCleanTenant) {
       // 删除租户相关字段 tenant_id 和 tenantId
-      const { tenant_id, tenantId, ...rest } = fuzzy as Record<string, unknown>;
+      const rest = Object.fromEntries(
+        Object.entries(fuzzy).filter(([key]) => key !== 'tenant_id' && key !== 'tenantId'),
+      );
 
       // 过滤掉空对象
       if (Object.keys(rest).length === 0) {

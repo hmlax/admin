@@ -1,3 +1,4 @@
+import type { DictType as DictTypeRecord } from '@/api/generated/admin/v1';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -34,7 +35,7 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingType, setEditingType] = useState<any>(null);
+  const [editingType, setEditingType] = useState<DictTypeRecord | null>(null);
 
   // 删除 mutation
   const deleteMutation = useDeleteDictType({
@@ -49,7 +50,7 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
   });
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<DictTypeRecord>[] = [
     {
       title: t('typeName'),
       dataIndex: 'typeName',
@@ -66,8 +67,8 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
         options: enableBoolOptions(t),
       },
       render: (_, record) => (
-        <Tag color={getEnableColor(record.isEnabled)}>
-          {getEnableLabel(t, record.isEnabled)}
+        <Tag color={getEnableColor(record.isEnabled ?? false)}>
+          {getEnableLabel(t, record.isEnabled ?? false)}
         </Tag>
       ),
     },
@@ -108,8 +109,12 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
-        <ListTable<any>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
+        <ListTable<DictTypeRecord>
           actionRef={actionRef}
           columns={columns}
           headerTitle={t('dictTypeList')}
@@ -120,9 +125,7 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
                 pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
               },
               formValues: Object.fromEntries(
-                Object.entries(params).filter(
-                  ([key]) => !['current', 'pageSize'].includes(key),
-                ),
+                Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
               ),
             });
 
@@ -135,7 +138,8 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
             };
           }}
           rowKey="id"
-          search={{ optionRender: searchOptionRender,
+          search={{
+            optionRender: searchOptionRender,
             labelWidth: 'auto',
             defaultCollapsed: false,
             span: 12,
@@ -146,7 +150,12 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
             showQuickJumper: true,
           }}
           toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListDictTypes} columns={columns} filename="dict-types" />,
+            <TableExportButton
+              key="export"
+              fetcher={fetchListDictTypes}
+              columns={columns}
+              filename="dict-types"
+            />,
             <Button
               key="create"
               color="primary"
@@ -173,7 +182,7 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
           scroll={{ y: tableScrollY }}
           onRow={(record) => ({
             onClick: () => {
-              onTypeSelect(record.id);
+              if (record.id !== undefined) onTypeSelect(record.id);
             },
             className: record.id === currentTypeId ? 'ant-table-row-selected' : undefined,
             style: {
@@ -186,7 +195,7 @@ const DictTypeList: React.FC<DictTypeListProps> = ({ currentTypeId, onTypeSelect
       <DictTypeDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingType}
+        data={editingType ?? undefined}
         onClose={() => {
           setDrawerOpen(false);
           setEditingType(null);

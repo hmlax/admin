@@ -18,7 +18,7 @@ import { apiClient } from '@/api/client';
 
 export function useListScriptLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListScriptLogsResponse, Error>,
+  options?: Omit<UseQueryOptions<ListScriptLogsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listScriptLogs', query],
@@ -36,11 +36,7 @@ export async function fetchListScriptLogs(params: PaginationQuery) {
 }
 
 export function usePurgeScriptLogs(
-  options?: UseMutationOptions<
-    PurgeScriptLogsResponse,
-    Error,
-    PurgeScriptLogsRequest
-  >,
+  options?: UseMutationOptions<PurgeScriptLogsResponse, Error, PurgeScriptLogsRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.scriptLogService.Purge(req),

@@ -1,3 +1,6 @@
+import type { Role } from '@/api/generated/admin/v1';
+import type { SelectionNode } from '@/types/selection';
+import type { User as UserRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import { DrawerForm, ProFormText, ProFormRadio, ProFormTextArea } from '@ant-design/pro-components';
@@ -16,10 +19,12 @@ import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard'
 import { getUserStatusOptions, getGenderOptions } from '../constants';
 import { buildOrgTreeSelectData } from './tree-utils';
 
+type UserFormValues = UserRecord & { password?: string };
+
 interface UserDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: UserRecord;
   tenantId: number | undefined;
   onClose: () => void;
   onSuccess: () => void;
@@ -37,7 +42,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
   onSuccess,
 }) => {
   const { t } = useTranslation('user');
-  const formRef = useRef<ProFormInstance>(null);
+  const formRef = useRef<ProFormInstance<UserFormValues>>(null);
   const queryClient = useQueryClient();
   const { message } = App.useApp();
 
@@ -53,8 +58,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
   );
 
   // 下拉数据
-  const [roleTreeData, setRoleTreeData] = useState<any[]>([]);
-  const [orgUnitTreeData, setOrgUnitTreeData] = useState<any[]>([]);
+  const [roleTreeData, setRoleTreeData] = useState<SelectionNode[]>([]);
+  const [orgUnitTreeData, setOrgUnitTreeData] = useState<SelectionNode[]>([]);
   const [positionOptions, setPositionOptions] = useState<{ label: string; value: number }[]>([]);
 
   // 加载下拉数据
@@ -75,7 +80,10 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
           const tree = buildRoleTreeSelect(res?.items || []);
           setRoleTreeData(tree);
         })
-        .catch(() => setRoleTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setRoleTreeData([]);
+        });
 
       // 组织
       fetchListOrgUnits(
@@ -85,18 +93,25 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
           const tree = buildOrgTreeSelectData(res?.items || []);
           setOrgUnitTreeData(tree);
         })
-        .catch(() => setOrgUnitTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setOrgUnitTreeData([]);
+        });
 
       // 职位
       fetchListPositions(new PaginationQuery({ formValues: { status: 'ON' } }))
         .then((res) => {
-          const opts = (res.items || []).map((item: any) => ({
+          const opts = (res.items || []).map((item) => ({
             label: item.name || '',
-            value: item.id,
+            key: item.id ?? 0,
+            value: item.id ?? 0,
           }));
           setPositionOptions(opts);
         })
-        .catch(() => setPositionOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setPositionOptions([]);
+        });
     }
   }, [open, tenantId]);
 
@@ -149,13 +164,13 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: UserFormValues) => {
     try {
       setConfirmLoading(true);
 
       // 被字段权限隐藏的字段整项剔除，避免把空值当成显式清空提交
       for (const key of [...userHiddenFields]) {
-        delete values[key];
+        delete (values as Record<string, unknown>)[key];
       }
 
       if (mode === 'edit' && data?.id) {
@@ -169,12 +184,13 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
         // 创建：需要 data + password 包装
         const { password, ...restValues } = values;
         await createMutation.mutateAsync({
-          data: restValues as any,
+          data: restValues,
           password: password || undefined,
         });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);
@@ -243,10 +259,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
       </Form.Item>
 
       {/* 组织 - TreeSelect 多选 */}
-      <Form.Item
-        name="orgUnitIds"
-        label={t('orgUnitIds')}
-      >
+      <Form.Item name="orgUnitIds" label={t('orgUnitIds')}>
         <TreeSelect
           treeData={orgUnitTreeData}
           placeholder={t('orgUnitIdsPlaceholder')}
@@ -259,10 +272,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({
       </Form.Item>
 
       {/* 职位 - Select 多选 */}
-      <Form.Item
-        name="positionIds"
-        label={t('positionIds')}
-      >
+      <Form.Item name="positionIds" label={t('positionIds')}>
         <Select
           mode="multiple"
           options={positionOptions}
@@ -341,20 +351,20 @@ export default UserDrawer;
 /**
  * 将角色扁平列表构建为 TreeSelect 数据
  */
-function buildRoleTreeSelect(items: any[]): any[] {
+function buildRoleTreeSelect(items: Role[]): SelectionNode[] {
   if (!items || items.length === 0) return [];
 
-  const map = new Map<number, any>();
-  const roots: any[] = [];
+  const map = new Map<number, SelectionNode & { children: SelectionNode[] }>();
+  const roots: SelectionNode[] = [];
 
   items.forEach((item) => {
     if (item.id == null) return;
     map.set(item.id, {
-      value: item.id,
+      key: item.id ?? 0,
+      value: item.id ?? 0,
       label: item.name || '',
       title: item.name || '',
       children: [],
-      parentId: item.parentId,
     });
   });
 
@@ -367,7 +377,7 @@ function buildRoleTreeSelect(items: any[]): any[] {
   });
 
   // 清理空 children
-  const cleanEmpty = (nodes: any[]) => {
+  const cleanEmpty = (nodes: SelectionNode[]) => {
     nodes.forEach((n) => {
       if (n.children && n.children.length === 0) {
         delete n.children;

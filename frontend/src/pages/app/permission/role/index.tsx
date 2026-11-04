@@ -160,16 +160,14 @@ const RoleManagement = () => {
           <ListTable<Role>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, _sorter, _filter) => {
+            request={async (params) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
               });
 
@@ -182,7 +180,8 @@ const RoleManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -192,7 +191,12 @@ const RoleManagement = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListRoles} columns={columns} filename="roles" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListRoles}
+                columns={columns}
+                filename="roles"
+              />,
               <Button
                 key="create"
                 color="primary"

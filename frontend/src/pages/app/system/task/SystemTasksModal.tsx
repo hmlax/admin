@@ -1,3 +1,4 @@
+import type { InspectSystemTasksResponse } from '@/api/generated/admin/v1';
 import { Modal, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
@@ -16,75 +17,69 @@ const { Text } = Typography;
  * asynq 队列无命名空间：后端只汇总调度条目覆盖到的任务类型，
  * 共库错开 URI 后看到的即本实例自己的任务。
  */
-const SystemTasksModal = ({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) => {
+const SystemTasksModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const { t } = useTranslation('task');
   const inspectQuery = useInspectSystemTasks({ enabled: open });
 
-  const scheduleColumns: ColumnsType<Record<string, any>> = [
-    {
-      title: t('sysTaskType'),
-      dataIndex: 'taskType',
-      render: (v: string) => <Tag color="geekblue">{v}</Tag>,
-    },
-    { title: t('sysTaskCron'), dataIndex: 'cronSpec', width: 130 },
-    {
-      title: t('sysTaskNext'),
-      dataIndex: 'nextEnqueueAt',
-      width: 170,
-      render: (v?: string) => (v ? formatDateTime(v) : '-'),
-    },
-    {
-      title: t('sysTaskPrev'),
-      dataIndex: 'prevEnqueueAt',
-      width: 170,
-      render: (v?: string) =>
-        v ? (
-          formatDateTime(v)
-        ) : (
-          <Text type="secondary">{t('sysTaskNeverRun')}</Text>
-        ),
-    },
-  ];
+  const scheduleColumns: ColumnsType<NonNullable<InspectSystemTasksResponse['schedules']>[number]> =
+    [
+      {
+        title: t('sysTaskType'),
+        dataIndex: 'taskType',
+        render: (v: string) => <Tag color="geekblue">{v}</Tag>,
+      },
+      { title: t('sysTaskCron'), dataIndex: 'cronSpec', width: 130 },
+      {
+        title: t('sysTaskNext'),
+        dataIndex: 'nextEnqueueAt',
+        width: 170,
+        render: (v?: string) => (v ? formatDateTime(v) : '-'),
+      },
+      {
+        title: t('sysTaskPrev'),
+        dataIndex: 'prevEnqueueAt',
+        width: 170,
+        render: (v?: string) =>
+          v ? formatDateTime(v) : <Text type="secondary">{t('sysTaskNeverRun')}</Text>,
+      },
+    ];
 
-  const summaryColumns: ColumnsType<Record<string, any>> = [
-    {
-      title: t('sysTaskType'),
-      dataIndex: 'taskType',
-      render: (v: string) => <Tag color="geekblue">{v}</Tag>,
-    },
-    { title: t('sysTaskActive'), dataIndex: 'active', width: 70, align: 'center' },
-    { title: t('sysTaskPending'), dataIndex: 'pending', width: 80, align: 'center' },
-    {
-      title: t('sysTaskRetry'),
-      dataIndex: 'retry',
-      width: 70,
-      align: 'center',
-      render: (v: number) => (v > 0 ? <Tag color="warning">{v}</Tag> : v),
-    },
-    {
-      title: t('sysTaskArchived'),
-      dataIndex: 'archived',
-      width: 80,
-      align: 'center',
-      render: (v: number) => (v > 0 ? <Tag color="error">{v}</Tag> : v),
-    },
-  ];
+  const summaryColumns: ColumnsType<NonNullable<InspectSystemTasksResponse['summaries']>[number]> =
+    [
+      {
+        title: t('sysTaskType'),
+        dataIndex: 'taskType',
+        render: (v: string) => <Tag color="geekblue">{v}</Tag>,
+      },
+      { title: t('sysTaskActive'), dataIndex: 'active', width: 70, align: 'center' },
+      { title: t('sysTaskPending'), dataIndex: 'pending', width: 80, align: 'center' },
+      {
+        title: t('sysTaskRetry'),
+        dataIndex: 'retry',
+        width: 70,
+        align: 'center',
+        render: (v: number) => (v > 0 ? <Tag color="warning">{v}</Tag> : v),
+      },
+      {
+        title: t('sysTaskArchived'),
+        dataIndex: 'archived',
+        width: 80,
+        align: 'center',
+        render: (v: number) => (v > 0 ? <Tag color="error">{v}</Tag> : v),
+      },
+    ];
 
-  const failureColumns: ColumnsType<Record<string, any>> = [
+  const failureColumns: ColumnsType<
+    NonNullable<
+      NonNullable<InspectSystemTasksResponse['summaries']>[number]['recentFailures']
+    >[number]
+  > = [
     { title: t('sysTaskType'), dataIndex: 'taskType', width: 160 },
     {
       title: t('sysTaskState'),
       dataIndex: 'state',
       width: 90,
-      render: (v: string) => (
-        <Tag color={v === 'archived' ? 'error' : 'warning'}>{v}</Tag>
-      ),
+      render: (v: string) => <Tag color={v === 'archived' ? 'error' : 'warning'}>{v}</Tag>,
     },
     { title: t('sysTaskLastError'), dataIndex: 'lastError', ellipsis: true },
     {
@@ -98,12 +93,12 @@ const SystemTasksModal = ({
       key: 'retried',
       width: 90,
       align: 'center',
-      render: (_: unknown, r: any) => `${r.retried ?? 0}/${r.maxRetry ?? 0}`,
+      render: (_: unknown, r) => `${r.retried ?? 0}/${r.maxRetry ?? 0}`,
     },
   ];
 
   const summaries = inspectQuery.data?.summaries ?? [];
-  const failures = summaries.flatMap((s: any) => s.recentFailures ?? []);
+  const failures = summaries.flatMap((s) => s.recentFailures ?? []);
 
   return (
     <Modal
@@ -118,9 +113,7 @@ const SystemTasksModal = ({
         <div style={{ padding: 48, textAlign: 'center' }}>{t('sysTaskLoading')}</div>
       )}
       {inspectQuery.isError && (
-        <Text type="danger">
-          {inspectQuery.error?.message || t('sysTaskLoadFailed')}
-        </Text>
+        <Text type="danger">{inspectQuery.error?.message || t('sysTaskLoadFailed')}</Text>
       )}
       {inspectQuery.data && (
         <>
@@ -132,7 +125,7 @@ const SystemTasksModal = ({
           </Typography.Title>
           <Table
             columns={scheduleColumns}
-            dataSource={(inspectQuery.data.schedules ?? []) as Record<string, any>[]}
+            dataSource={inspectQuery.data.schedules ?? []}
             pagination={false}
             rowKey="taskType"
             size="small"
@@ -144,7 +137,7 @@ const SystemTasksModal = ({
           </Typography.Title>
           <Table
             columns={summaryColumns}
-            dataSource={summaries as Record<string, any>[]}
+            dataSource={summaries}
             pagination={false}
             rowKey="taskType"
             size="small"
@@ -159,11 +152,9 @@ const SystemTasksModal = ({
           ) : (
             <Table
               columns={failureColumns}
-              dataSource={failures as Record<string, any>[]}
+              dataSource={failures}
               pagination={false}
-              rowKey={(r: any) =>
-                `${r.taskType}-${r.state}-${r.lastFailedAt ?? ''}-${r.retried ?? 0}`
-              }
+              rowKey={(r) => `${r.taskType}-${r.state}-${r.lastFailedAt ?? ''}-${r.retried ?? 0}`}
               size="small"
               bordered
             />

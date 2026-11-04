@@ -132,7 +132,7 @@ const InternalMessagePage: React.FC<InternalMessagePageProps> = ({ userId }) => 
         actionRef={actionRef}
         columns={columns}
         request={async (params) => {
-          const formValues: Record<string, any> = {};
+          const formValues: Record<string, unknown> = {};
           Object.entries(params).forEach(([key, value]) => {
             if (!['current', 'pageSize'].includes(key) && value !== undefined) {
               formValues[key] = value;
@@ -161,10 +161,7 @@ const InternalMessagePage: React.FC<InternalMessagePageProps> = ({ userId }) => 
           };
         }}
         rowKey="id"
-        search={{ optionRender: searchOptionRender,
-          labelWidth: 'auto',
-          defaultCollapsed: false,
-        }}
+        search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: false }}
         pagination={{
           defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
           showSizeChanger: true,

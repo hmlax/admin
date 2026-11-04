@@ -61,11 +61,18 @@ const ServerMonitor = () => {
   return (
     <ContentContainer heightMode="fixed" scrollable padding="16px">
       {/* 数据库 */}
-      <Card size="small" style={{ marginBottom: 16 }} title={<Text strong>{t('database')}</Text>} extra={
-        db?.pingOk === true ? <Tag color="success">{t('pingOk')}</Tag>
-          : db?.pingOk === false ? <Tag color="error">{t('pingFail')}</Tag>
-            : null
-      }>
+      <Card
+        size="small"
+        style={{ marginBottom: 16 }}
+        title={<Text strong>{t('database')}</Text>}
+        extra={
+          db?.pingOk === true ? (
+            <Tag color="success">{t('pingOk')}</Tag>
+          ) : db?.pingOk === false ? (
+            <Tag color="error">{t('pingFail')}</Tag>
+          ) : null
+        }
+      >
         {db ? (
           <Descriptions column={2} size="small" bordered colon>
             {renderRow(t('dbDriver'), db.driver)}
@@ -73,7 +80,12 @@ const ServerMonitor = () => {
             {renderRow(t('openConnections'), String(db.openConnections ?? '-'))}
             {renderRow(t('inUseConnections'), String(db.inUseConnections ?? '-'))}
             {renderRow(t('idleConnections'), String(db.idleConnections ?? '-'))}
-            {db.pingError ? renderRow(t('pingError'), <span style={{ color: token.colorError }}>{db.pingError}</span>) : null}
+            {db.pingError
+              ? renderRow(
+                  t('pingError'),
+                  <span style={{ color: token.colorError }}>{db.pingError}</span>,
+                )
+              : null}
           </Descriptions>
         ) : (
           <Empty description={t('noData')} />
@@ -89,7 +101,10 @@ const ServerMonitor = () => {
             {renderRow(t('memAlloc'), fmtBytes(go.memAllocBytes))}
             {renderRow(t('memSys'), fmtBytes(go.memSysBytes))}
             {renderRow(t('gcCycles'), String(go.gcCycles ?? '-'))}
-            {renderRow(t('uptime'), `${fmtUptime(go.uptimeSeconds)} (${formatDateTime(go.startedAt as any)})`)}
+            {renderRow(
+              t('uptime'),
+              `${fmtUptime(go.uptimeSeconds)} (${formatDateTime(go.startedAt)})`,
+            )}
           </Descriptions>
         ) : (
           <Empty description={t('noData')} />

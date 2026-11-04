@@ -19,6 +19,14 @@ import { toProtoTimestamp } from '@/utils/datetime';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
 import { getTaskTypeOptions } from '../constants';
 
+type TaskFormValues = Task & {
+  'taskOptions.maxRetry'?: number;
+  'taskOptions.timeout'?: string;
+  'taskOptions.deadline'?: string;
+  'taskOptions.processIn'?: string;
+  'taskOptions.processAt'?: string;
+};
+
 interface TaskDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
@@ -50,14 +58,17 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ open, mode, data, onClose, onSu
           const names = res?.typeNames || [];
           setTypeNameOptions(names.map((n: string) => ({ label: n, value: n })));
         })
-        .catch(() => setTypeNameOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load task types failed:', error);
+          setTypeNameOptions([]);
+        });
     }
   }, [open]);
 
   // 编辑模式填充表单
   useEffect(() => {
     if (open && mode === 'edit' && data) {
-      const taskOptions = (data as any).taskOptions || {};
+      const taskOptions = data.taskOptions || {};
       setTimeout(() => {
         formRef.current?.setFieldsValue({
           type: data.type || 'PERIODIC',
@@ -100,7 +111,7 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ open, mode, data, onClose, onSu
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: TaskFormValues) => {
     setConfirmLoading(true);
     try {
       // 聚合 taskOptions 嵌套字段
@@ -165,8 +176,10 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ open, mode, data, onClose, onSu
         rules={[{ required: true, message: t('requiredType') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 
@@ -178,8 +191,10 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ open, mode, data, onClose, onSu
         rules={[{ required: true, message: t('requiredTypeName') }]}
         fieldProps={{
           showSearch: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 

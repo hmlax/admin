@@ -24,7 +24,7 @@ import { apiClient } from '@/api/client';
 
 export function useListDictTypes(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListDictTypeResponse, Error>,
+  options?: Omit<UseQueryOptions<ListDictTypeResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listDictTypes', query],
@@ -43,7 +43,7 @@ export async function fetchListDictTypes(params: PaginationQuery) {
 
 export function useGetDictType(
   req: GetDictTypeRequest,
-  options?: UseQueryOptions<DictType, Error>,
+  options?: Omit<UseQueryOptions<DictType, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getDictType', req],
@@ -65,11 +65,20 @@ export function useUpdateDictType(
   options?: UseMutationOptions<
     DictType,
     Error,
-    { id: number; values: Record<string, any> }
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.dictTypeService.Update>[0]['data']>;
+    }
   >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.dictTypeService.Update>[0]['data']>;
+    }) =>
       apiClient.dictTypeService.Update({
         id,
         data: { ...values },
@@ -80,7 +89,7 @@ export function useUpdateDictType(
 }
 
 export function useDeleteDictType(
-  options?: UseMutationOptions<{}, Error, DeleteDictTypeRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteDictTypeRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.dictTypeService.Delete(data),
@@ -94,7 +103,7 @@ export function useDeleteDictType(
 
 export function useListDictEntries(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListDictEntryResponse, Error>,
+  options?: Omit<UseQueryOptions<ListDictEntryResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listDictEntries', query],
@@ -112,7 +121,7 @@ export async function fetchListDictEntries(params: PaginationQuery) {
 }
 
 export function useCreateDictEntry(
-  options?: UseMutationOptions<{}, Error, CreateDictEntryRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateDictEntryRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.dictEntryService.Create(data),
@@ -121,13 +130,26 @@ export function useCreateDictEntry(
 }
 
 export function useUpdateDictEntry(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.dictEntryService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.dictEntryService.Update>[0]['data']>;
+    }) =>
       apiClient.dictEntryService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -135,7 +157,7 @@ export function useUpdateDictEntry(
 }
 
 export function useDeleteDictEntry(
-  options?: UseMutationOptions<{}, Error, DeleteDictEntryRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteDictEntryRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.dictEntryService.Delete(data),

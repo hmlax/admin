@@ -1,11 +1,23 @@
+import { getErrorMessage } from '@/utils/error';
 import React, { useEffect, useRef, useState } from 'react';
-import { DrawerForm, ProFormText, ProFormSelect, ProFormTextArea, ProFormDateTimePicker } from '@ant-design/pro-components';
+import {
+  DrawerForm,
+  ProFormText,
+  ProFormSelect,
+  ProFormTextArea,
+  ProFormDateTimePicker,
+} from '@ant-design/pro-components';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import { Button, message, Divider, Popconfirm, Descriptions,  Progress } from 'antd';
+import { Button, message, Divider, Popconfirm, Descriptions, Progress } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
-import { useUpdateTenant, useCreateTenantWithAdminUser, useGetTenantUsage, useCleanupTenantData } from '@/api/hooks/tenant';
+import {
+  useUpdateTenant,
+  useCreateTenantWithAdminUser,
+  useGetTenantUsage,
+  useCleanupTenantData,
+} from '@/api/hooks/tenant';
 import { toProtoTimestamp } from '@/utils/datetime';
 import { fetchListPlans } from '@/api/hooks/plan';
 import { PaginationQuery } from '@/core';
@@ -23,6 +35,15 @@ import {
   SELECT_FILTER_PROPS,
 } from '../constants';
 
+type TenantFormValues = Tenant & {
+  tenantType?: Tenant_Type;
+  username?: string;
+  mobile?: string;
+  email?: string;
+  password?: string;
+  passwordConfirm?: string;
+};
+
 interface TenantDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
@@ -34,13 +55,7 @@ interface TenantDrawerProps {
 /**
  * 租户编辑/创建 Drawer 组件（基于 DrawerForm）
  */
-const TenantDrawer: React.FC<TenantDrawerProps> = ({
-  open,
-  mode,
-  data,
-  onClose,
-  onSuccess,
-}) => {
+const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
   const { t } = useTranslation('tenant');
   const queryClient = useQueryClient();
   const formRef = useRef<ProFormInstance>(null);
@@ -66,13 +81,16 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({
     if (open) {
       fetchListPlans(new PaginationQuery({ formValues: {} }))
         .then((res) => {
-          const options = (res.items || []).map((item: any) => ({
-            label: item.name,
-            value: item.id,
+          const options = (res.items || []).map((item) => ({
+            label: item.name ?? String(item.id),
+            value: item.id ?? 0,
           }));
           setPlanOptions(options);
         })
-        .catch(() => setPlanOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setPlanOptions([]);
+        });
     }
   }, [open]);
 
@@ -104,7 +122,7 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({
   }, [open, mode, data]);
 
   // 提交处理
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: TenantFormValues) => {
     try {
       if (mode === 'create') {
         // 检查密码和确认密码是否一致
@@ -171,8 +189,11 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({
       onClose();
 
       return true;
-    } catch (error: any) {
-      message.error(error.message || (mode === 'create' ? t('createFailed') : t('updateFailed')));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(
+        getErrorMessage(error) || (mode === 'create' ? t('createFailed') : t('updateFailed')),
+      );
       return false;
     }
   };
@@ -360,8 +381,9 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({
                   message.success(t('cleanupSuccess'));
                   queryClient.invalidateQueries({ queryKey: ['listTenants'] });
                   onClose();
-                } catch (err: any) {
-                  message.error(err?.message || t('cleanupFailed'));
+                } catch (err: unknown) {
+                  console.error('Operation failed:', err);
+                  message.error(getErrorMessage(err) || t('cleanupFailed'));
                 }
               }}
             >

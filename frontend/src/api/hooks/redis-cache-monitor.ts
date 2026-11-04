@@ -10,7 +10,7 @@ import { apiClient } from '@/api/client';
 const MONITOR_QUERY_KEY = 'getRedisCacheMonitorInfo';
 
 export function useRedisCacheMonitorInfo(
-  options?: UseQueryOptions<RedisCacheMonitorInfo, Error>,
+  options?: Omit<UseQueryOptions<RedisCacheMonitorInfo, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [MONITOR_QUERY_KEY],

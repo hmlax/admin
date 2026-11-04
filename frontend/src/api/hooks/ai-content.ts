@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 
 export interface GenerateContentParams {
-  scene: string; // DESCRIPTION / ANNOUNCEMENT / REPLY / GENERAL
+  scene: NonNullable<Parameters<typeof apiClient.aiContentService.GenerateContent>[0]['scene']>;
   topic: string;
   context?: string;
   lang?: string;
@@ -14,7 +14,7 @@ export function useGenerateContent() {
   return useMutation({
     mutationFn: (req: GenerateContentParams) =>
       apiClient.aiContentService.GenerateContent({
-        scene: req.scene as any,
+        scene: req.scene,
         topic: req.topic,
         context: req.context,
         lang: req.lang ?? 'zh-CN',

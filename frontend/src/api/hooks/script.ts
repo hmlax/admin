@@ -23,7 +23,7 @@ import { apiClient } from '@/api/client';
 
 export function useListScripts(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListScriptsResponse, Error>,
+  options?: Omit<UseQueryOptions<ListScriptsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listScripts', query],
@@ -42,7 +42,7 @@ export async function fetchListScripts(params: PaginationQuery) {
 
 export function useGetScript(
   req: GetScriptRequest,
-  options?: UseQueryOptions<Script, Error>,
+  options?: Omit<UseQueryOptions<Script, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getScript', req],
@@ -52,7 +52,7 @@ export function useGetScript(
 }
 
 export function useCreateScript(
-  options?: UseMutationOptions<{}, Error, CreateScriptRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateScriptRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.scriptService.Create(data),
@@ -61,13 +61,26 @@ export function useCreateScript(
 }
 
 export function useUpdateScript(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.scriptService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.scriptService.Update>[0]['data']>;
+    }) =>
       apiClient.scriptService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -75,7 +88,7 @@ export function useUpdateScript(
 }
 
 export function useDeleteScript(
-  options?: UseMutationOptions<{}, Error, DeleteScriptRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteScriptRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.scriptService.Delete(req),
@@ -93,10 +106,7 @@ export function useTestRunScript(
 }
 
 export function useListHookPoints(
-  options?: Omit<
-    UseQueryOptions<ListHookPointsResponse, Error>,
-    'queryKey' | 'queryFn'
-  >,
+  options?: Omit<UseQueryOptions<ListHookPointsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listHookPoints'],

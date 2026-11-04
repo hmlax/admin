@@ -166,16 +166,14 @@ const LoginPolicyManagement = () => {
           <ListTable<LoginPolicy>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, sorter, _filter) => {
+            request={async (params, sorter) => {
               const query = new PaginationQuery({
                 paging: {
                   page: params.current || 1,
                   pageSize: params.pageSize || 10,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -194,7 +192,8 @@ const LoginPolicyManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -204,7 +203,12 @@ const LoginPolicyManagement = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListLoginPolicies} columns={columns} filename="login-policies" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListLoginPolicies}
+                columns={columns}
+                filename="login-policies"
+              />,
               <Button
                 key="create"
                 color="primary"

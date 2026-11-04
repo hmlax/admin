@@ -1,10 +1,7 @@
+import type { PlanQuota as PlanQuotaRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormSelect,
-  ProFormDigit,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormSelect, ProFormDigit } from '@ant-design/pro-components';
 import { App, Select, Form } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +15,7 @@ import { SELECT_FILTER_PROPS } from '../constants';
 interface PlanQuotaDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: PlanQuotaRecord;
   planId: number;
   onClose: () => void;
   onSuccess: () => void;
@@ -53,13 +50,16 @@ const PlanQuotaDrawer: React.FC<PlanQuotaDrawerProps> = ({
     if (open) {
       fetchListPlans(new PaginationQuery({ formValues: {} }))
         .then((res) => {
-          const options = (res.items || []).map((item: any) => ({
-            label: item.name,
-            value: item.id,
+          const options = (res.items || []).map((item) => ({
+            label: item.name ?? String(item.id),
+            value: item.id ?? 0,
           }));
           setPlanOptions(options);
         })
-        .catch(() => setPlanOptions([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setPlanOptions([]);
+        });
     }
   }, [open]);
 
@@ -116,7 +116,7 @@ const PlanQuotaDrawer: React.FC<PlanQuotaDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: PlanQuotaRecord) => {
     try {
       setConfirmLoading(true);
       if (mode === 'edit' && data?.id) {
@@ -125,7 +125,8 @@ const PlanQuotaDrawer: React.FC<PlanQuotaDrawerProps> = ({
         await createMutation.mutateAsync({ data: values });
       }
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);
@@ -163,11 +164,7 @@ const PlanQuotaDrawer: React.FC<PlanQuotaDrawerProps> = ({
         label={t('planId')}
         rules={[{ required: true, message: t('requiredPlanId') }]}
       >
-        <Select
-          options={planOptions}
-          placeholder={t('planIdPlaceholder')}
-          disabled
-        />
+        <Select options={planOptions} placeholder={t('planIdPlaceholder')} disabled />
       </Form.Item>
 
       <ProFormSelect

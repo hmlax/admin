@@ -1,3 +1,4 @@
+import type { PlanModule, Plan as PlanRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
 import {
@@ -25,12 +26,11 @@ import { SELECT_FILTER_PROPS } from '../constants';
 
 // 将后端 PlanModule 列表映射为前端多选值（字符串模块名）。
 // 后端 entity 的 module 字段为字符串枚举值，与 MODULE_LABEL_KEYS 中的字符串一致。
-function extractModuleNames(items: any[] | undefined): string[] {
-  const names: string[] = [];
+function extractModuleNames(items: PlanModule[] | undefined): NonNullable<PlanModule['module']>[] {
+  const names: NonNullable<PlanModule['module']>[] = [];
   if (items) {
     for (const item of items) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mod = (item as any)?.module;
+      const mod = item.module;
       if (typeof mod === 'string' && mod.length > 0) {
         names.push(mod);
       }
@@ -42,7 +42,7 @@ function extractModuleNames(items: any[] | undefined): string[] {
 interface PlanDrawerProps {
   open: boolean;
   mode: 'create' | 'edit';
-  data?: any;
+  data?: PlanRecord;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -50,13 +50,7 @@ interface PlanDrawerProps {
 /**
  * 套餐目录编辑/创建抽屉组件
  */
-const PlanDrawer: React.FC<PlanDrawerProps> = ({
-  open,
-  mode,
-  data,
-  onClose,
-  onSuccess,
-}) => {
+const PlanDrawer: React.FC<PlanDrawerProps> = ({ open, mode, data, onClose, onSuccess }) => {
   const { t } = useTranslation('plan');
   const formRef = useRef<ProFormInstance>(null);
 
@@ -134,13 +128,15 @@ const PlanDrawer: React.FC<PlanDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (
+    values: PlanRecord & { moduleWhitelist?: NonNullable<PlanModule['module']>[] },
+  ) => {
     try {
       setConfirmLoading(true);
 
       // 剥离模块白名单字段，不传入套餐主体 CRUD。
       const { moduleWhitelist, ...planValues } = values;
-      const selectedModules: string[] = Array.isArray(moduleWhitelist) ? moduleWhitelist : [];
+      const selectedModules = moduleWhitelist ?? [];
 
       if (mode === 'edit' && data?.id) {
         await updateMutation.mutateAsync({ id: data.id, values: planValues });
@@ -156,23 +152,24 @@ const PlanDrawer: React.FC<PlanDrawerProps> = ({
 
         for (const mod of toAdd) {
           await createModuleMutation.mutateAsync({
-            data: { planId: data.id, module: mod as any },
-          } as any);
+            data: {
+              planId: data.id,
+              module: mod,
+            },
+          });
         }
         for (const mod of toRemove) {
           // 查找该模块对应的 plan_module 记录 ID 以执行删除。
-          const item = planModuleData?.items?.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (it: any) => it?.module === mod,
-          );
+          const item = planModuleData?.items?.find((it) => it?.module === mod);
           if (item?.id) {
-            await deleteModuleMutation.mutateAsync({ id: item.id } as any);
+            await deleteModuleMutation.mutateAsync({ id: item.id });
           }
         }
       }
 
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Operation failed:', error);
       return false;
     } finally {
       setConfirmLoading(false);

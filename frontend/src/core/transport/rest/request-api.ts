@@ -15,5 +15,5 @@ export function requestApi({
     method,
     data: body,
     headers,
-  } as never);
+  });
 }

@@ -12,18 +12,14 @@ import { RequestClient } from '@/core';
  * @param objectName 对象名称
  * @param preferPresignedUrl 是否优先使用预签名URL下载
  */
-async function downloadFile(
-  bucketName: string,
-  objectName: string,
-  preferPresignedUrl: boolean,
-) {
+async function downloadFile(bucketName: string, objectName: string, preferPresignedUrl: boolean) {
   if (preferPresignedUrl) {
     const resp = await apiClient.fileTransferService.DownloadFile({
       storageObject: { bucketName, objectName },
       preferPresignedUrl,
     });
 
-    const url = (resp as any).downloadUrl || '';
+    const url = resp.downloadUrl || '';
     if (!url) return;
 
     console.log('Downloading file transfer...', url);
@@ -43,9 +39,8 @@ async function downloadFile(
     preferPresignedUrl,
   });
 
-  const contentType = (resp as any).contentType || 'application/octet-stream';
-  const payload: ArrayBuffer | Blob | string | Uint8Array | undefined =
-    (resp as any).file ?? (resp as any).data ?? (resp as any).payload ?? resp;
+  const contentType = resp.mime || 'application/octet-stream';
+  const payload: ArrayBuffer | Blob | string | Uint8Array | undefined = resp.file;
 
   function normalizeBase64(s: string): string {
     let str = s.replaceAll(/\s+/g, '');
@@ -54,11 +49,15 @@ async function downloadFile(
     return str;
   }
 
-  function toBlob(data: any, type = contentType): Blob {
+  function toBlob(data: unknown, type = contentType): Blob {
     if (!data) return new Blob([], { type });
     if (data instanceof Blob) return data;
     if (data instanceof ArrayBuffer) return new Blob([data], { type });
-    if (ArrayBuffer.isView(data)) return new Blob([data as BufferSource], { type });
+    if (ArrayBuffer.isView(data))
+      return new Blob(
+        [Uint8Array.from(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))],
+        { type },
+      );
 
     if (typeof data === 'string') {
       // 支持 data URI 或纯 base64（处理 URL-safe base64）
@@ -83,7 +82,7 @@ async function downloadFile(
     }
 
     // fallback
-    return new Blob([data], { type });
+    throw new TypeError('Unsupported download payload');
   }
 
   const blob = toBlob(payload, contentType);
@@ -110,7 +109,7 @@ export async function uploadFile(
   fileDirectory: string,
   fileData: File,
   method: 'post' | 'put' = 'post',
-  onUploadProgress?: (progressEvent: any) => void,
+  onUploadProgress?: (progressEvent: unknown) => void,
 ) {
   // kratos 未注册 form-data codec，multipart 上传是死路径（后端 400
   // unregister Content-Type，go 参照后端同型）。JSON 形态（bytes 走 base64）
@@ -179,7 +178,7 @@ export function useUploadFile(
       fileDirectory: string;
       file: File;
       method?: 'post' | 'put';
-      onUploadProgress?: (progress: any) => void;
+      onUploadProgress?: (progress: unknown) => void;
     }
   >,
 ) {

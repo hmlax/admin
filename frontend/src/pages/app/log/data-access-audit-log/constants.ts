@@ -2,7 +2,7 @@
  * 数据访问审计日志模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 访问类型 ==========
 

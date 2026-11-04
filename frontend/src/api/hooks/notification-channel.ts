@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import {
   type CreateNotificationChannelRequest,
   type DeleteNotificationChannelRequest,
@@ -19,11 +25,12 @@ const LIST_KEY = 'listNotificationChannels';
 
 export function useListNotificationChannels(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListNotificationChannelResponse, Error>,
+  options?: Omit<UseQueryOptions<ListNotificationChannelResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listNotificationChannels', query],
-    queryFn: () => apiClient.notificationChannelService.ListNotificationChannel(query.toRawParams()),
+    queryFn: () =>
+      apiClient.notificationChannelService.ListNotificationChannel(query.toRawParams()),
     ...options,
   });
 }
@@ -31,17 +38,14 @@ export function useListNotificationChannels(
 export async function fetchListNotificationChannels(query: PaginationQuery) {
   return queryClient.fetchQuery({
     queryKey: [LIST_KEY, query],
-    queryFn: () => apiClient.notificationChannelService.ListNotificationChannel(query.toRawParams()),
+    queryFn: () =>
+      apiClient.notificationChannelService.ListNotificationChannel(query.toRawParams()),
     retry: 0,
   });
 }
 
 export function useCreateNotificationChannel(
-  options?: UseMutationOptions<
-    NotificationChannel,
-    Error,
-    CreateNotificationChannelRequest
-  >,
+  options?: UseMutationOptions<NotificationChannel, Error, CreateNotificationChannelRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -52,7 +56,7 @@ export function useCreateNotificationChannel(
 }
 
 export function useUpdateNotificationChannel(
-  options?: UseMutationOptions<{}, Error, UpdateNotificationChannelRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, UpdateNotificationChannelRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -63,7 +67,7 @@ export function useUpdateNotificationChannel(
 }
 
 export function useDeleteNotificationChannel(
-  options?: UseMutationOptions<{}, Error, DeleteNotificationChannelRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteNotificationChannelRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -74,7 +78,7 @@ export function useDeleteNotificationChannel(
 }
 
 export function useSendTestEmail(
-  options?: UseMutationOptions<{}, Error, SendTestEmailRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, SendTestEmailRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.notificationChannelService.SendTestEmail(req),
@@ -83,7 +87,7 @@ export function useSendTestEmail(
 }
 
 export function useSendTest(
-  options?: UseMutationOptions<{}, Error, SendTestRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, SendTestRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.notificationChannelService.SendTest(req),

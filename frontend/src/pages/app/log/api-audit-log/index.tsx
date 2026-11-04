@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -38,7 +39,11 @@ function successToColor(success: boolean | undefined): string {
 /**
  * 根据成功状态和状态码获取显示文本
  */
-function successToName(t: (key: string) => string, success: boolean | undefined, statusCode?: number): string {
+function successToName(
+  t: (key: string) => string,
+  success: boolean | undefined,
+  statusCode?: number,
+): string {
   if (success === true) return `${t('success.true')}${statusCode ? ` (${statusCode})` : ''}`;
   if (success === false) return `${t('success.false')}${statusCode ? ` (${statusCode})` : ''}`;
   return '-';
@@ -53,7 +58,7 @@ const ApiAuditLog = () => {
   // 详情抽屉当前行（只读，行数据自足不回源 Get）
   const [detailRecord, setDetailRecord] = useState<ApiAuditLog | null>(null);
   // 最近一次列表查询参数：导出 CSV 时沿用当前搜索/排序条件
-  const latestParamsRef = useRef<Record<string, any>>({});
+  const latestParamsRef = useRef<Record<string, unknown>>({});
   const { message } = App.useApp();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -202,7 +207,7 @@ const ApiAuditLog = () => {
       width: 180,
       hideInSearch: true,
       render: (_, record) => {
-        const info = record.deviceInfo as any;
+        const info = record.deviceInfo;
         if (!info) return '-';
         return `${info.osName || ''} ${info.browserName || ''}`.trim() || '-';
       },
@@ -213,7 +218,7 @@ const ApiAuditLog = () => {
       width: 150,
       hideInSearch: true,
       render: (_, record) => {
-        const geo = record.geoLocation as any;
+        const geo = record.geoLocation;
         if (!geo) return '-';
         return `${geo.province || ''} ${geo.city || ''}`.trim() || '-';
       },
@@ -243,7 +248,7 @@ const ApiAuditLog = () => {
     },
   ];
 
-        // 按当前搜索条件导出 CSV（客户端分页聚合，上限 1 万行；全量归档走后端 JSONL 任务）
+  // 按当前搜索条件导出 CSV（客户端分页聚合，上限 1 万行；全量归档走后端 JSONL 任务）
   // 服务端全量导出（XLSX，上限 50 万行）：当前搜索条件透传给后端，
   // 突破客户端聚合导出的 1 万行上限
   const handleServerExport = async () => {
@@ -262,9 +267,9 @@ const ApiAuditLog = () => {
         }),
       );
       message.success(t('exportServerSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('server-side audit export failed', error);
-      message.error(error?.message || t('exportServerFailed'));
+      message.error(getErrorMessage(error) || t('exportServerFailed'));
     }
   };
 
@@ -276,14 +281,18 @@ const ApiAuditLog = () => {
         title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
       }));
     try {
-      await exportAuditLogs({
-        fetcher: (q) => fetchListApiAuditLogs(q),
-        filename: `api-audit-logs-${Date.now()}.csv`,
-        columns: exportColumns,
-        params: latestParamsRef.current,
-      }, format);
-    } catch (error: any) {
-      message.error(error?.message || 'Export failed');
+      await exportAuditLogs(
+        {
+          fetcher: (q) => fetchListApiAuditLogs(q),
+          filename: `api-audit-logs-${Date.now()}.csv`,
+          columns: exportColumns,
+          params: latestParamsRef.current,
+        },
+        format,
+      );
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || 'Export failed');
     }
   };
   return (
@@ -301,9 +310,7 @@ const ApiAuditLog = () => {
                   pageSize: params.pageSize || 20,
                 },
                 formValues: Object.fromEntries(
-                  Object.entries(params).filter(
-                    ([key]) => !['current', 'pageSize'].includes(key),
-                  ),
+                  Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
                 ),
                 orderBy:
                   sorter && Object.keys(sorter).length > 0
@@ -322,7 +329,8 @@ const ApiAuditLog = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -353,7 +361,6 @@ const ApiAuditLog = () => {
                 <Button>{t('export')}</Button>
               </Dropdown>,
             ]}
-
             options={{
               density: true,
               fullScreen: true,

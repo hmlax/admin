@@ -4,10 +4,7 @@
  * 对齐 Vue 版 use-dict-cache.ts
  */
 import i18n from 'i18next';
-import type {
-  DictEntry,
-  DictType,
-} from '@/api/generated/admin/v1';
+import type { DictEntry, DictType } from '@/api/generated/admin/v1';
 import { fetchListDictTypes, fetchListDictEntries } from '@/api/hooks/dict';
 import { PaginationQuery } from '@/core';
 
@@ -46,7 +43,7 @@ export async function fetchAllDictEntries(): Promise<void> {
   // 按 typeCode 分组缓存条目
   const newCache: Record<string, DictEntry[]> = {};
   for (const entry of entries) {
-    const typeCode = types.find((type: any) => type.id === entry.typeId)?.typeCode;
+    const typeCode = types.find((type) => type.id === entry.typeId)?.typeCode;
     if (!typeCode) continue;
 
     if (!newCache[typeCode]) {
@@ -70,7 +67,9 @@ export function getDictEntriesByTypeCode(typeCode: string): DictEntry[] {
  * 获取指定 typeCode 的字典项选项（label/value 格式）
  * label 会根据当前语言从 i18n 字段中提取
  */
-export function getDictEntriesOptionsByTypeCode(typeCode: string): { label: string; value: string }[] {
+export function getDictEntriesOptionsByTypeCode(
+  typeCode: string,
+): { label: string; value: string }[] {
   const entries = getDictEntriesByTypeCode(typeCode);
   return entries.map((entry) => ({
     label: getDictEntryLabel(entry),
@@ -104,10 +103,7 @@ export function getDictEntryLabel(row: DictEntry): string {
 /**
  * 通过字典项值获取字典项标签
  */
-export function getDictEntryLabelByValue(
-  value?: string,
-  dictEntries?: DictEntry[],
-): string {
+export function getDictEntryLabelByValue(value?: string, dictEntries?: DictEntry[]): string {
   if (value === undefined) return '';
   if (!dictEntries) return value;
 

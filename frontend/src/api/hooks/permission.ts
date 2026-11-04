@@ -21,7 +21,7 @@ import { apiClient } from '@/api/client';
 
 export function useListPermissions(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListPermissionResponse, Error>,
+  options?: Omit<UseQueryOptions<ListPermissionResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listPermissions', query],
@@ -40,7 +40,7 @@ export async function fetchListPermissions(params: PaginationQuery) {
 
 export function useGetPermission(
   req: GetPermissionRequest,
-  options?: UseQueryOptions<Permission, Error>,
+  options?: Omit<UseQueryOptions<Permission, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getPermission', req],
@@ -50,7 +50,7 @@ export function useGetPermission(
 }
 
 export function useCreatePermission(
-  options?: UseMutationOptions<{}, Error, CreatePermissionRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreatePermissionRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.permissionService.Create(data),
@@ -59,13 +59,26 @@ export function useCreatePermission(
 }
 
 export function useUpdatePermission(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.permissionService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.permissionService.Update>[0]['data']>;
+    }) =>
       apiClient.permissionService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -73,7 +86,7 @@ export function useUpdatePermission(
 }
 
 export function useDeletePermission(
-  options?: UseMutationOptions<{}, Error, DeletePermissionRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeletePermissionRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.permissionService.Delete(req),
@@ -85,7 +98,7 @@ export function useDeletePermission(
 // 同步权限点（按菜单树重建业务权限分组与权限点）
 // ==============================
 
-export function useSyncPermissions(options?: UseMutationOptions<{}, Error>) {
+export function useSyncPermissions(options?: UseMutationOptions<Record<string, never>, Error>) {
   return useMutation({
     mutationFn: () => apiClient.permissionService.SyncPermissions({}),
     ...options,

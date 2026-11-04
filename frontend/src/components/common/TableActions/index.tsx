@@ -38,7 +38,7 @@ export interface TableAction {
   key: string;
   label: ReactNode;
   icon?: ReactNode;
-  onClick: (record: any) => void;
+  onClick: (record: unknown) => void;
   danger?: boolean;
   success?: boolean;
   confirm?: TableActionConfirm;
@@ -48,7 +48,7 @@ export interface TableAction {
 }
 
 interface TableActionsProps {
-  record: any;
+  record: unknown;
   actions: TableAction[];
   /** 行内最多按钮数，超出收「更多」；默认 3（§4 定式值） */
   maxInline?: number;
@@ -96,9 +96,7 @@ export default function TableActions({ record, actions, maxInline = 3 }: TableAc
         description={item.confirm.description}
         okText={t('button.ok')}
         cancelText={t('button.cancel')}
-        okButtonProps={
-          item.confirm.okLoading ? { loading: item.confirm.okLoading } : undefined
-        }
+        okButtonProps={item.confirm.okLoading ? { loading: item.confirm.okLoading } : undefined}
         onConfirm={(e) => {
           e?.stopPropagation();
           runItem(item);

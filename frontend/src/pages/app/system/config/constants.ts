@@ -3,7 +3,7 @@
  * 页面和 Drawer 共用
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 值类型映射 ==========
 

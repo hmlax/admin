@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Input, Button, App } from 'antd';
@@ -36,10 +37,15 @@ const MfaChallenge: React.FC = () => {
       // 空时传 undefined，走 store 默认的 homePath 跳转
       await completeMfaChallenge(
         values.totpCode,
-        safeRedirect ? () => { window.location.href = safeRedirect; } : undefined,
+        safeRedirect
+          ? () => {
+              window.location.href = safeRedirect;
+            }
+          : undefined,
       );
-    } catch (error: any) {
-      message.error(error?.message || t('mfaVerifyFailed'));
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || t('mfaVerifyFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -75,12 +81,7 @@ const MfaChallenge: React.FC = () => {
             />
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={submitting || loginLoading}
-            >
+            <Button type="primary" htmlType="submit" block loading={submitting || loginLoading}>
               {t('mfaVerify')}
             </Button>
           </Form.Item>

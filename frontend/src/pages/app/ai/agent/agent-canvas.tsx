@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isRecord } from '@/utils/value';
+import {
+  readNodeConfig,
+  parseAgentTrace,
+  type AgentInputVar,
+  type AgentNodeConfig,
+  type AgentTraceStep,
+} from './agent-values';
+import { getErrorMessage } from '@/utils/error';
+import { useCallback, useMemo, useState } from 'react';
 // ReactFlow 样式必须引入：handle/controls/minimap 全靠它——漏引时 handle 塌成 0 高，
 // 连线的命中判定永远失败（e2e 实证：真实鼠标在 handle 中心 down/move/up 仍连不出边）
 import '@xyflow/react/dist/style.css';
@@ -16,7 +25,21 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';
-import { Drawer, Button, Space, Form, Input, InputNumber, Select, Switch, App, Tag, Timeline, Descriptions, Popconfirm } from 'antd';
+import {
+  Drawer,
+  Button,
+  Space,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+  App,
+  Tag,
+  Timeline,
+  Descriptions,
+  Popconfirm,
+} from 'antd';
 import { SaveOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { AiAgentApp as AiAgentApp } from '@/api/generated/admin/v1';
@@ -53,10 +76,10 @@ const NODE_META: Record<AgentNodeType, { color: string; icon: string }> = {
 type CanvasNodeData = {
   nodeType: AgentNodeType;
   label: string;
-  config: Record<string, any>;
+  config: AgentNodeConfig;
 };
 
-function AgentFlowNode({ data, selected }: NodeProps) {
+function AgentFlowNode({ data, selected }: NodeProps<Node<CanvasNodeData>>) {
   const d = data as CanvasNodeData;
   const meta = NODE_META[d.nodeType] ?? NODE_META.llm;
   return (
@@ -83,11 +106,11 @@ function AgentFlowNode({ data, selected }: NodeProps) {
   );
 }
 
-function configSummary(nodeType: AgentNodeType, config: Record<string, any> | undefined): string {
+function configSummary(nodeType: AgentNodeType, config: AgentNodeConfig | undefined): string {
   if (!config) return '';
   switch (nodeType) {
     case 'start':
-      return (config.inputVars ?? []).map((v: any) => v.name).join(', ');
+      return (config.inputVars ?? []).map((v) => v.name).join(', ');
     case 'knowledge':
       return config.baseId ? `kb#${config.baseId} topK=${config.topK ?? 4}` : '';
     case 'llm':
@@ -104,35 +127,49 @@ function configSummary(nodeType: AgentNodeType, config: Record<string, any> | un
 const nodeTypes = { agent: AgentFlowNode };
 
 /** 图 DSL ↔ ReactFlow 状态的互转（唯一两处，别处不得各写一份）。 */
-function graphToFlow(graphJson: string): { nodes: Node[]; edges: Edge[] } {
+function graphToFlow(graphJson: string): { nodes: Node<CanvasNodeData>[]; edges: Edge[] } {
   if (!graphJson) return { nodes: [], edges: [] };
   try {
-    const g = JSON.parse(graphJson);
+    const g: unknown = JSON.parse(graphJson);
+    if (!isRecord(g)) return { nodes: [], edges: [] };
     return {
-      nodes: (g.nodes ?? []).map((n: any) => ({
-        id: n.id,
-        type: 'agent',
-        position: n.position ?? { x: 0, y: 0 },
-        data: {
-          nodeType: n.type,
-          label: `${n.id}`,
-          config: n.data ?? {},
-        } satisfies CanvasNodeData,
-      })),
-      edges: (g.edges ?? []).map((e: any, i: number) => ({
-        id: e.id ?? `edge_${i}`,
-        source: e.source,
-        target: e.target,
-        label: e.branch,
-        animated: e.branch === 'true',
-      })),
+      nodes: (Array.isArray(g.nodes) ? g.nodes : [])
+        .filter(isRecord)
+        .filter(
+          (n) => typeof n.id === 'string' && NODE_TYPE_ORDER.includes(n.type as AgentNodeType),
+        )
+        .map((n) => ({
+          id: String(n.id),
+          type: 'agent',
+          position:
+            isRecord(n.position) &&
+            typeof n.position.x === 'number' &&
+            typeof n.position.y === 'number'
+              ? { x: n.position.x, y: n.position.y }
+              : { x: 0, y: 0 },
+          data: {
+            nodeType: n.type as AgentNodeType,
+            label: `${n.id}`,
+            config: readNodeConfig(n.data),
+          } satisfies CanvasNodeData,
+        })),
+      edges: (Array.isArray(g.edges) ? g.edges : [])
+        .filter(isRecord)
+        .filter((e) => typeof e.source === 'string' && typeof e.target === 'string')
+        .map((e, i) => ({
+          id: typeof e.id === 'string' ? e.id : `edge_${i}`,
+          source: String(e.source),
+          target: String(e.target),
+          label: typeof e.branch === 'string' ? e.branch : undefined,
+          animated: e.branch === 'true',
+        })),
     };
   } catch {
     return { nodes: [], edges: [] };
   }
 }
 
-function flowToGraph(nodes: Node[], edges: Edge[]): string {
+function flowToGraph(nodes: Node<CanvasNodeData>[], edges: Edge[]): string {
   return JSON.stringify({
     nodes: nodes.map((n) => ({
       id: n.id,
@@ -141,7 +178,7 @@ function flowToGraph(nodes: Node[], edges: Edge[]): string {
       data: (n.data as CanvasNodeData).config,
     })),
     edges: edges.map((e, i) => ({
-      id: e.id ?? `edge_${i}`,
+      id: typeof e.id === 'string' ? e.id : `edge_${i}`,
       source: e.source,
       target: e.target,
       ...(e.label ? { branch: String(e.label) } : {}),
@@ -155,30 +192,19 @@ export interface AgentCanvasProps {
   onClose: () => void;
 }
 
-export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
+function AgentCanvasContent({ open, app, onClose }: AgentCanvasProps) {
   const { t } = useTranslation('ai-agent');
   const { message } = App.useApp();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<CanvasNodeData>>(
+    graphToFlow(app?.graph ?? '').nodes,
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(graphToFlow(app?.graph ?? '').edges);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
 
-  useEffect(() => {
-    if (open && app) {
-      const { nodes: n, edges: e } = graphToFlow(app.graph ?? '');
-      setNodes(n);
-      setEdges(e);
-      setSelectedId(undefined);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, app?.id]);
-
-  const selectedNode = useMemo(
-    () => nodes.find((n) => n.id === selectedId),
-    [nodes, selectedId],
-  );
+  const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedId), [nodes, selectedId]);
 
   const nextNodeId = useCallback(
     (nodeType: AgentNodeType): string => {
@@ -194,7 +220,7 @@ export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
     (nodeType: AgentNodeType) => {
       const id = nextNodeId(nodeType);
       const max = nodes.reduce((m, n) => Math.max(m, n.position.y), 0);
-      const node: Node = {
+      const node: Node<CanvasNodeData> = {
         id,
         type: 'agent',
         position: { x: 120 + (nodes.length % 3) * 60, y: max + 90 },
@@ -241,21 +267,17 @@ export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
         message.error(t('canvas.error.singleOut'));
         return;
       }
-      setEdges((es) =>
-        es.concat({ id: `edge_${source}_${target}_${Date.now()}`, source, target }),
-      );
+      setEdges((es) => es.concat({ id: `edge_${source}_${target}_${Date.now()}`, source, target }));
     },
     [nodes, edges, setEdges, message, t],
   );
 
   const updateSelectedConfig = useCallback(
-    (config: Record<string, any>) => {
+    (config: AgentNodeConfig) => {
       if (!selectedId) return;
       setNodes((ns) =>
         ns.map((n) =>
-          n.id === selectedId
-            ? { ...n, data: { ...(n.data as CanvasNodeData), config } }
-            : n,
+          n.id === selectedId ? { ...n, data: { ...(n.data as CanvasNodeData), config } } : n,
         ),
       );
     },
@@ -275,16 +297,19 @@ export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
         updateMask: 'graph',
       });
       message.success(t('canvas.saveSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
       // 后端强校验的报错原文在这里最有用（唯一 start/可达性……），直接透出
-      message.error(error?.message || t('canvas.saveFailed'));
+      message.error(getErrorMessage(error) || t('canvas.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   const startNode = nodes.find((n) => (n.data as CanvasNodeData).nodeType === 'start');
-  const inputVars: any[] = startNode ? ((startNode.data as CanvasNodeData).config.inputVars ?? []) : [];
+  const inputVars: AgentInputVar[] = startNode
+    ? ((startNode.data as CanvasNodeData).config.inputVars ?? [])
+    : [];
 
   return (
     <Drawer
@@ -297,14 +322,30 @@ export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
       destroyOnHidden
       styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column' } }}
     >
-      <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--ant-color-border-secondary, #f0f0f0)' }}>
+      <div
+        style={{
+          padding: '8px 16px',
+          borderBottom: '1px solid var(--ant-color-border-secondary, #f0f0f0)',
+        }}
+      >
         <Space wrap>
           {NODE_TYPE_ORDER.map((nodeType) => (
-            <Button key={nodeType} size="small" icon={<PlusOutlined />} onClick={() => addNode(nodeType)}>
+            <Button
+              key={nodeType}
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => addNode(nodeType)}
+            >
               {t(`canvas.nodeType.${nodeType}`)}
             </Button>
           ))}
-          <Button type="primary" size="small" icon={<SaveOutlined />} loading={saving} onClick={handleSave}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<SaveOutlined />}
+            loading={saving}
+            onClick={handleSave}
+          >
             {t('canvas.save')}
           </Button>
           <Button size="small" icon={<PlayCircleOutlined />} onClick={() => setTestOpen(true)}>
@@ -358,7 +399,7 @@ export default function AgentCanvas({ open, app, onClose }: AgentCanvasProps) {
   );
 }
 
-function defaultConfig(nodeType: AgentNodeType): Record<string, any> {
+function defaultConfig(nodeType: AgentNodeType): AgentNodeConfig {
   switch (nodeType) {
     case 'start':
       return { inputVars: [{ name: 'question', label: 'question', required: true }] };
@@ -384,16 +425,20 @@ function NodeConfigDrawer({
   onConfigChange,
   onDelete,
 }: {
-  node: Node | undefined;
+  node: Node<CanvasNodeData> | undefined;
   open: boolean;
   onClose: () => void;
-  onConfigChange: (config: Record<string, any>) => void;
+  onConfigChange: (config: AgentNodeConfig) => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation('ai-agent');
   const [form] = Form.useForm();
-  const knowledgeQuery = useListAiKnowledgeBases(new PaginationQuery({ paging: { page: 1, pageSize: 100 } }));
-  const providerQuery = useListAiProviders(new PaginationQuery({ paging: { page: 1, pageSize: 100 } }));
+  const knowledgeQuery = useListAiKnowledgeBases(
+    new PaginationQuery({ paging: { page: 1, pageSize: 100 } }),
+  );
+  const providerQuery = useListAiProviders(
+    new PaginationQuery({ paging: { page: 1, pageSize: 100 } }),
+  );
 
   const nodeType = node ? (node.data as CanvasNodeData).nodeType : 'llm';
   const config = node ? (node.data as CanvasNodeData).config : {};
@@ -416,7 +461,9 @@ function NodeConfigDrawer({
       extra={
         nodeType !== 'start' ? (
           <Popconfirm title={t('canvas.deleteNodeConfirm')} onConfirm={onDelete}>
-            <Button danger size="small">{t('canvas.deleteNode')}</Button>
+            <Button danger size="small">
+              {t('canvas.deleteNode')}
+            </Button>
           </Popconfirm>
         ) : undefined
       }
@@ -435,7 +482,13 @@ function NodeConfigDrawer({
                   <Space key={field.key} align="baseline" style={{ display: 'flex' }}>
                     <Form.Item
                       name={[field.name, 'name']}
-                      rules={[{ required: true, message: t('canvas.requiredVarName') }, { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: t('canvas.invalidVarName') }]}
+                      rules={[
+                        { required: true, message: t('canvas.requiredVarName') },
+                        {
+                          pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+                          message: t('canvas.invalidVarName'),
+                        },
+                      ]}
                     >
                       <Input placeholder={t('canvas.varName')} style={{ width: 140 }} />
                     </Form.Item>
@@ -445,10 +498,17 @@ function NodeConfigDrawer({
                     <Form.Item name={[field.name, 'required']} valuePropName="checked">
                       <Switch size="small" />
                     </Form.Item>
-                    <Button type="text" danger onClick={() => remove(field.name)}>{t('canvas.remove')}</Button>
+                    <Button type="text" danger onClick={() => remove(field.name)}>
+                      {t('canvas.remove')}
+                    </Button>
                   </Space>
                 ))}
-                <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ name: '', label: '', required: false })}>
+                <Button
+                  type="dashed"
+                  block
+                  icon={<PlusOutlined />}
+                  onClick={() => add({ name: '', label: '', required: false })}
+                >
                   {t('canvas.addVar')}
                 </Button>
               </>
@@ -458,16 +518,27 @@ function NodeConfigDrawer({
 
         {nodeType === 'knowledge' && (
           <>
-            <Form.Item name="baseId" label={t('canvas.knowledgeBase')} rules={[{ required: true, message: t('canvas.requiredKnowledgeBase') }]}>
+            <Form.Item
+              name="baseId"
+              label={t('canvas.knowledgeBase')}
+              rules={[{ required: true, message: t('canvas.requiredKnowledgeBase') }]}
+            >
               <Select
-                options={(knowledgeQuery.data?.items ?? []).map((k: any) => ({ value: k.id, label: k.name }))}
+                options={(knowledgeQuery.data?.items ?? []).map((k) => ({
+                  value: k.id,
+                  label: k.name,
+                }))}
                 allowClear
               />
             </Form.Item>
             <Form.Item name="topK" label="topK">
               <InputNumber min={1} max={20} precision={0} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item name="query" label={t('canvas.knowledgeQuery')} tooltip={t('canvas.templateHint')}>
+            <Form.Item
+              name="query"
+              label={t('canvas.knowledgeQuery')}
+              tooltip={t('canvas.templateHint')}
+            >
               <Input.TextArea rows={2} placeholder="{{start_1.question}}" />
             </Form.Item>
           </>
@@ -475,20 +546,39 @@ function NodeConfigDrawer({
 
         {nodeType === 'llm' && (
           <>
-            <Form.Item name="providerId" label={t('canvas.provider')} tooltip={t('canvas.providerHint')}>
+            <Form.Item
+              name="providerId"
+              label={t('canvas.provider')}
+              tooltip={t('canvas.providerHint')}
+            >
               <Select
-                options={(providerQuery.data?.items ?? []).map((p: any) => ({ value: p.id, label: p.name }))}
+                options={(providerQuery.data?.items ?? []).map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                }))}
                 allowClear
               />
             </Form.Item>
             <Form.Item name="model" label={t('canvas.model')} tooltip={t('canvas.modelHint')}>
               <Input placeholder="deepseek-chat" />
             </Form.Item>
-            <Form.Item name="systemPrompt" label={t('canvas.systemPrompt')} tooltip={t('canvas.templateHint')}>
+            <Form.Item
+              name="systemPrompt"
+              label={t('canvas.systemPrompt')}
+              tooltip={t('canvas.templateHint')}
+            >
               <Input.TextArea rows={3} />
             </Form.Item>
-            <Form.Item name="userPrompt" label={t('canvas.userPrompt')} tooltip={t('canvas.templateHint')} rules={[{ required: true, message: t('canvas.requiredUserPrompt') }]}>
-              <Input.TextArea rows={4} placeholder={'资料：{{kb_1.context}}\n问题：{{start_1.question}}'} />
+            <Form.Item
+              name="userPrompt"
+              label={t('canvas.userPrompt')}
+              tooltip={t('canvas.templateHint')}
+              rules={[{ required: true, message: t('canvas.requiredUserPrompt') }]}
+            >
+              <Input.TextArea
+                rows={4}
+                placeholder={'资料：{{kb_1.context}}\n问题：{{start_1.question}}'}
+              />
             </Form.Item>
             <Form.Item name="temperature" label="temperature">
               <InputNumber min={0} max={2} step={0.1} style={{ width: '100%' }} />
@@ -503,7 +593,11 @@ function NodeConfigDrawer({
             tooltip={t('canvas.expressionHint')}
             rules={[{ required: true, message: t('canvas.requiredExpression') }]}
           >
-            <Input.TextArea rows={3} placeholder={'llm_1.output contains "退款"'} style={{ fontFamily: 'monospace' }} />
+            <Input.TextArea
+              rows={3}
+              placeholder={'llm_1.output contains "退款"'}
+              style={{ fontFamily: 'monospace' }}
+            />
           </Form.Item>
         )}
 
@@ -513,7 +607,9 @@ function NodeConfigDrawer({
           </Form.Item>
         )}
       </Form>
-      <div style={{ color: 'var(--ant-color-text-tertiary, #aaa)', fontSize: 12 }}>{t('canvas.configAutoSaved')}</div>
+      <div style={{ color: 'var(--ant-color-text-tertiary, #aaa)', fontSize: 12 }}>
+        {t('canvas.configAutoSaved')}
+      </div>
     </Drawer>
   );
 }
@@ -540,7 +636,7 @@ function TestRunDrawer({
 }: {
   open: boolean;
   appId: number | undefined;
-  inputVars: any[];
+  inputVars: AgentInputVar[];
   onClose: () => void;
   runMutation: ReturnType<typeof useRunAiAgentApp>;
 }) {
@@ -549,16 +645,23 @@ function TestRunDrawer({
   const [result, setResult] = useState<RunResult | undefined>();
   // SSE 实时轨迹帧（ai_agent_run）：Run 同步响应到达前先逐节点呈现，
   // 响应到达后以 result.trace 全量覆盖（尽力而为丢帧可容忍）
-  const [liveSteps, setLiveSteps] = useState<Array<Record<string, any>>>([]);
+  const [liveSteps, setLiveSteps] = useState<AgentTraceStep[]>([]);
 
   // useAgentRunStream 以 appId 过滤帧；仅抽屉打开时订阅
-  useEffect(() => {
-    if (!open || !appId) return;
-    return useAgentRunStream(appId, (frame) => {
+  const onRunFrame = useCallback(
+    (
+      frame: Parameters<typeof useAgentRunStream>[1] extends (value: infer T) => void ? T : never,
+    ) => {
       if (frame.phase === 'node_end') {
         setLiveSteps((prev) => [
           ...prev,
-          { nodeId: frame.nodeId, type: '', status: frame.status ?? 'ok', ms: 0, summary: frame.summary },
+          {
+            nodeId: frame.nodeId,
+            type: '',
+            status: frame.status ?? 'ok',
+            ms: 0,
+            summary: frame.summary,
+          },
         ]);
       } else if (frame.phase === 'error') {
         setLiveSteps((prev) => [
@@ -566,37 +669,28 @@ function TestRunDrawer({
           { nodeId: '', type: '', status: 'error', ms: 0, error: frame.summary },
         ]);
       }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, appId]);
-
-  // 打开新一次试运行时清空上一次的实时帧
-  useEffect(() => {
-    if (open) setLiveSteps([]);
-  }, [open]);
+    },
+    [],
+  );
+  useAgentRunStream(appId, onRunFrame, open);
 
   const handleRun = async () => {
     if (!appId) return;
     const values = await form.validateFields().catch(() => null);
     if (values === null) return;
+    setLiveSteps([]);
     try {
       const run = await runMutation.mutateAsync({ id: appId, input: values });
       setResult(run as RunResult);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
       // 图校验/配额类错误原文直接给到面板
-      setResult({ status: 'FAILED', error: error?.message || String(error) });
+      setResult({ status: 'FAILED', error: getErrorMessage(error) || String(error) });
     }
   };
 
   // 响应未到达时先用 SSE 实时帧呈现；响应到达后以全量 trace 覆盖
-  let traceSteps: any[] = result?.trace ? [] : liveSteps;
-  if (result?.trace) {
-    try {
-      traceSteps = JSON.parse(result.trace);
-    } catch {
-      traceSteps = liveSteps;
-    }
-  }
+  const traceSteps: AgentTraceStep[] = result?.trace ? parseAgentTrace(result.trace) : liveSteps;
 
   return (
     <Drawer
@@ -611,7 +705,7 @@ function TestRunDrawer({
       destroyOnHidden
     >
       <Form form={form} layout="vertical">
-        {inputVars.map((v: any, i: number) => (
+        {inputVars.map((v, i) => (
           <Form.Item
             key={`${v.name}_${i}`}
             name={v.name}
@@ -639,12 +733,20 @@ function TestRunDrawer({
             ) : (
               <Tag color="error">{t('test.failed')}</Tag>
             )}
-            {result.totalTokens != null && <Tag>{t('test.tokens', { total: result.totalTokens })}</Tag>}
+            {result.totalTokens != null && (
+              <Tag>{t('test.tokens', { total: result.totalTokens })}</Tag>
+            )}
             {result.durationMs != null && <Tag>{result.durationMs}ms</Tag>}
           </Space>
 
           {result.error && (
-            <div style={{ color: 'var(--ant-color-error, #cf1322)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
+            <div
+              style={{
+                color: 'var(--ant-color-error, #cf1322)',
+                whiteSpace: 'pre-wrap',
+                marginBottom: 8,
+              }}
+            >
               {result.error}
             </div>
           )}
@@ -661,7 +763,7 @@ function TestRunDrawer({
             <>
               <div style={{ fontWeight: 600, margin: '8px 0' }}>{t('test.trace')}</div>
               <Timeline
-                items={traceSteps.map((step: any) => ({
+                items={traceSteps.map((step) => ({
                   color: step.status === 'ok' ? 'green' : 'red',
                   children: (
                     <div style={{ fontSize: 12 }}>
@@ -669,11 +771,18 @@ function TestRunDrawer({
                         <code>{step.nodeId}</code> <Tag>{step.type}</Tag> {step.ms}ms
                       </div>
                       {step.summary && (
-                        <div style={{ whiteSpace: 'pre-wrap', color: 'var(--ant-color-text-secondary, #888)' }}>
+                        <div
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            color: 'var(--ant-color-text-secondary, #888)',
+                          }}
+                        >
                           {String(step.summary).slice(0, 200)}
                         </div>
                       )}
-                      {step.error && <div style={{ color: 'var(--ant-color-error, #cf1322)' }}>{step.error}</div>}
+                      {step.error && (
+                        <div style={{ color: 'var(--ant-color-error, #cf1322)' }}>{step.error}</div>
+                      )}
                     </div>
                   ),
                 }))}
@@ -684,4 +793,8 @@ function TestRunDrawer({
       )}
     </Drawer>
   );
+}
+
+export default function AgentCanvas(props: AgentCanvasProps) {
+  return <AgentCanvasContent key={`${props.open}-${props.app?.id}`} {...props} />;
 }

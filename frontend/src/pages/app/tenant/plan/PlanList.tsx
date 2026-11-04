@@ -1,3 +1,4 @@
+import type { Plan as PlanRecord } from '@/api/generated/admin/v1';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -39,7 +40,7 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [editingPlan, setEditingPlan] = useState<PlanRecord | null>(null);
 
   const versionMap = getPlanVersionMap(t);
   const expiryPolicyMap = getExpiryPolicyMap(t);
@@ -57,7 +58,7 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
   });
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<PlanRecord>[] = [
     {
       title: t('name'),
       dataIndex: 'name',
@@ -70,7 +71,9 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
         options: getPlanVersionOptions(t),
       },
       render: (_, record) => {
-        const item = (versionMap as Record<string, { text: string; color: string }>)[record.version as string];
+        const item = (versionMap as Record<string, { text: string; color: string }>)[
+          record.version as string
+        ];
         return item ? <Tag color={item.color}>{item.text}</Tag> : '-';
       },
     },
@@ -82,7 +85,9 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
         options: getExpiryPolicyOptions(t),
       },
       render: (_, record) => {
-        const item = (expiryPolicyMap as Record<string, { text: string; color: string }>)[record.expiryPolicy as string];
+        const item = (expiryPolicyMap as Record<string, { text: string; color: string }>)[
+          record.expiryPolicy as string
+        ];
         return item ? <Tag color={item.color}>{item.text}</Tag> : '-';
       },
     },
@@ -147,8 +152,12 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
-        <ListTable<any>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
+        <ListTable<PlanRecord>
           actionRef={actionRef}
           columns={columns}
           headerTitle={t('planList')}
@@ -165,9 +174,7 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
                 pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
               },
               formValues: Object.fromEntries(
-                Object.entries(params).filter(
-                  ([key]) => !['current', 'pageSize'].includes(key),
-                ),
+                Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
               ),
               orderBy,
             });
@@ -181,7 +188,8 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
             };
           }}
           rowKey="id"
-          search={{ optionRender: searchOptionRender,
+          search={{
+            optionRender: searchOptionRender,
             labelWidth: 'auto',
             defaultCollapsed: false,
             span: 12,
@@ -192,7 +200,12 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
             showQuickJumper: true,
           }}
           toolBarRender={() => [
-            <TableExportButton key="export" fetcher={fetchListPlans} columns={columns} filename="plans" />,
+            <TableExportButton
+              key="export"
+              fetcher={fetchListPlans}
+              columns={columns}
+              filename="plans"
+            />,
             <Button
               key="create"
               color="primary"
@@ -219,7 +232,7 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
           scroll={{ y: tableScrollY }}
           onRow={(record) => ({
             onClick: () => {
-              onPlanSelect(record.id);
+              if (record.id !== undefined) onPlanSelect(record.id);
             },
             className: record.id === currentPlanId ? 'ant-table-row-selected' : undefined,
             style: {
@@ -232,7 +245,7 @@ const PlanList: React.FC<PlanListProps> = ({ currentPlanId, onPlanSelect }) => {
       <PlanDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingPlan}
+        data={editingPlan ?? undefined}
         onClose={() => {
           setDrawerOpen(false);
           setEditingPlan(null);

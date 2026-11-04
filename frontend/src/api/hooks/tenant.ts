@@ -24,7 +24,7 @@ import { queryClient } from '@/core';
 // ==============================
 export function useListTenants(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListTenantResponse, Error>,
+  options?: Omit<UseQueryOptions<ListTenantResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listTenants', query],
@@ -46,7 +46,7 @@ export async function fetchListTenants(params: PaginationQuery) {
 // ==============================
 export function useGetTenant(
   req: GetTenantRequest,
-  options?: UseQueryOptions<Tenant, Error>,
+  options?: Omit<UseQueryOptions<Tenant, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getTenant', req],
@@ -59,7 +59,7 @@ export function useGetTenant(
 // 创建租户
 // ==============================
 export function useCreateTenant(
-  options?: UseMutationOptions<{}, Error, CreateTenantRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateTenantRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.tenantService.Create(data),
@@ -71,10 +71,23 @@ export function useCreateTenant(
 // 更新租户
 // ==============================
 export function useUpdateTenant(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.tenantService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.tenantService.Update>[0]['data']>;
+    }) =>
       apiClient.tenantService.Update({
         id,
         data: {
@@ -90,7 +103,7 @@ export function useUpdateTenant(
 // 删除租户
 // ==============================
 export function useDeleteTenant(
-  options?: UseMutationOptions<{}, Error, DeleteTenantRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteTenantRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.tenantService.Delete(req),
@@ -98,9 +111,8 @@ export function useDeleteTenant(
   });
 }
 
-
 export function useCreateTenantWithAdminUser(
-  options?: UseMutationOptions<{}, Error, CreateTenantWithAdminUserRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateTenantWithAdminUserRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.tenantService.CreateTenantWithAdminUser(req),
@@ -113,7 +125,10 @@ export function useCreateTenantWithAdminUser(
 // ==============================
 export function useGetTenantUsage(
   req: GetTenantUsageRequest,
-  options?: Omit<UseQueryOptions<TenantUsage, Error, TenantUsage, readonly unknown[]>, 'queryKey' | 'queryFn'>,
+  options?: Omit<
+    UseQueryOptions<TenantUsage, Error, TenantUsage, readonly unknown[]>,
+    'queryKey' | 'queryFn'
+  >,
 ) {
   return useQuery({
     queryKey: ['getTenantUsage', req],
@@ -126,7 +141,7 @@ export function useGetTenantUsage(
 // 清理租户数据（保留租户记录，状态改为 OFF）
 // ==============================
 export function useCleanupTenantData(
-  options?: UseMutationOptions<{}, Error, CleanupTenantDataRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CleanupTenantDataRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.tenantService.CleanupData(req),

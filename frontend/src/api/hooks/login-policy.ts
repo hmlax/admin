@@ -19,7 +19,7 @@ import { apiClient } from '@/api/client';
 
 export function useListLoginPolicies(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListLoginPolicyResponse, Error>,
+  options?: Omit<UseQueryOptions<ListLoginPolicyResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listLoginPolicies', query],
@@ -38,7 +38,7 @@ export async function fetchListLoginPolicies(params: PaginationQuery) {
 
 export function useGetLoginPolicy(
   req: GetLoginPolicyRequest,
-  options?: UseQueryOptions<LoginPolicy, Error>,
+  options?: Omit<UseQueryOptions<LoginPolicy, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getLoginPolicy', req],
@@ -48,11 +48,7 @@ export function useGetLoginPolicy(
 }
 
 export function useCreateLoginPolicy(
-  options?: UseMutationOptions<
-    LoginPolicy,
-    Error,
-    LoginPolicy
-  >,
+  options?: UseMutationOptions<LoginPolicy, Error, LoginPolicy>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.loginPolicyService.Create({ data }),
@@ -61,10 +57,23 @@ export function useCreateLoginPolicy(
 }
 
 export function useUpdateLoginPolicy(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.loginPolicyService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.loginPolicyService.Update>[0]['data']>;
+    }) =>
       apiClient.loginPolicyService.Update({
         id,
         data: { ...values },
@@ -75,7 +84,7 @@ export function useUpdateLoginPolicy(
 }
 
 export function useDeleteLoginPolicy(
-  options?: UseMutationOptions<{}, Error, DeleteLoginPolicyRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteLoginPolicyRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.loginPolicyService.Delete(req),

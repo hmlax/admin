@@ -1,4 +1,5 @@
 import 'react';
+import type { PrintDesignerElement } from '@go-wind/print-common';
 
 /**
  * @worm-vue3-print/common 的 <print-designer> 自定义元素（Custom Element + Shadow DOM）
@@ -8,7 +9,10 @@ import 'react';
 declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
-      'print-designer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+      'print-designer': React.DetailedHTMLProps<
+        React.HTMLAttributes<PrintDesignerElement>,
+        PrintDesignerElement
+      > & {
         'is-edit'?: string | boolean;
         'show-help'?: string | boolean;
       };

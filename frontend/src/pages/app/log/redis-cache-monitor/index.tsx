@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { Card, Descriptions, Spin, Table, Tag, Typography, Empty, theme } from 'antd';
+import { Card, Descriptions, Spin, Table, Tag, Typography, Empty } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type {
-  RedisCacheMonitorInfo,
-  SlowLogEntry,
-} from '@/api/generated/admin/v1';
+import type { RedisCacheMonitorInfo, SlowLogEntry } from '@/api/generated/admin/v1';
 import { useRedisCacheMonitorInfo } from '@/api/hooks/redis-cache-monitor';
 import { formatDateTime } from '@/utils/date';
 import ContentContainer from '@/layouts/components/PageContainer/ContentContainer';
@@ -19,7 +16,6 @@ const { Title, Text } = Typography;
  */
 const RedisCacheMonitor = () => {
   const { t } = useTranslation('redis-cache-monitor');
-  const { token } = theme.useToken();
 
   const { data, isLoading } = useRedisCacheMonitorInfo();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -45,15 +41,7 @@ const RedisCacheMonitor = () => {
     // 超出视口时必须能滚，默认 fixed 是 overflow:hidden 会直接裁掉内容。
     <ContentContainer heightMode="fixed" scrollable padding="16px">
       {/* 单值指标：DBSIZE */}
-      <Card
-        size="small"
-        style={{ marginBottom: 16 }}
-        title={
-          <Text strong>
-            {t('dbSize')}
-          </Text>
-        }
-      >
+      <Card size="small" style={{ marginBottom: 16 }} title={<Text strong>{t('dbSize')}</Text>}>
         <Descriptions column={1} size="small" bordered colon>
           <Descriptions.Item label={t('dbSize')}>
             <Tag color={dbSize > 0 ? 'orange' : 'default'}>{String(dbSize)}</Tag>
@@ -79,9 +67,7 @@ const RedisCacheMonitor = () => {
               title={
                 <div
                   style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
-                  onClick={() =>
-                    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }))
-                  }
+                  onClick={() => setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }))}
                 >
                   <Text strong>{sectionName}</Text>
                   <Tag>{(section?.entries ?? []).length}</Tag>
@@ -123,14 +109,7 @@ const RedisCacheMonitor = () => {
       )}
 
       {/* SLOWLOG：静态数据表 */}
-      <Card
-        size="small"
-        title={
-          <Text strong>
-            {t('slowlog')}
-          </Text>
-        }
-      >
+      <Card size="small" title={<Text strong>{t('slowlog')}</Text>}>
         <Table<SlowLogEntry>
           rowKey={(record) =>
             // Redis SLOWLOG 的 entry id 单次查询内唯一，作为稳定 key；
@@ -142,7 +121,7 @@ const RedisCacheMonitor = () => {
           size="small"
           scroll={{ x: 'max-content' }}
           locale={{ emptyText: <Empty description={t('noSlowlog')} /> }}
-          columns={slowLogColumns(t, token.colorTextSecondary)}
+          columns={slowLogColumns(t)}
         />
       </Card>
 
@@ -153,10 +132,7 @@ const RedisCacheMonitor = () => {
   );
 };
 
-function slowLogColumns(
-  t: (key: string) => string,
-  _secondaryColor: string,
-): TableColumnsType<SlowLogEntry> {
+function slowLogColumns(t: (key: string) => string): TableColumnsType<SlowLogEntry> {
   return [
     {
       title: t('slowlogId'),
@@ -167,7 +143,7 @@ function slowLogColumns(
       title: t('createdAt'),
       dataIndex: 'createdAt',
       width: 180,
-      render: (val) => formatDateTime(val as any),
+      render: (val) => formatDateTime(val as unknown),
     },
     {
       title: t('durationUsec'),

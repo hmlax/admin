@@ -3,7 +3,7 @@ import { pageModules } from '@app/pages';
 import { RouterProvider } from 'react-router-dom';
 
 import { useAuthStore, useUserStore } from '@/stores';
-import { useAuth } from '@/hooks/useAuth';
+import { createAuthActions } from '@/hooks/useAuth';
 import { getAccessStatic } from '@/core/access';
 import { fetchAllDictEntries } from '@/hooks/useDictCache';
 import { usePreferencesStore } from '@/core/preferences/store';
@@ -77,7 +77,7 @@ export const allRoutes: AppRouteObject[] = [
 
 export const AppRouter = () => {
   const [routerBundle, setRouterBundle] = useState<{
-    router: any;
+    router: unknown;
     routes: AppRouteObject[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +99,7 @@ export const AppRouter = () => {
         // 对齐 Vue 版 setupAccessGuard：权限码获取 + 字典预加载
         if (isAuthenticated) {
           try {
-            const auth = useAuth();
+            const auth = createAuthActions();
 
             // 获取用户权限码（角色 + 权限码，首次会调 API）；失败=认证失效走登出
             await auth.getUserPermissionCodes();

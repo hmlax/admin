@@ -1,4 +1,9 @@
-import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { type PaginationQuery, queryClient } from '@/core';
 import { makeUpdateMask } from '@/core/transport/rest/utils';
@@ -44,20 +49,36 @@ export function useGetAiProvider(
 
 // 4. useCreateAiProvider
 export function useCreateAiProvider(
-  options?: UseMutationOptions<{}, Error, CreateAiProviderRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateAiProviderRequest>,
 ) {
-  return useMutation({ mutationFn: (data) => apiClient.aiProviderService.Create(data), ...options });
+  return useMutation({
+    mutationFn: (data) => apiClient.aiProviderService.Create(data),
+    ...options,
+  });
 }
 
 // 5. useUpdateAiProvider — 固定签名 { id, values }，内部自动构建 updateMask
 export function useUpdateAiProvider(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiProviderService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.aiProviderService.Update>[0]['data']>;
+    }) =>
       apiClient.aiProviderService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -66,7 +87,7 @@ export function useUpdateAiProvider(
 
 // 6. useDeleteAiProvider
 export function useDeleteAiProvider(
-  options?: UseMutationOptions<{}, Error, DeleteAiProviderRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteAiProviderRequest>,
 ) {
   return useMutation({ mutationFn: (req) => apiClient.aiProviderService.Delete(req), ...options });
 }

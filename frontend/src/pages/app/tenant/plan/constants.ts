@@ -1,9 +1,10 @@
+import type { PlanModule } from '@/api/generated/admin/v1';
 /**
  * 套餐模块枚举映射常量
  * 页面和 Drawer 共用
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 套餐版本 ==========
 
@@ -104,15 +105,17 @@ export function getQuotaTypeOptions(t: TFn) {
 export const SELECT_FILTER_PROPS = {
   showSearch: true,
   allowClear: true,
-  filterOption: (input: string, option: any) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+  filterOption: (input: string, option?: { label?: unknown }) =>
+    String(option?.label ?? '')
+      .toLowerCase()
+      .includes(input.toLowerCase()),
 };
 
 // ========== 模块白名单（多选） ==========
 // 用于套餐 drawer 中的模块白名单多选框，选项标签来自 i18n module.* 枚举。
 // 值对齐 Module_Module 枚举（数字），由调用方与后端 PlanModule.entity 交互。
 
-export const MODULE_LABEL_KEYS: string[] = [
+export const MODULE_LABEL_KEYS: NonNullable<PlanModule['module']>[] = [
   'DASHBOARD',
   'OPM',
   'SYSTEM',

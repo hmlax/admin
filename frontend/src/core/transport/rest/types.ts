@@ -1,6 +1,13 @@
 import type { AxiosResponse, CreateAxiosDefaults, InternalAxiosRequestConfig } from 'axios';
 
-type RequestResponse<T = any> = AxiosResponse<T>;
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    _requestId?: string;
+    __isRetryRequest?: boolean;
+  }
+}
+
+type RequestResponse<T = unknown> = AxiosResponse<T>;
 
 type RequestContentType =
   | 'application/json;charset=utf-8'
@@ -13,16 +20,16 @@ type RequestClientOptions = CreateAxiosDefaults;
 interface RequestInterceptorConfig {
   fulfilled?: (
     config: InternalAxiosRequestConfig,
-  ) => InternalAxiosRequestConfig<any> | Promise<InternalAxiosRequestConfig<any>>;
-  rejected?: (error: any) => any;
+  ) => InternalAxiosRequestConfig<unknown> | Promise<InternalAxiosRequestConfig<unknown>>;
+  rejected?: (error: unknown) => unknown;
 }
 
-interface ResponseInterceptorConfig<T = any> {
+interface ResponseInterceptorConfig<T = unknown> {
   fulfilled?: (response: AxiosResponse<T>) => AxiosResponse | Promise<AxiosResponse>;
-  rejected?: (error: any) => any;
+  rejected?: (error: unknown) => unknown;
 }
 
-type MakeErrorMessageFn = (message: string, error: any) => void;
+type MakeErrorMessageFn = (message: string, error: unknown) => void;
 
 interface HttpResponse {
   code: number;

@@ -115,7 +115,13 @@ const ScriptLogDrawer: React.FC<ScriptLogDrawerProps> = ({ open, onClose }) => {
       ellipsis: true,
       render: (_, record) =>
         record.error ? (
-          <Tooltip title={<pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: 300, overflow: 'auto' }}>{record.error}</pre>}>
+          <Tooltip
+            title={
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: 300, overflow: 'auto' }}>
+                {record.error}
+              </pre>
+            }
+          >
             <span style={{ color: 'var(--go-admin-danger-text)' }}>{record.error}</span>
           </Tooltip>
         ) : (
@@ -132,69 +138,58 @@ const ScriptLogDrawer: React.FC<ScriptLogDrawerProps> = ({ open, onClose }) => {
   ];
 
   return (
-    <Drawer
-      title={t('viewTitle')}
-      open={open}
-      onClose={onClose}
-      size={960}
-      forceRender
-    >
+    <Drawer title={t('viewTitle')} open={open} onClose={onClose} size={960} forceRender>
       <div ref={containerRef} className="page-container-content h-full">
-      <ListTable<ScriptLog>
-        actionRef={actionRef}
-        columns={columns}
-        request={async (params, _sorter, _filter) => {
-          const query = new PaginationQuery({
-            paging: {
-              page: params.current || 1,
-              pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
-            },
-            formValues: Object.fromEntries(
-              Object.entries(params).filter(
-                ([key]) => !['current', 'pageSize'].includes(key),
+        <ListTable<ScriptLog>
+          actionRef={actionRef}
+          columns={columns}
+          request={async (params) => {
+            const query = new PaginationQuery({
+              paging: {
+                page: params.current || 1,
+                pageSize: params.pageSize || TABLE.DEFAULT_PAGE_SIZE,
+              },
+              formValues: Object.fromEntries(
+                Object.entries(params).filter(([key]) => !['current', 'pageSize'].includes(key)),
               ),
-            ),
-          });
+            });
 
-          const response = await fetchListScriptLogs(query);
+            const response = await fetchListScriptLogs(query);
 
-          return {
-            data: response.items || [],
-            total: Number(response.total || 0),
-            success: true,
-          };
-        }}
-        rowKey="id"
-        search={{ optionRender: searchOptionRender,
-          labelWidth: 'auto',
-          defaultCollapsed: false,
-        }}
-        pagination={{
-          defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
-          showSizeChanger: true,
-        }}
-        toolBarRender={() => [
-          <Popconfirm
-            key="purge"
-            title={t('logPurgeConfirmTitle')}
-            description={t('logPurgeConfirmDesc')}
-            onConfirm={() =>
-              purgeMutation.mutate({
-                before: new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString() as any,
-              })
-            }
-            okText={t('common:button.ok')}
-            cancelText={t('common:button.cancel')}
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              {t('logPurge')}
-            </Button>
-          </Popconfirm>,
-        ]}
-        options={{ setting: { settingIcon: <ColumnSlidersIcon /> }, density: true, reload: true }}
-        size="middle"
-        scroll={{ y: tableScrollY }}
-      />
+            return {
+              data: response.items || [],
+              total: Number(response.total || 0),
+              success: true,
+            };
+          }}
+          rowKey="id"
+          search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: false }}
+          pagination={{
+            defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
+            showSizeChanger: true,
+          }}
+          toolBarRender={() => [
+            <Popconfirm
+              key="purge"
+              title={t('logPurgeConfirmTitle')}
+              description={t('logPurgeConfirmDesc')}
+              onConfirm={() =>
+                purgeMutation.mutate({
+                  before: new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString(),
+                })
+              }
+              okText={t('common:button.ok')}
+              cancelText={t('common:button.cancel')}
+            >
+              <Button danger icon={<DeleteOutlined />}>
+                {t('logPurge')}
+              </Button>
+            </Popconfirm>,
+          ]}
+          options={{ setting: { settingIcon: <ColumnSlidersIcon /> }, density: true, reload: true }}
+          size="middle"
+          scroll={{ y: tableScrollY }}
+        />
       </div>
     </Drawer>
   );

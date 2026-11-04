@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { HTMLAttributes, Key, MutableRefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { HTMLAttributes, Key } from 'react';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionType, ProColumns, ProTableProps } from '@ant-design/pro-components';
 import { Alert, Button, Empty } from 'antd';
@@ -25,7 +33,10 @@ const FALLBACK_SKELETON_ROWS = 10;
 type ListTableColumn<RecordType> = ProColumns<RecordType> & { resizable?: boolean };
 
 /** 与 antd getColumnKey 同规则的稳定列标识（key → dataIndex → 序号），列宽状态按它挂靠 */
-const getColumnKey = (column: { key?: Key; dataIndex?: unknown }, fallbackIndex: number): string => {
+const getColumnKey = (
+  column: { key?: Key; dataIndex?: unknown },
+  fallbackIndex: number,
+): string => {
   if (column.key !== undefined && column.key !== null) return String(column.key);
   const { dataIndex } = column;
   if (typeof dataIndex === 'string' || typeof dataIndex === 'number') return String(dataIndex);
@@ -42,8 +53,8 @@ interface ResizeState {
 }
 
 type ListTableProps<
-  RecordType extends Record<string, any>,
-  Params extends Record<string, any> = Record<string, any>,
+  RecordType extends object,
+  Params extends Record<string, unknown> = Record<string, unknown>,
 > = ProTableProps<RecordType, Params>;
 
 type LoadPhase = 'initial' | 'ready' | 'failed';
@@ -62,8 +73,8 @@ type LoadPhase = 'initial' | 'ready' | 'failed';
  * 页面把 `<ProTable>` 换成 `<ListTable>` 即可，request / columns / actionRef 用法不变。
  */
 export function ListTable<
-  RecordType extends Record<string, any>,
-  Params extends Record<string, any> = Record<string, any>,
+  RecordType extends object,
+  Params extends Record<string, unknown> = Record<string, unknown>,
 >(props: ListTableProps<RecordType, Params> & { striped?: boolean }) {
   const {
     request,
@@ -233,18 +244,13 @@ export function ListTable<
   // 页面传进来的 request 是内联箭头函数（每次渲染都是新引用）。走 ref 取值，给 ProTable 的
   // request 才能保持恒定引用，否则包装层自己会变成重新取数的原因。
   const requestRef = useRef(request);
-  requestRef.current = request;
+  useLayoutEffect(() => {
+    requestRef.current = request;
+  }, [request]);
 
-  // ProTable 只接受一个 actionRef：这里收下它，再把同一个 action 对象转交给页面的 ref。
-  // 子组件 effect 先于父组件 effect 运行，所以本页的 actionRef 在页面首次 reload 前就已就位。
-  useEffect(() => {
-    if (!actionRef) return;
-    if (typeof actionRef === 'function') {
-      actionRef(ownActionRef.current);
-      return;
-    }
-    (actionRef as MutableRefObject<ActionType | undefined>).current = ownActionRef.current;
-  });
+  // The child publishes its handle during layout; forward it through React's
+  // ref API after that commit, without mutating the incoming props object.
+  useImperativeHandle(actionRef, () => ownActionRef.current);
 
   // 斑马纹：默认开启，对齐 ele/vben 共享表格的 stripe 默认值（值表见 docs/design-language.md §4 表格条）。
   // 页面自带 rowClassName 时叠加而非覆盖；占位行（暂无数据）由 CSS 侧排除。
@@ -297,7 +303,7 @@ export function ListTable<
         stopSkeleton();
       }
     },
-    [skeletonEnabled, stopSkeleton],
+    [skeletonEnabled, stopSkeleton, t],
   );
 
   const retry = useCallback(() => {
@@ -352,13 +358,18 @@ export function ListTable<
   const scrollX = typeof effectiveScroll === 'object' ? effectiveScroll?.x : undefined;
   const scrollY = typeof effectiveScroll === 'object' ? effectiveScroll?.y : undefined;
 
-  const tableViewRender = useCallback<NonNullable<ListTableProps<RecordType, Params>['tableViewRender']>>(
+  const tableViewRender = useCallback<
+    NonNullable<ListTableProps<RecordType, Params>['tableViewRender']>
+  >(
     (_tableProps, defaultDom) => {
       // 首屏就失败：一行数据都没有，"暂无数据"会被读成查询成功但结果为空，必须换成错误态
       if (phase === 'failed' && !loadedOnceRef.current) {
         return (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={errorReason ?? t('loading.failed')} />
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={errorReason ?? t('loading.failed')}
+            />
             <Button icon={<ReloadOutlined />} onClick={retry}>
               {t('button.retry')}
             </Button>
@@ -399,7 +410,20 @@ export function ListTable<
       }
       return defaultDom;
     },
-    [phase, showSkeleton, errorReason, retry, resizableColumns, skeletonRows, size, bordered, scrollX, scrollY, pagination, t],
+    [
+      phase,
+      showSkeleton,
+      errorReason,
+      retry,
+      resizableColumns,
+      skeletonRows,
+      size,
+      bordered,
+      scrollX,
+      scrollY,
+      pagination,
+      t,
+    ],
   );
 
   const tableNode = (
@@ -427,7 +451,11 @@ export function ListTable<
   // 自动撑满时套一层测量容器（flex 列父级里 flex:1 撑满；hook 据此测高并直写表体高度）。
   // 页面自己传了 scroll.y 的历史页面不包，DOM 结构与迁移前逐字节一致。
   if (!autoFill) return tableNode;
-  return <div ref={fillRef} className="listtable-fill">{tableNode}</div>;
+  return (
+    <div ref={fillRef} className="listtable-fill">
+      {tableNode}
+    </div>
+  );
 }
 
 export default ListTable;

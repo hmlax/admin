@@ -1,3 +1,4 @@
+import type { PlanQuota as PlanQuotaRecord } from '@/api/generated/admin/v1';
 import { useRef, useState, useEffect } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import TableExportButton from '@/components/common/TableExportButton';
@@ -36,7 +37,7 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
-  const [editingQuota, setEditingQuota] = useState<any>(null);
+  const [editingQuota, setEditingQuota] = useState<PlanQuotaRecord | null>(null);
 
   // 当 planId 变化时自动刷新列表
   useEffect(() => {
@@ -58,7 +59,7 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
   });
 
   // 列配置
-  const columns: ProColumns<any>[] = [
+  const columns: ProColumns<PlanQuotaRecord>[] = [
     {
       title: t('quotaTypeLabel'),
       dataIndex: 'quotaType',
@@ -68,7 +69,9 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
         options: getQuotaTypeOptions(t),
       },
       render: (_, record) => {
-        const item = (quotaTypeMap as Record<string, { text: string; color: string }>)[record.quotaType as string];
+        const item = (quotaTypeMap as Record<string, { text: string; color: string }>)[
+          record.quotaType as string
+        ];
         return item ? <Tag color={item.color}>{item.text}</Tag> : '-';
       },
     },
@@ -123,9 +126,13 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
 
   return (
     <>
-      <div ref={containerRef} className="page-container-content" style={{ padding: '0 8px', height: '100%' }}>
+      <div
+        ref={containerRef}
+        className="page-container-content"
+        style={{ padding: '0 8px', height: '100%' }}
+      >
         {planId ? (
-          <ListTable<any>
+          <ListTable<PlanQuotaRecord>
             actionRef={actionRef}
             columns={columns}
             headerTitle={false}
@@ -162,7 +169,8 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -172,7 +180,12 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListPlanQuotas} columns={columns} filename="plan-quotas" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListPlanQuotas}
+                columns={columns}
+                filename="plan-quotas"
+              />,
               <Button
                 key="create"
                 color="primary"
@@ -199,7 +212,14 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
             scroll={{ y: tableScrollY }}
           />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+            }}
+          >
             <Empty description={t('selectPlanFirst')} />
           </div>
         )}
@@ -208,7 +228,7 @@ const PlanQuotaList: React.FC<PlanQuotaListProps> = ({ planId }) => {
       <PlanQuotaDrawer
         open={drawerOpen}
         mode={drawerMode}
-        data={editingQuota}
+        data={editingQuota ?? undefined}
         planId={planId!}
         onClose={() => {
           setDrawerOpen(false);

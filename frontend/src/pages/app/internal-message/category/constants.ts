@@ -2,7 +2,7 @@
  * 消息分类模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 布尔值映射（isEnabled） ==========
 

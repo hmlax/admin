@@ -23,7 +23,9 @@ async function getMe(): Promise<User | null> {
   return apiClient.userProfileService.GetUser({});
 }
 
-export function useGetUserProfile(options?: UseQueryOptions<User | null, Error>) {
+export function useGetUserProfile(
+  options?: Omit<UseQueryOptions<User | null, Error>, 'queryKey' | 'queryFn'>,
+) {
   return useQuery({
     queryKey: ['getMe'],
     queryFn: () => getMe(),
@@ -43,13 +45,26 @@ export async function fetchUserProfile() {
 }
 
 export function useUpdateUserProfile(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.userProfileService.UpdateUser>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.userProfileService.UpdateUser>[0]['data']>;
+    }) =>
       apiClient.userProfileService.UpdateUser({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -57,7 +72,7 @@ export function useUpdateUserProfile(
 }
 
 export function useChangePassword(
-  options?: UseMutationOptions<{}, Error, ChangePasswordRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, ChangePasswordRequest>,
 ) {
   return useMutation({
     // 后端 NeedDecrypt 要求 AES 密文传输（与登录同规），明文会被当密文解密导致校验必败
@@ -71,11 +86,7 @@ export function useChangePassword(
 }
 
 export function useUploadAvatar(
-  options?: UseMutationOptions<
-    UploadAvatarResponse,
-    Error,
-    UploadAvatarRequest
-  >,
+  options?: UseMutationOptions<UploadAvatarResponse, Error, UploadAvatarRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.userProfileService.UploadAvatar(data),
@@ -83,7 +94,7 @@ export function useUploadAvatar(
   });
 }
 
-export function useDeleteAvatar(options?: UseMutationOptions<{}, Error, void>) {
+export function useDeleteAvatar(options?: UseMutationOptions<Record<string, never>, Error, void>) {
   return useMutation({
     mutationFn: () => apiClient.userProfileService.DeleteAvatar({}),
     ...options,
@@ -91,7 +102,7 @@ export function useDeleteAvatar(options?: UseMutationOptions<{}, Error, void>) {
 }
 
 export function useBindContact(
-  options?: UseMutationOptions<{}, Error, BindContactRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, BindContactRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.userProfileService.BindContact(data),
@@ -100,7 +111,7 @@ export function useBindContact(
 }
 
 export function useVerifyContact(
-  options?: UseMutationOptions<{}, Error, VerifyContactRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, VerifyContactRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.userProfileService.VerifyContact(data),

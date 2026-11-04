@@ -1,18 +1,14 @@
 import { applicationStorageKey } from '@/config/application';
-import "@go-wind/bi-react/style.css";
+import '@go-wind/bi-react/style.css';
 // React 设计器是「React 容器 + Vue 画布」的桥接壳，画布样式来自 bi-vue
-import "@go-wind/bi-vue/style.css";
-import { useCallback, useEffect, useRef, useState } from "react";
+import '@go-wind/bi-vue/style.css';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Tooltip } from 'antd';
-import {
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
-import { BiDesignerReact } from "@go-wind/bi-react";
-import { setBiLocale } from "@go-wind/bi-vue";
-import type { BiDashboardSchema } from "@go-wind/bi-core";
+import { FullscreenExitOutlined, FullscreenOutlined, ReloadOutlined } from '@ant-design/icons';
+import { BiDesignerReact } from '@go-wind/bi-react';
+import { setBiLocale } from '@go-wind/bi-vue';
+import type { BiDashboardSchema } from '@go-wind/bi-core';
 import { fetchBiDashboard, useSaveBiDashboardPayload } from '@/api/hooks/bi-dashboard';
 import { useI18n } from '@/core/i18n';
 import { usePageFullscreen } from '@/hooks/usePageFullscreen';
@@ -22,13 +18,24 @@ const DRAFT_KEY = applicationStorageKey('bi-schema');
 /** 自动保存防抖 */
 const SAVE_DEBOUNCE_MS = 1200;
 
-type SaveStatus = "idle" | "saving" | "saved" | "conflict";
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'conflict';
 
 /**
  * BI 独立设计器页（React 端）：
  * - ?id=N：加载库中仪表盘，画布改动防抖自动保存回写（version 乐观锁，409 后自动刷新版本）；
  * - 无 id：本地草稿（localStorage），保存落草稿，不进服务端
  */
+function readDraft(): Partial<BiDashboardSchema> | undefined {
+  const saved = localStorage.getItem(DRAFT_KEY);
+  if (!saved) return undefined;
+  try {
+    return JSON.parse(saved);
+  } catch (error) {
+    console.error('[bi-designer] 本地草稿解析失败，改用演示 schema', error);
+    return undefined;
+  }
+}
+
 export default function BiDesignerPage() {
   const { t, i18n } = useI18n();
   const [searchParams] = useSearchParams();
@@ -39,10 +46,12 @@ export default function BiDesignerPage() {
 
   // 桥接壳的 initialSchema 是「挂载时快照」，运行期改 props 不回灌，
   // 所以必须先读完数据源再挂载（后端行 / 本地草稿），否则保存过的仪表盘不会进画布。
-  const [ready, setReady] = useState(false);
-  const [initialSchema, setInitialSchema] = useState<Partial<BiDashboardSchema> | undefined>();
-  const [targetName, setTargetName] = useState("");
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [ready, setReady] = useState(!dashboardId);
+  const [initialSchema, setInitialSchema] = useState<Partial<BiDashboardSchema> | undefined>(() =>
+    dashboardId ? undefined : readDraft(),
+  );
+  const [targetName, setTargetName] = useState('');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   /** 内容基线：首帧回显（normalizeSchema 会补默认值，与服务端原文永不字符串相等）
    *  定为画布首次 emit 的规范化串；此后内容与基线相同（如 select 类无内容变更）跳过保存 */
   const baselineRef = useRef<string | null>(null);
@@ -51,43 +60,27 @@ export default function BiDesignerPage() {
   const conflictToasted = useRef(false);
 
   useEffect(() => {
-    setBiLocale((i18n.language ?? "zh-CN").startsWith("zh") ? "zh-CN" : "en-US");
+    setBiLocale((i18n.language ?? 'zh-CN').startsWith('zh') ? 'zh-CN' : 'en-US');
   }, [i18n.language]);
 
   useEffect(() => {
     if (dashboardId) {
       fetchBiDashboard(dashboardId)
         .then((row) => {
-          setTargetName(row.name || "");
+          setTargetName(row.name || '');
           versionRef.current = row.version ?? 1;
           if (row.payload) {
             setInitialSchema(JSON.parse(row.payload));
           }
         })
         .catch((error: unknown) => {
-          console.error("[bi-designer] 加载仪表盘失败，切换为本地草稿", error);
-          loadDraft();
+          console.error('[bi-designer] 加载仪表盘失败，切换为本地草稿', error);
+          setInitialSchema(readDraft());
         })
         .finally(() => setReady(true));
       return;
     }
-    loadDraft();
-    setReady(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardId]);
-
-  function loadDraft() {
-    const saved = localStorage.getItem(DRAFT_KEY);
-    if (saved) {
-      try {
-        setInitialSchema(JSON.parse(saved));
-      } catch (error) {
-        // 脏数据不阻塞页面：记原始错误，回落到内置演示 schema
-        console.error("[bi-designer] 本地草稿解析失败，改用演示 schema", error);
-        setInitialSchema(undefined);
-      }
-    }
-  }
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearTimer = () => {
@@ -97,27 +90,24 @@ export default function BiDesignerPage() {
 
   const saveToServer = useCallback(
     (schema: BiDashboardSchema, payloadStr: string) => {
-      setSaveStatus("saving");
+      setSaveStatus('saving');
       savePayload({
         id: dashboardId!,
         version: versionRef.current,
         payload: payloadStr,
         chartCount: schema.charts?.length ?? 0,
-        themeKey: schema.theme?.key ?? "",
+        themeKey: schema.theme?.key ?? '',
       })
         .then(() => {
           versionRef.current += 1;
           baselineRef.current = payloadStr;
-          setSaveStatus("saved");
+          setSaveStatus('saved');
         })
         .catch((error: Error) => {
-          const msg = String(error?.message || "");
-          if (
-            msg.includes("modified by another session") ||
-            msg.includes("CONFLICT")
-          ) {
+          const msg = String(error?.message || '');
+          if (msg.includes('modified by another session') || msg.includes('CONFLICT')) {
             // 他人已保存：刷新版本后继续自动保存（后续编辑会用新版本落盘）
-            setSaveStatus("conflict");
+            setSaveStatus('conflict');
             if (!conflictToasted.current) {
               conflictToasted.current = true;
               // message 弹层由 hook 的 options 里没有 App 上下文，这里用 alert-free 方案：状态条已示警
@@ -125,14 +115,14 @@ export default function BiDesignerPage() {
             fetchBiDashboard(dashboardId!)
               .then((row) => {
                 versionRef.current = row.version ?? versionRef.current;
-                setSaveStatus("idle");
+                setSaveStatus('idle');
               })
               .catch((refreshError: unknown) =>
-                console.error("[bi-designer] 冲突后刷新版本失败", refreshError),
+                console.error('[bi-designer] 冲突后刷新版本失败', refreshError),
               );
           } else {
-            console.error("[bi-designer] 自动保存失败", error);
-            setSaveStatus("idle");
+            console.error('[bi-designer] 自动保存失败', error);
+            setSaveStatus('idle');
           }
         });
     },
@@ -150,10 +140,7 @@ export default function BiDesignerPage() {
         }
         if (payloadStr === baselineRef.current) return;
         clearTimer();
-        saveTimer.current = setTimeout(
-          () => saveToServer(schema, payloadStr),
-          SAVE_DEBOUNCE_MS,
-        );
+        saveTimer.current = setTimeout(() => saveToServer(schema, payloadStr), SAVE_DEBOUNCE_MS);
       } else {
         clearTimer();
         saveTimer.current = setTimeout(() => {
@@ -172,43 +159,41 @@ export default function BiDesignerPage() {
   );
 
   const statusNode =
-    dashboardId && saveStatus !== "idle" ? (
+    dashboardId && saveStatus !== 'idle' ? (
       <span
         style={{
           fontSize: 12,
           color:
-            saveStatus === "saved"
-              ? "#52c41a"
-              : saveStatus === "conflict"
-                ? "#ff4d4f"
-                : "rgba(0,0,0,0.45)",
+            saveStatus === 'saved'
+              ? '#52c41a'
+              : saveStatus === 'conflict'
+                ? '#ff4d4f'
+                : 'rgba(0,0,0,0.45)',
         }}
       >
-        {saveStatus === "saving" && t("statusSaving")}
-        {saveStatus === "saved" && t("statusSaved")}
-        {saveStatus === "conflict" && t("statusConflict")}
+        {saveStatus === 'saving' && t('statusSaving')}
+        {saveStatus === 'saved' && t('statusSaved')}
+        {saveStatus === 'conflict' && t('statusConflict')}
       </span>
     ) : null;
 
-  const targetLabel = dashboardId
-    ? targetName || `#${dashboardId}`
-    : t("localDraft");
+  const targetLabel = dashboardId ? targetName || `#${dashboardId}` : t('localDraft');
 
   return (
     <div
       ref={rootRef}
       style={{
-        height: "100%",
-        padding: "12px 16px",
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
+        height: '100%',
+        padding: '12px 16px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
+          display: 'flex',
+          alignItems: 'center',
           gap: 12,
           flexShrink: 0,
           paddingBottom: 8,
@@ -225,10 +210,10 @@ export default function BiDesignerPage() {
               window.location.href = `/bi/dashboard?id=${dashboardId}`;
             }}
           >
-            {t("preview")}
+            {t('preview')}
           </Button>
         )}
-        <Tooltip title={isFullscreen ? t("exitFullscreen") : t("fullscreen")}>
+        <Tooltip title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}>
           <Button
             size="small"
             icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
@@ -241,11 +226,11 @@ export default function BiDesignerPage() {
         {ready && (
           <BiDesignerReact
             // key 带数据源：换目标强制重挂载（initialSchema 是挂载快照，不回灌）
-            key={`${dashboardId ?? "draft"}`}
+            key={`${dashboardId ?? 'draft'}`}
             demo={!initialSchema}
             initialSchema={initialSchema}
             onChange={onSchemaChange}
-            style={{ height: "100%" }}
+            style={{ height: '100%' }}
           />
         )}
       </div>

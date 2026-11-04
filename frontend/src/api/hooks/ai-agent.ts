@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import {
   type AiAgentApp,
   type AiAgentRun,
@@ -22,7 +28,7 @@ const RUNS_KEY = 'listAiAgentRuns';
 
 export function useListAiAgentApps(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListAiAgentAppsResponse, Error>,
+  options?: Omit<UseQueryOptions<ListAiAgentAppsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [LIST_KEY, query],
@@ -51,7 +57,7 @@ export function useCreateAiAgentApp(
 }
 
 export function useUpdateAiAgentApp(
-  options?: UseMutationOptions<{}, Error, UpdateAiAgentAppRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, UpdateAiAgentAppRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -62,7 +68,7 @@ export function useUpdateAiAgentApp(
 }
 
 export function useDeleteAiAgentApp(
-  options?: UseMutationOptions<{}, Error, DeleteAiAgentAppRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteAiAgentAppRequest>,
 ) {
   const queryClientRef = useQueryClient();
   return useMutation({
@@ -84,7 +90,7 @@ export function useRunAiAgentApp(
 export function useListAiAgentRuns(
   appId: number | undefined,
   query: PaginationQuery,
-  options?: UseQueryOptions<ListAiAgentRunsResponse, Error>,
+  options?: Omit<UseQueryOptions<ListAiAgentRunsResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: [RUNS_KEY, appId, query],

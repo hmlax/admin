@@ -20,7 +20,7 @@ import { apiClient } from '@/api/client';
 
 export function useListConfigs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListConfigResponse, Error>,
+  options?: Omit<UseQueryOptions<ListConfigResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listConfigs', query],
@@ -39,7 +39,7 @@ export async function fetchListConfigs(params: PaginationQuery) {
 
 export function useGetConfig(
   req: GetConfigRequest,
-  options?: UseQueryOptions<Config, Error>,
+  options?: Omit<UseQueryOptions<Config, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getConfig', req],
@@ -49,7 +49,7 @@ export function useGetConfig(
 }
 
 export function useCreateConfig(
-  options?: UseMutationOptions<{}, Error, CreateConfigRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateConfigRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.configService.Create(data),
@@ -58,13 +58,26 @@ export function useCreateConfig(
 }
 
 export function useUpdateConfig(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.configService.Update>[0]['data']>;
+    }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.configService.Update>[0]['data']>;
+    }) =>
       apiClient.configService.Update({
         id,
-        data: { ...values } as any,
+        data: { ...values },
         updateMask: makeUpdateMask(Object.keys(values ?? {})),
       }),
     ...options,
@@ -72,7 +85,7 @@ export function useUpdateConfig(
 }
 
 export function useDeleteConfig(
-  options?: UseMutationOptions<{}, Error, DeleteConfigRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteConfigRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.configService.Delete(req),

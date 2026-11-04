@@ -1,11 +1,6 @@
 import { useRef, useState } from 'react';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import {
-  DrawerForm,
-  ProFormText,
-  ProFormDigit,
-  ProFormSwitch,
-} from '@ant-design/pro-components';
+import { DrawerForm, ProFormText, ProFormDigit, ProFormSwitch } from '@ant-design/pro-components';
 import { App } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -68,7 +63,7 @@ const LanguageDrawer: React.FC<LanguageDrawerProps> = ({
   });
 
   // 提交表单
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Language) => {
     setConfirmLoading(true);
 
     try {
@@ -165,15 +160,9 @@ const LanguageDrawer: React.FC<LanguageDrawerProps> = ({
         }}
       />
 
-      <ProFormSwitch
-        name="isEnabled"
-        label={t('isEnabled')}
-      />
+      <ProFormSwitch name="isEnabled" label={t('isEnabled')} />
 
-      <ProFormSwitch
-        name="isDefault"
-        label={t('isDefault')}
-      />
+      <ProFormSwitch name="isDefault" label={t('isDefault')} />
     </DrawerForm>
   );
 };

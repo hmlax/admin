@@ -45,7 +45,7 @@ const PositionDrawer: React.FC<PositionDrawerProps> = ({
   const { message } = App.useApp();
 
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [orgTreeData, setOrgTreeData] = useState<any[]>([]);
+  const [orgTreeData, setOrgTreeData] = useState<ReturnType<typeof buildOrgTreeData>>([]);
 
   // 加载组织树
   useEffect(() => {
@@ -53,9 +53,12 @@ const PositionDrawer: React.FC<PositionDrawerProps> = ({
       fetchListOrgUnits(new PaginationQuery({ formValues: { status: 'ON' } }))
         .then((res) => {
           const items = res?.items || [];
-          setOrgTreeData(buildOrgTreeData(items as any[]));
+          setOrgTreeData(buildOrgTreeData(items));
         })
-        .catch(() => setOrgTreeData([]));
+        .catch((error: unknown) => {
+          console.error('Load options failed:', error);
+          setOrgTreeData([]);
+        });
     }
   }, [open]);
 
@@ -68,12 +71,12 @@ const PositionDrawer: React.FC<PositionDrawerProps> = ({
           name: data.name || '',
           code: data.code || '',
           type: data.type || 'REGULAR',
-          orgUnitId: (data as any).orgUnitId || undefined,
-          headcount: (data as any).headcount ?? 1,
-          sortOrder: (data as any).sortOrder ?? 1,
+          orgUnitId: data.orgUnitId || undefined,
+          headcount: data.headcount ?? 1,
+          sortOrder: data.sortOrder ?? 1,
           status: data.status || 'ON',
-          description: (data as any).description || '',
-          remark: (data as any).remark || '',
+          description: data.description || '',
+          remark: data.remark || '',
         });
       }, 0);
     }
@@ -103,7 +106,7 @@ const PositionDrawer: React.FC<PositionDrawerProps> = ({
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Position) => {
     setConfirmLoading(true);
     try {
       if (mode === 'create') {
@@ -169,8 +172,10 @@ const PositionDrawer: React.FC<PositionDrawerProps> = ({
         fieldProps={{
           showSearch: true,
           allowClear: true,
-          filterOption: (input: string, option: any) =>
-            (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
+          filterOption: (input, option) =>
+            String(option?.label ?? '')
+              .toLowerCase()
+              .includes(input.toLowerCase()),
         }}
       />
 

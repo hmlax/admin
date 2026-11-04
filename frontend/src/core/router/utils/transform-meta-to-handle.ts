@@ -8,11 +8,11 @@ export function transformMetaToHandle(meta?: RouteMeta): RouteHandle | undefined
   if (!meta) return undefined;
 
   return {
+    ...meta,
     title: meta.title,
     icon: typeof meta.icon === 'string' ? meta.icon : undefined,
     authority: meta.authority,
     // 展开其他自定义字段（排除已明确指定的字段）
-    ...((({ title, icon, authority, ...rest }) => rest)(meta)),
   };
 }
 

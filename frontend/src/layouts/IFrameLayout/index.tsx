@@ -112,7 +112,7 @@ const IFrameLayout = () => {
 
   // 向 iframe 发送消息（跨域通信）
   const postMessageToIframe = useCallback(
-    (type: string, data?: any) => {
+    (type: string, data?: unknown) => {
       if (!iframeRef.current?.contentWindow || !iframeOrigin) return;
       // targetOrigin 指定具体 origin 而非 '*'，避免把主题模式等信息泄露给任意监听者
       iframeRef.current.contentWindow.postMessage({ type, data }, iframeOrigin);

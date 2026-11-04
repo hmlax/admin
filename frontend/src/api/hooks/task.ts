@@ -21,7 +21,7 @@ import { apiClient } from '@/api/client';
 
 export function useListTasks(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListTaskResponse, Error>,
+  options?: Omit<UseQueryOptions<ListTaskResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listTasks', query],
@@ -40,7 +40,7 @@ export async function fetchListTasks(params: PaginationQuery) {
 
 export function useGetTask(
   req: GetTaskRequest,
-  options?: UseQueryOptions<Task, Error>,
+  options?: Omit<UseQueryOptions<Task, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getTask', req],
@@ -50,7 +50,7 @@ export function useGetTask(
 }
 
 export function useCreateTask(
-  options?: UseMutationOptions<{}, Error, CreateTaskRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, CreateTaskRequest>,
 ) {
   return useMutation({
     mutationFn: (data) => apiClient.taskService.Create(data),
@@ -59,10 +59,20 @@ export function useCreateTask(
 }
 
 export function useUpdateTask(
-  options?: UseMutationOptions<{}, Error, { id: number; values: Record<string, any> }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { id: number; values: NonNullable<Parameters<typeof apiClient.taskService.Update>[0]['data']> }
+  >,
 ) {
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: Record<string, any> }) =>
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: number;
+      values: NonNullable<Parameters<typeof apiClient.taskService.Update>[0]['data']>;
+    }) =>
       apiClient.taskService.Update({
         id,
         data: { ...values },
@@ -73,7 +83,7 @@ export function useUpdateTask(
 }
 
 export function useDeleteTask(
-  options?: UseMutationOptions<{}, Error, DeleteTaskRequest>,
+  options?: UseMutationOptions<Record<string, never>, Error, DeleteTaskRequest>,
 ) {
   return useMutation({
     mutationFn: (req) => apiClient.taskService.Delete(req),
@@ -96,7 +106,11 @@ export async function fetchListTaskTypeNames() {
 
 /** 控制单个任务 */
 export function useControlTask(
-  options?: UseMutationOptions<{}, Error, { typeName: string; controlType: string }>,
+  options?: UseMutationOptions<
+    Record<string, never>,
+    Error,
+    { typeName: string; controlType: string }
+  >,
 ) {
   return useMutation({
     mutationFn: ({ typeName, controlType }) =>
@@ -109,7 +123,7 @@ export function useControlTask(
 }
 
 /** 启动所有任务 */
-export function useStartAllTasks(options?: UseMutationOptions<{}, Error, void>) {
+export function useStartAllTasks(options?: UseMutationOptions<Record<string, never>, Error, void>) {
   return useMutation({
     mutationFn: () => apiClient.taskService.StartAllTask({}),
     ...options,
@@ -117,7 +131,7 @@ export function useStartAllTasks(options?: UseMutationOptions<{}, Error, void>) 
 }
 
 /** 停止所有任务 */
-export function useStopAllTasks(options?: UseMutationOptions<{}, Error, void>) {
+export function useStopAllTasks(options?: UseMutationOptions<Record<string, never>, Error, void>) {
   return useMutation({
     mutationFn: () => apiClient.taskService.StopAllTask({}),
     ...options,
@@ -125,7 +139,13 @@ export function useStopAllTasks(options?: UseMutationOptions<{}, Error, void>) {
 }
 
 /** 重启所有任务 */
-export function useRestartAllTasks(options?: UseMutationOptions<{}, Error, void>) {
+export function useRestartAllTasks(
+  options?: UseMutationOptions<
+    Awaited<ReturnType<typeof apiClient.taskService.RestartAllTask>>,
+    Error,
+    void
+  >,
+) {
   return useMutation({
     mutationFn: () => apiClient.taskService.RestartAllTask({}),
     ...options,

@@ -1,3 +1,5 @@
+import { isRecord } from '@/utils/value';
+import { getErrorMessage } from '@/utils/error';
 import { PaginationQuery } from '@/core';
 import { message } from 'antd';
 import ExcelJS from 'exceljs';
@@ -14,11 +16,11 @@ export interface ExportColumn {
 }
 
 export interface ExportAuditOptions {
-  fetcher: (query: PaginationQuery) => Promise<{ items?: any[]; total?: number }>;
+  fetcher: (query: PaginationQuery) => Promise<{ items?: unknown[]; total?: number }>;
   filename: string;
   columns: ExportColumn[];
   /** 当前 ProTable 搜索参数（不含分页字段） */
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   maxRows?: number;
 }
 
@@ -43,9 +45,7 @@ function escapeCsvCell(value: unknown): string {
 
 function buildCsv(columns: ExportColumn[], rows: Record<string, unknown>[]): string {
   const header = columns.map((c) => escapeCsvCell(c.title)).join(',');
-  const lines = rows.map((row) =>
-    columns.map((c) => escapeCsvCell(row?.[c.key])).join(','),
-  );
+  const lines = rows.map((row) => columns.map((c) => escapeCsvCell(row?.[c.key])).join(','));
   // BOM：保证 Excel 打开中文不乱码
   return `\uFEFF${header}\n${lines.join('\n')}`;
 }
@@ -86,7 +86,9 @@ async function fetchAllRows(options: ExportAuditOptions): Promise<Record<string,
   if (columns.length === 0) return [];
 
   // 剔除 ProTable 分页字段，保留搜索/排序条件
-  const { current: _c, pageSize: _p, ...filters } = params as Record<string, any>;
+  const filters = Object.fromEntries(
+    Object.entries(params ?? {}).filter(([key]) => key !== 'current' && key !== 'pageSize'),
+  );
 
   const allRows: Record<string, unknown>[] = [];
   let page = 1;
@@ -100,7 +102,7 @@ async function fetchAllRows(options: ExportAuditOptions): Promise<Record<string,
     const resp = await fetcher(query);
     const items = resp.items ?? [];
     total = resp.total ?? allRows.length + items.length;
-    allRows.push(...items);
+    allRows.push(...items.filter(isRecord));
     if (items.length === 0) break; // 防御：空页避免死循环
     page += 1;
   }
@@ -150,7 +152,8 @@ export async function handleAuditExport(
   try {
     const count = await exportAuditLogsToCsv(options);
     successHint?.(count);
-  } catch (error: any) {
-    message.error(error?.message || `导出失败：${error}`);
+  } catch (error: unknown) {
+    console.error('Operation failed:', error);
+    message.error(getErrorMessage(error) || `导出失败：${error}`);
   }
 }

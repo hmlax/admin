@@ -18,7 +18,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 // registerAll 必须在任何 mount 之前执行：未升级元素上的 property 赋值会以自有属性
 // 遮蔽升级后的类访问器（Custom Element 经典坑，docs/print_template.md §8.1）。
-import { registerAll, createDefaultTemplate } from '@go-wind/print-common';
+import {
+  registerAll,
+  createDefaultTemplate,
+  type PrintDesignerElement,
+} from '@go-wind/print-common';
 import { renderHtmlPages, browserCodeRenderer } from '@go-wind/print-core/browser';
 import { writeHtmlToFrame } from './previewRender';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
@@ -63,7 +67,7 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
   // 关闭守卫：遮罩/ESC/X/取消统一，脏数据先确认（docs/form_drawer_close_guard.md）
   const { guardClose, markDirty } = useDrawerCloseGuardForDesigner(open, onClose);
 
-  const designerRef = useRef<any>(null);
+  const designerRef = useRef<PrintDesignerElement>(null);
   const previewFrameRef = useRef<HTMLIFrameElement>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -116,12 +120,12 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
           };
     form.setFieldsValue(initial);
 
-      // 等自定义元素挂载完成再注入（对象入参必须走 property，不能写 JSX 属性）
+    // 等自定义元素挂载完成再注入（对象入参必须走 property，不能写 JSX 属性）
     const timer = window.setTimeout(() => {
       const el = designerRef.current;
       if (!el) return;
       applyPrintDesignerTheme(el, isDark);
-      let tpl: unknown;
+      let tpl: PrintDesignerElement['template'];
       try {
         tpl = mode === 'create' ? createDefaultTemplate() : JSON.parse(data?.payload || '');
       } catch {
@@ -144,7 +148,8 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
     }
   };
 
-  const currentSample = (): Record<string, unknown> => parseSample(form.getFieldValue('sampleData'));
+  const currentSample = (): Record<string, unknown> =>
+    parseSample(form.getFieldValue('sampleData'));
 
   /** 打开预览：两遍渲染（测量→分页→HTML）写入同源 iframe */
   const handlePreview = async () => {
@@ -168,6 +173,7 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
         setPreviewLoading(false);
       }, 80);
     } catch (e) {
+      console.error('Operation failed:', e);
       setPreviewLoading(false);
       message.error((e as Error).message || t('renderFailed'));
     }
@@ -215,7 +221,7 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
             isEnabled: values.isEnabled ?? true,
             sortOrder: values.sortOrder ?? 100,
             isBuiltIn: false,
-          } as any,
+          },
         });
       }
     } finally {
@@ -271,7 +277,10 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
             <Col span={4}>
               <Form.Item name="paperSize" label={t('paperSize')}>
                 <Select
-                  options={['A4', 'A3', 'A5', 'Letter', 'Legal'].map((v) => ({ value: v, label: v }))}
+                  options={['A4', 'A3', 'A5', 'Letter', 'Legal'].map((v) => ({
+                    value: v,
+                    label: v,
+                  }))}
                 />
               </Form.Item>
             </Col>
@@ -303,11 +312,7 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name="sampleData"
-                label={t('sampleData')}
-                tooltip={t('sampleDataTip')}
-              >
+              <Form.Item name="sampleData" label={t('sampleData')} tooltip={t('sampleDataTip')}>
                 <Input.TextArea
                   rows={2}
                   placeholder='{"order":{"no":"SO-001","items":[{"sku":"A1","qty":2}]}}'
@@ -319,11 +324,24 @@ const TemplateDesignerDrawer: React.FC<TemplateDesignerDrawerProps> = ({
 
         {/* 画布容器：任何指针交互视为脏（Shadow DOM 内的编辑以捕获态兜住） */}
         <div
-          style={{ border: '1px solid #d9d9d9', borderRadius: 8, overflow: 'hidden', height: 'calc(100vh - 320px)', minHeight: 420 }}
+          style={{
+            border: '1px solid #d9d9d9',
+            borderRadius: 8,
+            overflow: 'hidden',
+            height: 'calc(100vh - 320px)',
+            minHeight: 420,
+          }}
           onPointerDownCapture={markDirty}
           onKeyDownCapture={markDirty}
         >
-          {open && <print-designer ref={designerRef} is-edit="true" show-help="false" style={{ display: 'block', height: '100%' }} />}
+          {open && (
+            <print-designer
+              ref={designerRef}
+              is-edit="true"
+              show-help="false"
+              style={{ display: 'block', height: '100%' }}
+            />
+          )}
         </div>
       </Drawer>
 

@@ -22,7 +22,7 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({ userId }) => {
   const { token } = theme.useToken();
   const hiddenFieldEntries = useUserStore((s) => s.hiddenFields);
 
-  const { data, isLoading } = useGetUser({ id: userId ?? 0 }, { enabled: !!userId } as any);
+  const { data, isLoading } = useGetUser({ id: userId ?? 0 }, { enabled: !!userId });
 
   if (isLoading) {
     return (
@@ -59,7 +59,14 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({ userId }) => {
           {!user.avatar && firstChar}
         </Avatar>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 20, fontWeight: 600, color: token.colorTextHeading, marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: token.colorTextHeading,
+              marginBottom: 4,
+            }}
+          >
             {user.realname || user.username}
           </div>
           <div style={{ color: token.colorTextSecondary, fontSize: 14, marginBottom: 8 }}>
@@ -70,7 +77,9 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({ userId }) => {
               {genderMap[user.gender || '']?.text || '-'}
             </Tag>
             {(user.roleNames || []).map((role) => (
-              <Tag key={role} color="purple">{role}</Tag>
+              <Tag key={role} color="purple">
+                {role}
+              </Tag>
             ))}
           </div>
         </div>
@@ -89,7 +98,10 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({ userId }) => {
         <Descriptions.Item label={t('desc.orgUnitName')}>
           {(user.orgUnitNames ?? []).length > 0
             ? (user.orgUnitNames ?? []).map((org) => (
-                <Tag key={org} style={{ backgroundColor: getRandomColor(org), color: '#333', border: 'none' }}>
+                <Tag
+                  key={org}
+                  style={{ backgroundColor: getRandomColor(org), color: '#333', border: 'none' }}
+                >
                   {org}
                 </Tag>
               ))
@@ -98,7 +110,9 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({ userId }) => {
         <Descriptions.Item label={t('desc.positionName')}>
           {(user.positionNames ?? []).length > 0
             ? (user.positionNames ?? []).map((pos) => (
-                <Tag key={pos} color="blue">{pos}</Tag>
+                <Tag key={pos} color="blue">
+                  {pos}
+                </Tag>
               ))
             : '-'}
         </Descriptions.Item>

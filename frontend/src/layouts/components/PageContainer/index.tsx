@@ -13,7 +13,7 @@ import { usePreferencesStore } from '@/core/preferences/store';
 import { useBreadcrumb } from './hooks/useBreadcrumb';
 import { usePageTitle } from './hooks/usePageTitle';
 import { checkPagePermission } from './utils/permission';
-import type { PageContainerProps } from './types';
+import type { BreadcrumbItem, PageContainerProps } from './types';
 import './PageContainer.style.css'; // 引入样式文件
 
 /**
@@ -39,7 +39,6 @@ export const PageContainer = ({
   content,
   contentPadding = true,
   contentClassName,
-  keepAlive,
   pageKey: customPageKey,
   showRefresh,
   onRefresh,
@@ -47,6 +46,8 @@ export const PageContainer = ({
   render,
   ...restProps
 }: PageContainerProps) => {
+  // Reserved cache marker is owned by the page wrapper, not ProPageContainer.
+  delete restProps.keepAlive;
   const location = useLocation();
 
   // 用户权限（通过 useAccess 获取合并后的角色码 + 权限码）
@@ -98,7 +99,7 @@ export const PageContainer = ({
   // 计算面包屑
   const breadcrumb = useBreadcrumb({
     manual: manualBreadcrumb === false ? false : undefined,
-    route,
+    route: route ?? undefined,
     showHomeIcon: breadcrumbPreferences?.showHome ?? true,
     showIcon: breadcrumbPreferences?.showIcon ?? true,
   });
@@ -126,7 +127,7 @@ export const PageContainer = ({
   const effectiveHeader = isFullscreen ? false : header;
 
   // 渲染面包屑项
-  const renderBreadcrumbItems = useCallback((items: any[], styleType: string) => {
+  const renderBreadcrumbItems = useCallback((items: BreadcrumbItem[], styleType: string) => {
     return items.map((item) => ({
       title: (
         <span
@@ -216,7 +217,7 @@ export const PageContainer = ({
         className="mt-4"
       />
     );
-  }, [forbiddenFallback]);
+  }, [forbiddenFallback, t]);
 
   // 渲染加载状态
   const renderLoading = useMemo(() => {
@@ -244,7 +245,7 @@ export const PageContainer = ({
     return (
       <ProPageContainer
         ghost={ghost}
-        header={effectiveHeader === false ? undefined : (effectiveHeader as any)}
+        header={effectiveHeader === false ? undefined : effectiveHeader}
         title={effectiveHeader === false ? undefined : pageTitle}
         breadcrumb={breadcrumbConfig}
         extra={actionButtons ? <Space>{actionButtons}</Space> : extra}
@@ -261,7 +262,7 @@ export const PageContainer = ({
     return (
       <ProPageContainer
         ghost={ghost}
-        header={effectiveHeader === false ? undefined : (effectiveHeader as any)}
+        header={effectiveHeader === false ? undefined : effectiveHeader}
         title={effectiveHeader === false ? undefined : pageTitle}
         breadcrumb={breadcrumbConfig}
         extra={actionButtons ? <Space>{actionButtons}</Space> : extra}
@@ -278,7 +279,7 @@ export const PageContainer = ({
     <ProPageContainer
       className="page-container-root"
       ghost={ghost}
-      header={effectiveHeader === false ? undefined : (effectiveHeader as any)}
+      header={effectiveHeader === false ? undefined : effectiveHeader}
       title={effectiveHeader === false ? undefined : pageTitle}
       breadcrumb={breadcrumbConfig}
       extra={actionButtons ? <Space>{actionButtons}</Space> : extra}
@@ -295,7 +296,9 @@ export const PageContainer = ({
        * 这样不管 ProPageContainer 内部包了多少层 div，都不影响
        */}
       <div
+        className={contentClassName}
         style={{
+          padding: contentPadding ? undefined : 0,
           position: 'absolute',
           top: 0,
           left: 0,

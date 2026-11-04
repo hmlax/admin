@@ -31,6 +31,7 @@ export const authenticateResponseInterceptor = ({
 }): ResponseInterceptorConfig => {
   return {
     rejected: async (error) => {
+      if (!axios.isAxiosError<unknown>(error) || !error.config) throw error;
       const { config, response } = error;
 
       /// 不是 401 → 直接抛错，交给错误拦截器处理
@@ -79,7 +80,7 @@ export const authenticateResponseInterceptor = ({
               return;
             }
             config.headers.Authorization = formatToken(newToken);
-            resolve(client.request(config.url, { ...config }));
+            resolve(client.requestResponse(config.url ?? '', { ...config }));
           };
           const timer = setTimeout(() => {
             client.refreshTokenQueue = client.refreshTokenQueue.filter((cb) => cb !== callback);
@@ -118,7 +119,7 @@ export const authenticateResponseInterceptor = ({
         // 清空队列
         client.refreshTokenQueue = [];
 
-        return client.request(error.config.url, { ...error.config });
+        return client.requestResponse(config.url ?? '', { ...config });
       } catch (refreshError) {
         // 如果刷新 token 失败，处理错误（如强制登出或跳转登录页面）
         client.refreshTokenQueue.forEach((callback) => callback(''));

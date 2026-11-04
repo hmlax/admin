@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utils/error';
 import { useRef, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -26,7 +27,7 @@ const PermissionAuditLogPage = () => {
   const { t } = useTranslation('permission-audit-log');
   const actionRef = useRef<ActionType>(null);
   // 最近一次列表查询参数：导出 CSV 时沿用当前搜索/排序条件
-  const latestParamsRef = useRef<Record<string, any>>({});
+  const latestParamsRef = useRef<Record<string, unknown>>({});
   const { message } = App.useApp();
   const [detailRecord, setDetailRecord] = useState<PermissionAuditLog | null>(null);
 
@@ -201,9 +202,9 @@ const PermissionAuditLogPage = () => {
         }),
       );
       message.success(t('exportServerSuccess'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('server-side audit export failed', error);
-      message.error(error?.message || t('exportServerFailed'));
+      message.error(getErrorMessage(error) || t('exportServerFailed'));
     }
   };
 
@@ -215,14 +216,18 @@ const PermissionAuditLogPage = () => {
         title: typeof c.title === 'string' ? c.title : String(c.dataIndex),
       }));
     try {
-      await exportAuditLogs({
-        fetcher: (q) => fetchListPermissionAuditLogs(q),
-        filename: `permission-audit-logs-${Date.now()}.csv`,
-        columns: exportColumns,
-        params: latestParamsRef.current,
-      }, format);
-    } catch (error: any) {
-      message.error(error?.message || 'Export failed');
+      await exportAuditLogs(
+        {
+          fetcher: (q) => fetchListPermissionAuditLogs(q),
+          filename: `permission-audit-logs-${Date.now()}.csv`,
+          columns: exportColumns,
+          params: latestParamsRef.current,
+        },
+        format,
+      );
+    } catch (error: unknown) {
+      console.error('Operation failed:', error);
+      message.error(getErrorMessage(error) || 'Export failed');
     }
   };
 
@@ -260,7 +265,8 @@ const PermissionAuditLogPage = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -291,7 +297,6 @@ const PermissionAuditLogPage = () => {
                 <Button>{t('export')}</Button>
               </Dropdown>,
             ]}
-
             options={{
               density: true,
               fullScreen: true,

@@ -161,7 +161,7 @@ const ApiManagement = () => {
           <ListTable<Api>
             actionRef={actionRef}
             columns={columns}
-            request={async (params, sorter, _filter) => {
+            request={async (params, sorter) => {
               // 构建查询对象
               const query = new PaginationQuery({
                 paging: {
@@ -190,7 +190,8 @@ const ApiManagement = () => {
               };
             }}
             rowKey="id"
-            search={{ optionRender: searchOptionRender,
+            search={{
+              optionRender: searchOptionRender,
               labelWidth: 'auto',
               defaultCollapsed: false,
             }}
@@ -200,7 +201,12 @@ const ApiManagement = () => {
               showQuickJumper: true,
             }}
             toolBarRender={() => [
-              <TableExportButton key="export" fetcher={fetchListApis} columns={columns} filename="apis" />,
+              <TableExportButton
+                key="export"
+                fetcher={fetchListApis}
+                columns={columns}
+                filename="apis"
+              />,
               <Popconfirm
                 key="sync"
                 title={t('syncConfirmTitle')}

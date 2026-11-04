@@ -13,7 +13,7 @@ import { apiClient } from '@/api/client';
 
 export function useListDataAccessAuditLogs(
   query: PaginationQuery,
-  options?: UseQueryOptions<ListDataAccessAuditLogResponse, Error>,
+  options?: Omit<UseQueryOptions<ListDataAccessAuditLogResponse, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['listDataAccessAuditLogs', query],
@@ -32,7 +32,7 @@ export async function fetchListDataAccessAuditLogs(params: PaginationQuery) {
 
 export function useGetDataAccessAuditLog(
   req: GetDataAccessAuditLogRequest,
-  options?: UseQueryOptions<DataAccessAuditLog, Error>,
+  options?: Omit<UseQueryOptions<DataAccessAuditLog, Error>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['getDataAccessAuditLog', req],

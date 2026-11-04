@@ -2,7 +2,7 @@
  * 组织架构模块枚举映射常量
  */
 
-type TFn = (key: string, options?: Record<string, any>) => string;
+type TFn = (key: string, options?: Record<string, unknown>) => string;
 
 // ========== 组织状态（ON/OFF） ==========
 
