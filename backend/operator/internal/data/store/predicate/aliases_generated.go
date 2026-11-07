@@ -21,6 +21,7 @@ type MembershipOrgUnit = func(*gorm.DB) *gorm.DB
 type MembershipPosition = func(*gorm.DB) *gorm.DB
 type MembershipRole = func(*gorm.DB) *gorm.DB
 type Menu = func(*gorm.DB) *gorm.DB
+type MuskdeerAccountBinding = func(*gorm.DB) *gorm.DB
 type OperationAuditLog = func(*gorm.DB) *gorm.DB
 type OrgUnit = func(*gorm.DB) *gorm.DB
 type Permission = func(*gorm.DB) *gorm.DB

@@ -2379,6 +2379,496 @@ paths:
                 "200":
                     description: OK
                     content: {}
+    /admin/v1/muskdeer/account-bindings:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListAccountBindings
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: tenantId
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerBindingPage'
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_CreateAccountBinding
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerCreateBindingRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerAccountBinding'
+    /admin/v1/muskdeer/account-bindings/{id}/set-enabled:
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_SetAccountBindingEnabled
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerSetBindingEnabledRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerAccountBinding'
+    /admin/v1/muskdeer/account-snapshot:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_GetAccountSnapshot
+            parameters:
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerAccountSnapshot'
+    /admin/v1/muskdeer/accounts:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListAccounts
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: search
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerAccountPage'
+    /admin/v1/muskdeer/cancellations:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListCancellations
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: symbol
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  schema:
+                    type: string
+                - name: instanceId
+                  in: query
+                  schema:
+                    type: string
+                - name: runId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerCancellationPage'
+    /admin/v1/muskdeer/instances:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListInstances
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: search
+                  in: query
+                  schema:
+                    type: string
+                - name: strategyType
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstancePage'
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_CreateInstance
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerCreateInstanceRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstance'
+    /admin/v1/muskdeer/instances/{id}:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_GetInstance
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstance'
+        put:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_UpdateInstance
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerUpdateInstanceRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstance'
+    /admin/v1/muskdeer/instances/{id}/start:
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_StartInstance
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerRunningRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstance'
+    /admin/v1/muskdeer/instances/{id}/stop:
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_StopInstance
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerRunningRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstance'
+    /admin/v1/muskdeer/instances/{instanceId}/cancel-orders:
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_CancelInstanceOrders
+            parameters:
+                - name: instanceId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerCancelRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerCancelReply'
+    /admin/v1/muskdeer/instruments:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListInstruments
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: search
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerInstrumentPage'
+    /admin/v1/muskdeer/order-records:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListOrderRecords
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: symbol
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  schema:
+                    type: string
+                - name: instanceId
+                  in: query
+                  schema:
+                    type: string
+                - name: runId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerOrderPage'
+    /admin/v1/muskdeer/overview:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_GetOverview
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerOverview'
+    /admin/v1/muskdeer/synthetic-records:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListSyntheticRecords
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: symbol
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  schema:
+                    type: string
+                - name: instanceId
+                  in: query
+                  schema:
+                    type: string
+                - name: runId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerSyntheticPage'
+    /admin/v1/muskdeer/templates:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListTemplates
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: search
+                  in: query
+                  schema:
+                    type: string
+                - name: accountId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerTemplatePage'
     /admin/v1/online-session/force-logout:
         post:
             tags:
@@ -4286,6 +4776,7 @@ components:
                         - TENANT
                         - PERMISSION
                         - LOG
+                        - MUSKDEER
                         - FILE
                     type: string
                     description: 所属业务功能模块
@@ -6059,6 +6550,7 @@ components:
                         - TENANT
                         - PERMISSION
                         - LOG
+                        - MUSKDEER
                         - FILE
                     type: string
                     description: 所属业务功能模块
@@ -6210,6 +6702,545 @@ components:
                 meta:
                     $ref: '#/components/schemas/MenuMeta'
             description: 路由项
+        MuskdeerAccount:
+            type: object
+            properties:
+                id:
+                    type: string
+                accountId:
+                    type: string
+                userId:
+                    type: string
+                fundId:
+                    type: string
+                symbol:
+                    type: string
+                maximumNotional:
+                    type: string
+                maximumOrderNotional:
+                    type: string
+                leverage:
+                    type: integer
+                    format: uint32
+                enabled:
+                    type: boolean
+                observedNotional:
+                    type: string
+                reservedNotional:
+                    type: string
+                availableQuote:
+                    type: string
+                snapshotExpiresAtMs:
+                    type: string
+        MuskdeerAccountBinding:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: uint32
+                tenantId:
+                    type: integer
+                    format: uint32
+                accountId:
+                    type: string
+                enabled:
+                    type: boolean
+                version:
+                    type: string
+        MuskdeerAccountPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerAccount'
+                total:
+                    type: string
+        MuskdeerAccountSnapshot:
+            type: object
+            properties:
+                accountId:
+                    type: string
+                symbol:
+                    type: string
+                validUntilMs:
+                    type: string
+                orders:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerActiveOrder'
+                positions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerPosition'
+                available:
+                    type: string
+                markPrice:
+                    type: string
+                observedAtMs:
+                    type: string
+            description: MuskdeerAccountSnapshot comes from the matching gateway, never from local order audit.
+        MuskdeerActiveOrder:
+            type: object
+            properties:
+                orderId:
+                    type: string
+                clientId:
+                    type: string
+                side:
+                    type: string
+                price:
+                    type: string
+                quantity:
+                    type: string
+                executedQuantity:
+                    type: string
+                status:
+                    type: string
+        MuskdeerBindingDraft:
+            type: object
+            properties:
+                tenantId:
+                    type: integer
+                    format: uint32
+                accountId:
+                    type: string
+                enabled:
+                    type: boolean
+        MuskdeerBindingPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerAccountBinding'
+                total:
+                    type: string
+        MuskdeerCancelReply:
+            type: object
+            properties:
+                acknowledged:
+                    type: integer
+                    format: uint32
+                confirmationPending:
+                    type: boolean
+        MuskdeerCancelRequest:
+            type: object
+            properties:
+                instanceId:
+                    type: string
+                expectedRevision:
+                    type: string
+                cancelAll:
+                    type: boolean
+                    description: Required explicit intent; an absent flag must never widen cancellation.
+        MuskdeerCancellation:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAtMs:
+                    type: string
+                updatedAtMs:
+                    type: string
+                accountId:
+                    type: string
+                symbol:
+                    type: string
+                orderId:
+                    type: string
+                state:
+                    type: string
+        MuskdeerCancellationPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerCancellation'
+                total:
+                    type: string
+        MuskdeerCreateBindingRequest:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/MuskdeerBindingDraft'
+        MuskdeerCreateInstanceRequest:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/MuskdeerInstanceDraft'
+        MuskdeerDepthParameters:
+            type: object
+            properties:
+                depth:
+                    type: integer
+                    format: uint32
+                quantityFraction:
+                    type: string
+                replacementFraction:
+                    type: string
+                bridgeSlots:
+                    type: integer
+                    format: uint32
+        MuskdeerExecutionParameters:
+            type: object
+            properties:
+                pollIntervalMs:
+                    type: string
+                operationTimeoutMs:
+                    type: string
+                leaseTtlMs:
+                    type: string
+                leverage:
+                    type: integer
+                    format: uint32
+        MuskdeerGridParameters:
+            type: object
+            properties:
+                lowerPrice:
+                    type: string
+                upperPrice:
+                    type: string
+                gridCount:
+                    type: integer
+                    format: int32
+                totalBudget:
+                    type: string
+                perOrderNotional:
+                    type: string
+                inventoryLimit:
+                    type: string
+                maxMarketAgeMs:
+                    type: string
+        MuskdeerInstance:
+            type: object
+            properties:
+                id:
+                    type: string
+                instanceKey:
+                    type: string
+                strategyType:
+                    type: string
+                implementation:
+                    type: string
+                templateId:
+                    type: string
+                templateRevision:
+                    type: string
+                accountId:
+                    type: string
+                instrumentId:
+                    type: string
+                symbol:
+                    type: string
+                marketDataSource:
+                    type: string
+                desiredRunning:
+                    type: boolean
+                revision:
+                    type: string
+                controlVersion:
+                    type: string
+                parameters:
+                    $ref: '#/components/schemas/MuskdeerInstanceParameters'
+                restartRequired:
+                    type: boolean
+                runtimes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerRuntimeVersion'
+                createdAtMs:
+                    type: string
+                updatedAtMs:
+                    type: string
+                archived:
+                    type: boolean
+        MuskdeerInstanceDraft:
+            type: object
+            properties:
+                instanceKey:
+                    type: string
+                templateId:
+                    type: string
+                templateRevision:
+                    type: string
+                accountId:
+                    type: string
+                instrumentId:
+                    type: string
+                marketDataSource:
+                    type: string
+                parameters:
+                    $ref: '#/components/schemas/MuskdeerInstanceParameters'
+        MuskdeerInstancePage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerInstance'
+                total:
+                    type: string
+        MuskdeerInstanceParameterUpdate:
+            type: object
+            properties:
+                parameters:
+                    $ref: '#/components/schemas/MuskdeerInstanceParameters'
+        MuskdeerInstanceParameters:
+            type: object
+            properties:
+                execution:
+                    $ref: '#/components/schemas/MuskdeerExecutionParameters'
+                marketMaker:
+                    $ref: '#/components/schemas/MuskdeerDepthParameters'
+                grid:
+                    $ref: '#/components/schemas/MuskdeerGridParameters'
+                washTrade:
+                    $ref: '#/components/schemas/MuskdeerWashParameters'
+        MuskdeerInstrument:
+            type: object
+            properties:
+                id:
+                    type: string
+                symbol:
+                    type: string
+                baseAsset:
+                    type: string
+                quoteAsset:
+                    type: string
+                status:
+                    type: string
+                executionVenue:
+                    type: string
+                priceTick:
+                    type: string
+                quantityStep:
+                    type: string
+                minimumNotional:
+                    type: string
+        MuskdeerInstrumentPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerInstrument'
+                total:
+                    type: string
+        MuskdeerOrderPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerOrderRecord'
+                total:
+                    type: string
+        MuskdeerOrderRecord:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAtMs:
+                    type: string
+                updatedAtMs:
+                    type: string
+                accountId:
+                    type: string
+                symbol:
+                    type: string
+                clientId:
+                    type: string
+                side:
+                    type: string
+                price:
+                    type: string
+                quantity:
+                    type: string
+                leverage:
+                    type: integer
+                    format: uint32
+                state:
+                    type: string
+                orderId:
+                    type: string
+                reservedNotional:
+                    type: string
+                instanceId:
+                    type: string
+                revision:
+                    type: string
+        MuskdeerOverview:
+            type: object
+            properties:
+                templates:
+                    type: string
+                instances:
+                    type: string
+                desiredRunning:
+                    type: string
+                instruments:
+                    type: string
+                accounts:
+                    type: string
+                orderRecords:
+                    type: string
+                syntheticPublished:
+                    type: string
+                syntheticUnknown:
+                    type: string
+                observedAtMs:
+                    type: string
+        MuskdeerPosition:
+            type: object
+            properties:
+                symbol:
+                    type: string
+                signedQuantity:
+                    type: string
+                entryPrice:
+                    type: string
+                leverage:
+                    type: string
+        MuskdeerRunningRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                expectedRevision:
+                    type: string
+                expectedControlVersion:
+                    type: string
+        MuskdeerRuntimeVersion:
+            type: object
+            properties:
+                service:
+                    type: string
+                revision:
+                    type: string
+                available:
+                    type: boolean
+        MuskdeerSetBindingEnabledRequest:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: uint32
+                expectedVersion:
+                    type: string
+                enabled:
+                    type: boolean
+        MuskdeerSyntheticPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerSyntheticRecord'
+                total:
+                    type: string
+        MuskdeerSyntheticRecord:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAtMs:
+                    type: string
+                runId:
+                    type: string
+                symbol:
+                    type: string
+                sequence:
+                    type: string
+                side:
+                    type: string
+                price:
+                    type: string
+                quantity:
+                    type: string
+                notional:
+                    type: string
+                state:
+                    type: string
+                tradeId:
+                    type: string
+                instanceId:
+                    type: string
+                sourceTradeId:
+                    type: string
+        MuskdeerTemplate:
+            type: object
+            properties:
+                id:
+                    type: string
+                key:
+                    type: string
+                name:
+                    type: string
+                strategyType:
+                    type: string
+                implementation:
+                    type: string
+                revision:
+                    type: string
+                enabled:
+                    type: boolean
+                requiresOrderBook:
+                    type: boolean
+                requiresAccount:
+                    type: boolean
+                tradesMode:
+                    type: string
+                executionFields:
+                    type: array
+                    items:
+                        type: string
+                parameterFields:
+                    type: array
+                    items:
+                        type: string
+        MuskdeerTemplatePage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerTemplate'
+                total:
+                    type: string
+        MuskdeerUpdateInstanceRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/MuskdeerInstanceParameterUpdate'
+                expectedRevision:
+                    type: string
+                expectedControlVersion:
+                    type: string
+        MuskdeerWashParameters:
+            type: object
+            properties:
+                developmentOnly:
+                    type: boolean
+                mode:
+                    type: string
+                runId:
+                    type: string
+                intervalMs:
+                    type: string
+                maximumEvents:
+                    type: integer
+                    description: Zero is unlimited; no historical slot is reset or resent.
+                    format: uint32
+                quantity:
+                    type: string
+                maximumNotional:
+                    type: string
+                quantityFraction:
+                    type: string
         OnlineSession:
             type: object
             properties:
@@ -7876,6 +8907,8 @@ tags:
          管理侧 RPC（GetMFAStatus/ListEnrolledMethods/StartEnrollMethod/ConfirmEnrollMethod/
          DisableMFA/RevokeMFADevice）需登录态，走正常 auth+authz 中间件，不加 security:{}。
          登录挑战侧 RPC（VerifyMFAChallenge）免鉴权，加 security:{} 并加入 rest_server 白名单。
+    - name: MuskdeerService
+      description: 做市管理：平台全部账户；商户只操作平台绑定的账户。
     - name: OnlineSessionService
       description: 在线会话管理服务（在线用户列表 + 强制下线）
     - name: OperationAuditLogService

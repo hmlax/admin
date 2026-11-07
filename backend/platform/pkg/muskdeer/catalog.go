@@ -1,0 +1,62 @@
+// Package muskdeer defines the independent administration module catalog.
+package muskdeer
+
+const (
+	Module     = "muskdeer"
+	ServiceTag = "MuskdeerService"
+	RootName   = "Muskdeer"
+	RootPath   = "/muskdeer"
+)
+
+type Page struct {
+	Path         string
+	Resource     string
+	Title        string
+	Name         string
+	PlatformOnly bool
+}
+
+func Pages() []Page {
+	return []Page{
+		{Path: "overview", Resource: "overview", Title: "总览", Name: "MuskdeerOverview", PlatformOnly: false},
+		{Path: "templates", Resource: "template", Title: "策略模板", Name: "MuskdeerTemplates", PlatformOnly: false},
+		{Path: "instances", Resource: "instance", Title: "策略实例", Name: "MuskdeerInstances", PlatformOnly: false},
+		{Path: "instruments", Resource: "instrument", Title: "品种", Name: "MuskdeerInstruments", PlatformOnly: false},
+		{Path: "accounts", Resource: "account", Title: "账户额度", Name: "MuskdeerAccounts", PlatformOnly: false},
+		{Path: "orders", Resource: "order", Title: "订单记录", Name: "MuskdeerOrders", PlatformOnly: false},
+		{Path: "cancellations", Resource: "cancellation", Title: "撤单记录", Name: "MuskdeerCancellations", PlatformOnly: false},
+		{Path: "synthetic", Resource: "synthetic", Title: "开发成交", Name: "MuskdeerSynthetic", PlatformOnly: false},
+		{Path: "snapshot", Resource: "snapshot", Title: "挂单与持仓", Name: "MuskdeerSnapshot", PlatformOnly: false},
+		{Path: "account-bindings", Resource: "binding", Title: "商户账户绑定", Name: "MuskdeerBindings", PlatformOnly: true},
+	}
+}
+
+type Capability struct {
+	Code         string
+	Title        string
+	Page         string
+	Methods      []string
+	PlatformOnly bool
+}
+
+func Capabilities() []Capability {
+	return []Capability{
+		{Code: "muskdeer:overview:view", Title: "查看总览", Page: "overview", Methods: []string{"GetOverview"}, PlatformOnly: false},
+		{Code: "muskdeer:template:view", Title: "查看策略模板", Page: "templates", Methods: []string{"ListTemplates"}, PlatformOnly: false},
+		{Code: "muskdeer:instance:view", Title: "查看策略实例", Page: "instances", Methods: []string{"ListInstances", "GetInstance"}, PlatformOnly: false},
+		{Code: "muskdeer:instrument:view", Title: "查看品种", Page: "instruments", Methods: []string{"ListInstruments"}, PlatformOnly: false},
+		{Code: "muskdeer:account:view", Title: "查看账户额度", Page: "accounts", Methods: []string{"ListAccounts"}, PlatformOnly: false},
+		{Code: "muskdeer:order:view", Title: "查看订单记录", Page: "orders", Methods: []string{"ListOrderRecords"}, PlatformOnly: false},
+		{Code: "muskdeer:cancellation:view", Title: "查看撤单记录", Page: "cancellations", Methods: []string{"ListCancellations"}, PlatformOnly: false},
+		{Code: "muskdeer:synthetic:view", Title: "查看开发成交", Page: "synthetic", Methods: []string{"ListSyntheticRecords"}, PlatformOnly: false},
+		{Code: "muskdeer:snapshot:view", Title: "查看挂单与持仓", Page: "snapshot", Methods: []string{"GetAccountSnapshot"}, PlatformOnly: false},
+		{Code: "muskdeer:binding:view", Title: "查看商户账户绑定", Page: "account-bindings", Methods: []string{"ListAccountBindings"}, PlatformOnly: true},
+		{Code: "muskdeer:instance:create", Title: "创建策略实例", Page: "instances", Methods: []string{"CreateInstance"}, PlatformOnly: false},
+		{Code: "muskdeer:instance:update", Title: "修改实例参数", Page: "instances", Methods: []string{"UpdateInstance"}, PlatformOnly: false},
+		{Code: "muskdeer:instance:start", Title: "启动实例", Page: "instances", Methods: []string{"StartInstance"}, PlatformOnly: false},
+		{Code: "muskdeer:instance:stop", Title: "停止实例", Page: "instances", Methods: []string{"StopInstance"}, PlatformOnly: false},
+		{Code: "muskdeer:instance:cancel", Title: "撤销实例挂单", Page: "instances", Methods: []string{"CancelInstanceOrders"}, PlatformOnly: false},
+		{Code: "muskdeer:binding:create", Title: "绑定商户账户", Page: "account-bindings", Methods: []string{"CreateAccountBinding"}, PlatformOnly: true},
+		{Code: "muskdeer:binding:update", Title: "启用禁用绑定", Page: "account-bindings", Methods: []string{"SetAccountBindingEnabled"}, PlatformOnly: true},
+	}
+}

@@ -92,6 +92,7 @@ wire-check:
 # generate protobuf api go code
 api:
 	$(PYTHON) platform/tools/codegen.py api
+	$(MAKE) muskdeer-api
 	$(MAKE) models
 	$(MAKE) hz
 	$(MAKE) wire
@@ -220,3 +221,12 @@ help:
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
+
+# The external core contract is intentionally independent of operator/API DTOs.
+.PHONY: muskdeer-api muskdeer-api-check
+muskdeer-api:
+	$(PYTHON) platform/tools/muskdeer-contract.py generate
+	$(PYTHON) platform/tools/muskdeer-mappings.py
+	go fmt ./operator/internal/service
+muskdeer-api-check:
+	$(PYTHON) platform/tools/muskdeer-contract.py check

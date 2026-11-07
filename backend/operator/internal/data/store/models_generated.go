@@ -134,6 +134,14 @@ type MenuSelect = Select[Menu]
 type MenuCreateBulk = CreateBulk[Menu]
 type MenuDelete = Delete[Menu]
 
+const TypeMuskdeerAccountBinding = "MuskdeerAccountBinding"
+
+type MuskdeerAccountBinding = operator.SysMuskdeerAccountBindings
+type MuskdeerAccountBindingQuery = Query[MuskdeerAccountBinding]
+type MuskdeerAccountBindingSelect = Select[MuskdeerAccountBinding]
+type MuskdeerAccountBindingCreateBulk = CreateBulk[MuskdeerAccountBinding]
+type MuskdeerAccountBindingDelete = Delete[MuskdeerAccountBinding]
+
 const TypeOperationAuditLog = "OperationAuditLog"
 
 type OperationAuditLog = operator.SysOperationAuditLogs
@@ -318,48 +326,49 @@ type UserRoleSelect = Select[UserRole]
 type UserRoleCreateBulk = CreateBulk[UserRole]
 type UserRoleDelete = Delete[UserRole]
 type Client struct {
-	db                  *gorm.DB
-	hooks               []Hook
-	Schema              *Schema
-	AccessKey           *AccessKeyClient
-	Api                 *ApiClient
-	ApiAuditLog         *ApiAuditLogClient
-	DataAccessAuditLog  *DataAccessAuditLogClient
-	DictEntry           *DictEntryClient
-	DictEntryI18n       *DictEntryI18nClient
-	DictType            *DictTypeClient
-	File                *FileClient
-	Language            *LanguageClient
-	LoginAuditLog       *LoginAuditLogClient
-	LoginPolicy         *LoginPolicyClient
-	Membership          *MembershipClient
-	MembershipOrgUnit   *MembershipOrgUnitClient
-	MembershipPosition  *MembershipPositionClient
-	MembershipRole      *MembershipRoleClient
-	Menu                *MenuClient
-	OperationAuditLog   *OperationAuditLogClient
-	OrgUnit             *OrgUnitClient
-	Permission          *PermissionClient
-	PermissionApi       *PermissionApiClient
-	PermissionAuditLog  *PermissionAuditLogClient
-	PermissionGroup     *PermissionGroupClient
-	PermissionMenu      *PermissionMenuClient
-	PermissionPolicy    *PermissionPolicyClient
-	PolicyEvaluationLog *PolicyEvaluationLogClient
-	Position            *PositionClient
-	Role                *RoleClient
-	RoleFieldPermission *RoleFieldPermissionClient
-	RoleMetadata        *RoleMetadataClient
-	RoleOrgUnit         *RoleOrgUnitClient
-	RolePermission      *RolePermissionClient
-	SysConfig           *SysConfigClient
-	Tenant              *TenantClient
-	User                *UserClient
-	UserCredential      *UserCredentialClient
-	UserMfaFactor       *UserMfaFactorClient
-	UserOrgUnit         *UserOrgUnitClient
-	UserPosition        *UserPositionClient
-	UserRole            *UserRoleClient
+	db                     *gorm.DB
+	hooks                  []Hook
+	Schema                 *Schema
+	AccessKey              *AccessKeyClient
+	Api                    *ApiClient
+	ApiAuditLog            *ApiAuditLogClient
+	DataAccessAuditLog     *DataAccessAuditLogClient
+	DictEntry              *DictEntryClient
+	DictEntryI18n          *DictEntryI18nClient
+	DictType               *DictTypeClient
+	File                   *FileClient
+	Language               *LanguageClient
+	LoginAuditLog          *LoginAuditLogClient
+	LoginPolicy            *LoginPolicyClient
+	Membership             *MembershipClient
+	MembershipOrgUnit      *MembershipOrgUnitClient
+	MembershipPosition     *MembershipPositionClient
+	MembershipRole         *MembershipRoleClient
+	Menu                   *MenuClient
+	MuskdeerAccountBinding *MuskdeerAccountBindingClient
+	OperationAuditLog      *OperationAuditLogClient
+	OrgUnit                *OrgUnitClient
+	Permission             *PermissionClient
+	PermissionApi          *PermissionApiClient
+	PermissionAuditLog     *PermissionAuditLogClient
+	PermissionGroup        *PermissionGroupClient
+	PermissionMenu         *PermissionMenuClient
+	PermissionPolicy       *PermissionPolicyClient
+	PolicyEvaluationLog    *PolicyEvaluationLogClient
+	Position               *PositionClient
+	Role                   *RoleClient
+	RoleFieldPermission    *RoleFieldPermissionClient
+	RoleMetadata           *RoleMetadataClient
+	RoleOrgUnit            *RoleOrgUnitClient
+	RolePermission         *RolePermissionClient
+	SysConfig              *SysConfigClient
+	Tenant                 *TenantClient
+	User                   *UserClient
+	UserCredential         *UserCredentialClient
+	UserMfaFactor          *UserMfaFactorClient
+	UserOrgUnit            *UserOrgUnitClient
+	UserPosition           *UserPositionClient
+	UserRole               *UserRoleClient
 }
 
 func NewClient(db *gorm.DB) *Client {
@@ -381,6 +390,7 @@ func NewClient(db *gorm.DB) *Client {
 	c.MembershipPosition = &MembershipPositionClient{EntityClient: &EntityClient[MembershipPosition]{client: c, entity: "MembershipPosition", dataScope: false}}
 	c.MembershipRole = &MembershipRoleClient{EntityClient: &EntityClient[MembershipRole]{client: c, entity: "MembershipRole", dataScope: false}}
 	c.Menu = &MenuClient{EntityClient: &EntityClient[Menu]{client: c, entity: "Menu", dataScope: false}}
+	c.MuskdeerAccountBinding = &MuskdeerAccountBindingClient{EntityClient: &EntityClient[MuskdeerAccountBinding]{client: c, entity: "MuskdeerAccountBinding", dataScope: false}}
 	c.OperationAuditLog = &OperationAuditLogClient{EntityClient: &EntityClient[OperationAuditLog]{client: c, entity: "OperationAuditLog", dataScope: false}}
 	c.OrgUnit = &OrgUnitClient{EntityClient: &EntityClient[OrgUnit]{client: c, entity: "OrgUnit", dataScope: false}}
 	c.Permission = &PermissionClient{EntityClient: &EntityClient[Permission]{client: c, entity: "Permission", dataScope: false}}
@@ -424,6 +434,7 @@ func AllModels() []any {
 		&operator.SysMembershipPositions{},
 		&operator.SysMembershipRoles{},
 		&operator.SysMenus{},
+		&operator.SysMuskdeerAccountBindings{},
 		&operator.SysOperationAuditLogs{},
 		&operator.SysOrgUnits{},
 		&operator.SysPermissions{},

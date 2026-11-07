@@ -60,7 +60,7 @@ type SysMenus struct {
 	Meta *MenuMeta `gorm:"column:meta;serializer:json;type:json;comment:路由元信息" json:"meta,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
 	// 所属业务功能模块（用于套餐白名单过滤）
 
-	Module *string `gorm:"column:module;type:varchar(255);index:idx_sys_menu_module,priority:1;comment:所属业务功能模块（用于套餐白名单过滤）" json:"module,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false" orm_enum:"DASHBOARD,OPM,SYSTEM,DICT,TENANT,PERMISSION,LOG,INTERNAL_MESSAGE,FILE,TASK,AI"`
+	Module *string `gorm:"column:module;type:varchar(255);index:idx_sys_menu_module,priority:1;comment:所属业务功能模块（用于套餐白名单过滤）" json:"module,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false" orm_enum:"DASHBOARD,OPM,SYSTEM,DICT,TENANT,PERMISSION,LOG,INTERNAL_MESSAGE,FILE,MUSKDEER,TASK,AI"`
 	// 父节点ID
 
 	ParentID *uint32     `gorm:"column:parent_id;type:bigint;uniqueIndex:idx_sys_menu_parent_name,priority:1;uniqueIndex:idx_sys_menu_parent_path,priority:1;index:idx_sys_menu_parent,priority:1;comment:父节点ID" json:"parent_id,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`

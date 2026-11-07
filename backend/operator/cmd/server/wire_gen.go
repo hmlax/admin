@@ -110,6 +110,22 @@ func initApp(ctx *bootstrap.Context) (*kratos.App, func(), error) {
 	dataAccessAuditLogRepo := data.NewDataAccessAuditLogRepo(ctx, dbClient)
 	dataAccessAuditLogService := service.NewDataAccessAuditLogService(ctx, dataAccessAuditLogRepo)
 	onlineSessionService := service.NewOnlineSessionService(ctx, v)
+	muskdeerConnection, cleanup4, err := data.NewMuskdeerConnection(ctx)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	muskdeerBindingRepo := data.NewMuskdeerBindingRepo(dbClient)
+	muskdeerService, err := service.NewMuskdeerService(ctx, muskdeerConnection, muskdeerBindingRepo, permissionService)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	accessTokenChecker := security.NewTokenChecker(ctx, v, clientType_ClientType)
 	auditExportService := service.NewAuditExportService(ctx, loginAuditLogRepo, apiAuditLogRepo, operationAuditLogRepo, dataAccessAuditLogRepo, permissionAuditLogRepo, policyEvaluationLogRepo, accessTokenChecker)
 	accessKeyRepo := data.NewAccessKeyRepo(ctx, dbClient)
@@ -117,8 +133,9 @@ func initApp(ctx *bootstrap.Context) (*kratos.App, func(), error) {
 	configService := service.NewConfigService(ctx, configRepo)
 	gatewayAccessRepo := data.NewGatewayAccessRepo(ctx, dbClient)
 	gatewayService := server.NewGatewayService(provider, gatewayAccessRepo, apiAuditLogRepo, loginAuditLogRepo, operationAuditLogRepo, permissionAuditLogRepo, dataAccessAuditLogRepo, policyEvaluationLogRepo, auditExportService, fileTransferService)
-	grpcServer, err := server.NewGRPCServer(ctx, authorizer, authenticationService, mfaService, loginPolicyService, adminPortalService, fileService, fileTransferService, dictTypeService, dictEntryService, languageService, tenantService, userService, userProfileService, roleService, positionService, orgUnitService, menuService, apiService, permissionService, permissionGroupService, permissionAuditLogService, policyEvaluationLogService, loginAuditLogService, apiAuditLogService, operationAuditLogService, dataAccessAuditLogService, onlineSessionService, auditExportService, accessKeyService, configService, gatewayService)
+	grpcServer, err := server.NewGRPCServer(ctx, authorizer, authenticationService, mfaService, loginPolicyService, adminPortalService, fileService, fileTransferService, dictTypeService, dictEntryService, languageService, tenantService, userService, userProfileService, roleService, positionService, orgUnitService, menuService, apiService, permissionService, permissionGroupService, permissionAuditLogService, policyEvaluationLogService, loginAuditLogService, apiAuditLogService, operationAuditLogService, dataAccessAuditLogService, onlineSessionService, muskdeerService, auditExportService, accessKeyService, configService, gatewayService)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -126,6 +143,7 @@ func initApp(ctx *bootstrap.Context) (*kratos.App, func(), error) {
 	}
 	app := newApp(ctx, grpcServer)
 	return app, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

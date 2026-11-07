@@ -249,6 +249,8 @@ var DefaultLanguages = []*operatorV1.Language{
 // 用于菜单的业务分类；权限由角色与 API 授权控制。
 func ComponentToModule(component string) operatorV1.Module_Module {
 	switch {
+ case len(component)>=13 && component[:13]=="app/muskdeer/":
+ return operatorV1.Module_MUSKDEER
 	case component == "BasicLayout" || component == "":
 		return operatorV1.Module_MODULE_UNSPECIFIED
 	case len(component) >= 10 && component[:10] == "dashboard/":

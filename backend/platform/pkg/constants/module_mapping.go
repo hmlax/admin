@@ -4,7 +4,8 @@ import operatorV1 "go-admin/platform/pb/operator"
 
 // ServiceTagToBusinessModule groups registered APIs for administration.
 var ServiceTagToBusinessModule = map[string]operatorV1.Module_Module{
-	"ExportService":      operatorV1.Module_LOG,
+	"MuskdeerService": operatorV1.Module_MUSKDEER,
+ "ExportService":      operatorV1.Module_LOG,
 	"AdminPortalService": operatorV1.Module_DASHBOARD,
 
 	"UserService":        operatorV1.Module_OPM,

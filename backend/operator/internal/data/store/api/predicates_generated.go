@@ -381,6 +381,7 @@ const BusinessModuleTenant BusinessModule = "TENANT"
 const BusinessModulePermission BusinessModule = "PERMISSION"
 const BusinessModuleLog BusinessModule = "LOG"
 const BusinessModuleFile BusinessModule = "FILE"
+const BusinessModuleMuskdeer BusinessModule = "MUSKDEER"
 
 func BusinessModuleValidator(v string) error {
 	switch v {
@@ -399,6 +400,8 @@ func BusinessModuleValidator(v string) error {
 	case "LOG":
 		return nil
 	case "FILE":
+		return nil
+	case "MUSKDEER":
 		return nil
 	}
 	return fmt.Errorf("invalid BusinessModule: %s", v)

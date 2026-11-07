@@ -92,5 +92,16 @@
       "analytics": "首页",
       "workspace": "工作台"
     }
-  }
+  },
+  "Muskdeer": "做市管理",
+  "MuskdeerOverview": "总览",
+  "MuskdeerTemplates": "策略模板",
+  "MuskdeerInstances": "策略实例",
+  "MuskdeerInstruments": "品种",
+  "MuskdeerAccounts": "账户额度",
+  "MuskdeerOrders": "订单记录",
+  "MuskdeerCancellations": "撤单记录",
+  "MuskdeerSynthetic": "开发成交",
+  "MuskdeerSnapshot": "挂单与持仓",
+  "MuskdeerBindings": "商户账户绑定"
 }

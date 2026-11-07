@@ -24,29 +24,31 @@ const (
 type Module_Module int32
 
 const (
-	Module_MODULE_UNSPECIFIED Module_Module = 0 // 未指定
-	Module_DASHBOARD          Module_Module = 1 // 仪表盘
-	Module_OPM                Module_Module = 2 // 组织人员管理
-	Module_SYSTEM             Module_Module = 3 // 系统管理
-	Module_DICT               Module_Module = 4 // 数据字典
-	Module_TENANT             Module_Module = 5 // 租户管理
-	Module_PERMISSION         Module_Module = 6 // 权限管理
-	Module_LOG                Module_Module = 7 // 日志审计
-	Module_FILE               Module_Module = 9 // 文件管理
+	Module_MODULE_UNSPECIFIED Module_Module = 0  // 未指定
+	Module_DASHBOARD          Module_Module = 1  // 仪表盘
+	Module_OPM                Module_Module = 2  // 组织人员管理
+	Module_SYSTEM             Module_Module = 3  // 系统管理
+	Module_DICT               Module_Module = 4  // 数据字典
+	Module_TENANT             Module_Module = 5  // 租户管理
+	Module_PERMISSION         Module_Module = 6  // 权限管理
+	Module_LOG                Module_Module = 7  // 日志审计
+	Module_MUSKDEER           Module_Module = 12 // 做市管理
+	Module_FILE               Module_Module = 9  // 文件管理
 )
 
 // Enum value maps for Module_Module.
 var (
 	Module_Module_name = map[int32]string{
-		0: "MODULE_UNSPECIFIED",
-		1: "DASHBOARD",
-		2: "OPM",
-		3: "SYSTEM",
-		4: "DICT",
-		5: "TENANT",
-		6: "PERMISSION",
-		7: "LOG",
-		9: "FILE",
+		0:  "MODULE_UNSPECIFIED",
+		1:  "DASHBOARD",
+		2:  "OPM",
+		3:  "SYSTEM",
+		4:  "DICT",
+		5:  "TENANT",
+		6:  "PERMISSION",
+		7:  "LOG",
+		12: "MUSKDEER",
+		9:  "FILE",
 	}
 	Module_Module_value = map[string]int32{
 		"MODULE_UNSPECIFIED": 0,
@@ -57,6 +59,7 @@ var (
 		"TENANT":             5,
 		"PERMISSION":         6,
 		"LOG":                7,
+		"MUSKDEER":           12,
 		"FILE":               9,
 	}
 )
@@ -129,8 +132,8 @@ var File_admin_v1_module_types_proto protoreflect.FileDescriptor
 
 const file_admin_v1_module_types_proto_rawDesc = "" +
 	"\n" +
-	"\x1badmin/v1/module_types.proto\x12\badmin.v1\"\xb6\x01\n" +
-	"\x06Module\"\xab\x01\n" +
+	"\x1badmin/v1/module_types.proto\x12\badmin.v1\"\xc4\x01\n" +
+	"\x06Module\"\xb9\x01\n" +
 	"\x06Module\x12\x16\n" +
 	"\x12MODULE_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tDASHBOARD\x10\x01\x12\a\n" +
@@ -142,7 +145,8 @@ const file_admin_v1_module_types_proto_rawDesc = "" +
 	"\x06TENANT\x10\x05\x12\x0e\n" +
 	"\n" +
 	"PERMISSION\x10\x06\x12\a\n" +
-	"\x03LOG\x10\a\x12\b\n" +
+	"\x03LOG\x10\a\x12\f\n" +
+	"\bMUSKDEER\x10\f\x12\b\n" +
 	"\x04FILE\x10\t\"\x04\b\b\x10\b\"\x04\b\n" +
 	"\x10\n" +
 	"\"\x04\b\v\x10\v*\x10INTERNAL_MESSAGE*\x04TASK*\x02AIB+Z)go-admin/admin/biz/model/admin/v1;adminpbb\x06proto3"

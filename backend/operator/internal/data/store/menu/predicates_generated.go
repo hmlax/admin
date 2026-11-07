@@ -520,6 +520,7 @@ const ModulePermission Module = "PERMISSION"
 const ModuleLog Module = "LOG"
 const ModuleInternalMessage Module = "INTERNAL_MESSAGE"
 const ModuleFile Module = "FILE"
+const ModuleMuskdeer Module = "MUSKDEER"
 const ModuleTask Module = "TASK"
 const ModuleAi Module = "AI"
 
@@ -542,6 +543,8 @@ func ModuleValidator(v string) error {
 	case "INTERNAL_MESSAGE":
 		return nil
 	case "FILE":
+		return nil
+	case "MUSKDEER":
 		return nil
 	case "TASK":
 		return nil

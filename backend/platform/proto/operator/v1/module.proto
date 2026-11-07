@@ -18,6 +18,7 @@ message Module {
     LOG = 7; // 日志审计
     reserved 8, 10, 11;
     reserved "INTERNAL_MESSAGE", "TASK", "AI";
+    MUSKDEER = 12; // 做市管理
     FILE = 9; // 文件管理
   }
 }

@@ -5,6 +5,7 @@ import "github.com/google/wire"
 // ProviderSet provides the reusable administration services.
 var ProviderSet = wire.NewSet(
 	NewAccessKeyService,
+	NewMuskdeerService,
 	NewAdminPortalService,
 	NewApiAuditLogService,
 	NewApiService,

@@ -92,5 +92,16 @@
       "analytics": "Home",
       "workspace": "Workbench"
     }
-  }
+  },
+  "Muskdeer": "Market making",
+  "MuskdeerOverview": "Overview",
+  "MuskdeerTemplates": "Strategy templates",
+  "MuskdeerInstances": "Strategy instances",
+  "MuskdeerInstruments": "Instruments",
+  "MuskdeerAccounts": "Account limits",
+  "MuskdeerOrders": "Order records",
+  "MuskdeerCancellations": "Cancellations",
+  "MuskdeerSynthetic": "Development publications",
+  "MuskdeerSnapshot": "Orders and positions",
+  "MuskdeerBindings": "Merchant account bindings"
 }

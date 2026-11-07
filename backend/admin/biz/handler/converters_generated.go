@@ -2344,6 +2344,339 @@ func toRPCVerifyMFAChallengeRequest(in *v1.VerifyMFAChallengeRequest) *operator.
 	}
 	return out
 }
+func toRPCMuskdeerCancelRequest(in *v1.MuskdeerCancelRequest) *operator.MuskdeerCancelRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerCancelRequest)
+	out.InstanceId = in.InstanceId
+	out.ExpectedRevision = in.ExpectedRevision
+	out.CancelAll = in.CancelAll
+	return out
+}
+func toAPIMuskdeerCancelReply(in *operator.MuskdeerCancelReply) *v1.MuskdeerCancelReply {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerCancelReply)
+	out.Acknowledged = in.Acknowledged
+	out.ConfirmationPending = in.ConfirmationPending
+	return out
+}
+func toRPCMuskdeerCreateBindingRequest(in *v1.MuskdeerCreateBindingRequest) *operator.MuskdeerCreateBindingRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerCreateBindingRequest)
+	out.Data = toRPCMuskdeerBindingDraft(in.Data)
+	return out
+}
+func toAPIMuskdeerAccountBinding(in *operator.MuskdeerAccountBinding) *v1.MuskdeerAccountBinding {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerAccountBinding)
+	out.Id = in.Id
+	out.TenantId = in.TenantId
+	out.AccountId = in.AccountId
+	out.Enabled = in.Enabled
+	out.Version = in.Version
+	return out
+}
+func toRPCMuskdeerCreateInstanceRequest(in *v1.MuskdeerCreateInstanceRequest) *operator.MuskdeerCreateInstanceRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerCreateInstanceRequest)
+	out.Data = toRPCMuskdeerInstanceDraft(in.Data)
+	return out
+}
+func toAPIMuskdeerInstance(in *operator.MuskdeerInstance) *v1.MuskdeerInstance {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerInstance)
+	out.Id = in.Id
+	out.InstanceKey = in.InstanceKey
+	out.StrategyType = in.StrategyType
+	out.Implementation = in.Implementation
+	out.TemplateId = in.TemplateId
+	out.TemplateRevision = in.TemplateRevision
+	out.AccountId = in.AccountId
+	out.InstrumentId = in.InstrumentId
+	out.Symbol = in.Symbol
+	out.MarketDataSource = in.MarketDataSource
+	out.DesiredRunning = in.DesiredRunning
+	out.Revision = in.Revision
+	out.ControlVersion = in.ControlVersion
+	out.Parameters = toAPIMuskdeerInstanceParameters(in.Parameters)
+	out.RestartRequired = in.RestartRequired
+	if in.Runtimes != nil {
+		out.Runtimes = make([]*v1.MuskdeerRuntimeVersion, len(in.Runtimes))
+		for index, value := range in.Runtimes {
+			out.Runtimes[index] = toAPIMuskdeerRuntimeVersion(value)
+		}
+	}
+	out.CreatedAtMs = in.CreatedAtMs
+	out.UpdatedAtMs = in.UpdatedAtMs
+	out.Archived = in.Archived
+	return out
+}
+func toRPCMuskdeerAccountRequest(in *v1.MuskdeerAccountRequest) *operator.MuskdeerAccountRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerAccountRequest)
+	out.AccountId = in.AccountId
+	return out
+}
+func toAPIMuskdeerAccountSnapshot(in *operator.MuskdeerAccountSnapshot) *v1.MuskdeerAccountSnapshot {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerAccountSnapshot)
+	out.AccountId = in.AccountId
+	out.Symbol = in.Symbol
+	out.ValidUntilMs = in.ValidUntilMs
+	if in.Orders != nil {
+		out.Orders = make([]*v1.MuskdeerActiveOrder, len(in.Orders))
+		for index, value := range in.Orders {
+			out.Orders[index] = toAPIMuskdeerActiveOrder(value)
+		}
+	}
+	if in.Positions != nil {
+		out.Positions = make([]*v1.MuskdeerPosition, len(in.Positions))
+		for index, value := range in.Positions {
+			out.Positions[index] = toAPIMuskdeerPosition(value)
+		}
+	}
+	out.Available = in.Available
+	out.MarkPrice = in.MarkPrice
+	out.ObservedAtMs = in.ObservedAtMs
+	return out
+}
+func toRPCMuskdeerInstanceRequest(in *v1.MuskdeerInstanceRequest) *operator.MuskdeerInstanceRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerInstanceRequest)
+	out.Id = in.Id
+	return out
+}
+func toRPCMuskdeerOverviewRequest(in *v1.MuskdeerOverviewRequest) *operator.MuskdeerOverviewRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerOverviewRequest)
+	return out
+}
+func toAPIMuskdeerOverview(in *operator.MuskdeerOverview) *v1.MuskdeerOverview {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerOverview)
+	out.Templates = in.Templates
+	out.Instances = in.Instances
+	out.DesiredRunning = in.DesiredRunning
+	out.Instruments = in.Instruments
+	out.Accounts = in.Accounts
+	out.OrderRecords = in.OrderRecords
+	out.SyntheticPublished = in.SyntheticPublished
+	out.SyntheticUnknown = in.SyntheticUnknown
+	out.ObservedAtMs = in.ObservedAtMs
+	return out
+}
+func toRPCMuskdeerBindingListRequest(in *v1.MuskdeerBindingListRequest) *operator.MuskdeerBindingListRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerBindingListRequest)
+	out.Page = in.Page
+	out.PageSize = in.PageSize
+	out.TenantId = in.TenantId
+	out.AccountId = in.AccountId
+	return out
+}
+func toAPIMuskdeerBindingPage(in *operator.MuskdeerBindingPage) *v1.MuskdeerBindingPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerBindingPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerAccountBinding, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerAccountBinding(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toRPCMuskdeerListRequest(in *v1.MuskdeerListRequest) *operator.MuskdeerListRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerListRequest)
+	out.Page = in.Page
+	out.PageSize = in.PageSize
+	out.Search = in.Search
+	out.AccountId = in.AccountId
+	return out
+}
+func toAPIMuskdeerAccountPage(in *operator.MuskdeerAccountPage) *v1.MuskdeerAccountPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerAccountPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerAccount, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerAccount(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toRPCMuskdeerRecordListRequest(in *v1.MuskdeerRecordListRequest) *operator.MuskdeerRecordListRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerRecordListRequest)
+	out.Page = in.Page
+	out.PageSize = in.PageSize
+	out.Symbol = in.Symbol
+	out.AccountId = in.AccountId
+	out.State = in.State
+	out.InstanceId = in.InstanceId
+	out.RunId = in.RunId
+	return out
+}
+func toAPIMuskdeerCancellationPage(in *operator.MuskdeerCancellationPage) *v1.MuskdeerCancellationPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerCancellationPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerCancellation, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerCancellation(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toRPCMuskdeerInstanceListRequest(in *v1.MuskdeerInstanceListRequest) *operator.MuskdeerInstanceListRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerInstanceListRequest)
+	out.Page = in.Page
+	out.PageSize = in.PageSize
+	out.Search = in.Search
+	out.StrategyType = in.StrategyType
+	out.AccountId = in.AccountId
+	return out
+}
+func toAPIMuskdeerInstancePage(in *operator.MuskdeerInstancePage) *v1.MuskdeerInstancePage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerInstancePage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerInstance, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerInstance(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toAPIMuskdeerInstrumentPage(in *operator.MuskdeerInstrumentPage) *v1.MuskdeerInstrumentPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerInstrumentPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerInstrument, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerInstrument(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toAPIMuskdeerOrderPage(in *operator.MuskdeerOrderPage) *v1.MuskdeerOrderPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerOrderPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerOrderRecord, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerOrderRecord(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toAPIMuskdeerSyntheticPage(in *operator.MuskdeerSyntheticPage) *v1.MuskdeerSyntheticPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerSyntheticPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerSyntheticRecord, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerSyntheticRecord(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toAPIMuskdeerTemplatePage(in *operator.MuskdeerTemplatePage) *v1.MuskdeerTemplatePage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerTemplatePage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerTemplate, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerTemplate(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
+func toRPCMuskdeerSetBindingEnabledRequest(in *v1.MuskdeerSetBindingEnabledRequest) *operator.MuskdeerSetBindingEnabledRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerSetBindingEnabledRequest)
+	out.Id = in.Id
+	out.ExpectedVersion = in.ExpectedVersion
+	out.Enabled = in.Enabled
+	return out
+}
+func toRPCMuskdeerRunningRequest(in *v1.MuskdeerRunningRequest) *operator.MuskdeerRunningRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerRunningRequest)
+	out.Id = in.Id
+	out.ExpectedRevision = in.ExpectedRevision
+	out.ExpectedControlVersion = in.ExpectedControlVersion
+	return out
+}
+func toRPCMuskdeerUpdateInstanceRequest(in *v1.MuskdeerUpdateInstanceRequest) *operator.MuskdeerUpdateInstanceRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerUpdateInstanceRequest)
+	out.Id = in.Id
+	out.Data = toRPCMuskdeerInstanceParameterUpdate(in.Data)
+	out.ExpectedRevision = in.ExpectedRevision
+	out.ExpectedControlVersion = in.ExpectedControlVersion
+	return out
+}
 func toRPCForceLogoutSessionRequest(in *v1.ForceLogoutSessionRequest) *operator.ForceLogoutSessionRequest {
 	if in == nil {
 		return nil
@@ -4529,6 +4862,8 @@ func toAPIModule_Module(in operator.Module_Module) v1.Module_Module {
 		return v1.Module_PERMISSION
 	case operator.Module_LOG:
 		return v1.Module_LOG
+	case operator.Module_MUSKDEER:
+		return v1.Module_MUSKDEER
 	case operator.Module_FILE:
 		return v1.Module_FILE
 	default:
@@ -5532,6 +5867,225 @@ func toAPIWebAuthnResult(in *operator.WebAuthnResult) *v1.WebAuthnResult {
 	out.Challenge = in.Challenge
 	out.OptionsJson = in.OptionsJson
 	out.RpId = in.RpId
+	return out
+}
+func toRPCMuskdeerBindingDraft(in *v1.MuskdeerBindingDraft) *operator.MuskdeerBindingDraft {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerBindingDraft)
+	out.TenantId = in.TenantId
+	out.AccountId = in.AccountId
+	out.Enabled = in.Enabled
+	return out
+}
+func toRPCMuskdeerInstanceDraft(in *v1.MuskdeerInstanceDraft) *operator.MuskdeerInstanceDraft {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerInstanceDraft)
+	out.InstanceKey = in.InstanceKey
+	out.TemplateId = in.TemplateId
+	out.TemplateRevision = in.TemplateRevision
+	out.AccountId = in.AccountId
+	out.InstrumentId = in.InstrumentId
+	out.MarketDataSource = in.MarketDataSource
+	out.Parameters = toRPCMuskdeerInstanceParameters(in.Parameters)
+	return out
+}
+func toAPIMuskdeerInstanceParameters(in *operator.MuskdeerInstanceParameters) *v1.MuskdeerInstanceParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerInstanceParameters)
+	out.Execution = toAPIMuskdeerExecutionParameters(in.Execution)
+	switch value := in.Algorithm.(type) {
+	case *operator.MuskdeerInstanceParameters_MarketMaker:
+		if value == nil {
+			break
+		}
+		mapped := new(v1.MuskdeerInstanceParameters_MarketMaker)
+		mapped.MarketMaker = toAPIMuskdeerDepthParameters(value.MarketMaker)
+		out.Algorithm = mapped
+	case *operator.MuskdeerInstanceParameters_Grid:
+		if value == nil {
+			break
+		}
+		mapped := new(v1.MuskdeerInstanceParameters_Grid)
+		mapped.Grid = toAPIMuskdeerGridParameters(value.Grid)
+		out.Algorithm = mapped
+	case *operator.MuskdeerInstanceParameters_WashTrade:
+		if value == nil {
+			break
+		}
+		mapped := new(v1.MuskdeerInstanceParameters_WashTrade)
+		mapped.WashTrade = toAPIMuskdeerWashParameters(value.WashTrade)
+		out.Algorithm = mapped
+	}
+	return out
+}
+func toAPIMuskdeerRuntimeVersion(in *operator.MuskdeerRuntimeVersion) *v1.MuskdeerRuntimeVersion {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerRuntimeVersion)
+	out.Service = in.Service
+	out.Revision = in.Revision
+	out.Available = in.Available
+	return out
+}
+func toAPIMuskdeerActiveOrder(in *operator.MuskdeerActiveOrder) *v1.MuskdeerActiveOrder {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerActiveOrder)
+	out.OrderId = in.OrderId
+	out.ClientId = in.ClientId
+	out.Side = in.Side
+	out.Price = in.Price
+	out.Quantity = in.Quantity
+	out.ExecutedQuantity = in.ExecutedQuantity
+	out.Status = in.Status
+	return out
+}
+func toAPIMuskdeerPosition(in *operator.MuskdeerPosition) *v1.MuskdeerPosition {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerPosition)
+	out.Symbol = in.Symbol
+	out.SignedQuantity = in.SignedQuantity
+	out.EntryPrice = in.EntryPrice
+	out.Leverage = in.Leverage
+	return out
+}
+func toAPIMuskdeerAccount(in *operator.MuskdeerAccount) *v1.MuskdeerAccount {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerAccount)
+	out.Id = in.Id
+	out.AccountId = in.AccountId
+	out.UserId = in.UserId
+	out.FundId = in.FundId
+	out.Symbol = in.Symbol
+	out.MaximumNotional = in.MaximumNotional
+	out.MaximumOrderNotional = in.MaximumOrderNotional
+	out.Leverage = in.Leverage
+	out.Enabled = in.Enabled
+	out.ObservedNotional = in.ObservedNotional
+	out.ReservedNotional = in.ReservedNotional
+	out.AvailableQuote = in.AvailableQuote
+	out.SnapshotExpiresAtMs = in.SnapshotExpiresAtMs
+	return out
+}
+func toAPIMuskdeerCancellation(in *operator.MuskdeerCancellation) *v1.MuskdeerCancellation {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerCancellation)
+	out.Id = in.Id
+	out.CreatedAtMs = in.CreatedAtMs
+	out.UpdatedAtMs = in.UpdatedAtMs
+	out.AccountId = in.AccountId
+	out.Symbol = in.Symbol
+	out.OrderId = in.OrderId
+	out.State = in.State
+	return out
+}
+func toAPIMuskdeerInstrument(in *operator.MuskdeerInstrument) *v1.MuskdeerInstrument {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerInstrument)
+	out.Id = in.Id
+	out.Symbol = in.Symbol
+	out.BaseAsset = in.BaseAsset
+	out.QuoteAsset = in.QuoteAsset
+	out.Status = in.Status
+	out.ExecutionVenue = in.ExecutionVenue
+	out.PriceTick = in.PriceTick
+	out.QuantityStep = in.QuantityStep
+	out.MinimumNotional = in.MinimumNotional
+	return out
+}
+func toAPIMuskdeerOrderRecord(in *operator.MuskdeerOrderRecord) *v1.MuskdeerOrderRecord {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerOrderRecord)
+	out.Id = in.Id
+	out.CreatedAtMs = in.CreatedAtMs
+	out.UpdatedAtMs = in.UpdatedAtMs
+	out.AccountId = in.AccountId
+	out.Symbol = in.Symbol
+	out.ClientId = in.ClientId
+	out.Side = in.Side
+	out.Price = in.Price
+	out.Quantity = in.Quantity
+	out.Leverage = in.Leverage
+	out.State = in.State
+	out.OrderId = in.OrderId
+	out.ReservedNotional = in.ReservedNotional
+	out.InstanceId = in.InstanceId
+	out.Revision = in.Revision
+	return out
+}
+func toAPIMuskdeerSyntheticRecord(in *operator.MuskdeerSyntheticRecord) *v1.MuskdeerSyntheticRecord {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerSyntheticRecord)
+	out.Id = in.Id
+	out.CreatedAtMs = in.CreatedAtMs
+	out.RunId = in.RunId
+	out.Symbol = in.Symbol
+	out.Sequence = in.Sequence
+	out.Side = in.Side
+	out.Price = in.Price
+	out.Quantity = in.Quantity
+	out.Notional = in.Notional
+	out.State = in.State
+	out.TradeId = in.TradeId
+	out.InstanceId = in.InstanceId
+	out.SourceTradeId = in.SourceTradeId
+	return out
+}
+func toAPIMuskdeerTemplate(in *operator.MuskdeerTemplate) *v1.MuskdeerTemplate {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerTemplate)
+	out.Id = in.Id
+	out.Key = in.Key
+	out.Name = in.Name
+	out.StrategyType = in.StrategyType
+	out.Implementation = in.Implementation
+	out.Revision = in.Revision
+	out.Enabled = in.Enabled
+	out.RequiresOrderBook = in.RequiresOrderBook
+	out.RequiresAccount = in.RequiresAccount
+	out.TradesMode = in.TradesMode
+	if in.ExecutionFields != nil {
+		out.ExecutionFields = make([]string, len(in.ExecutionFields))
+		for index, value := range in.ExecutionFields {
+			out.ExecutionFields[index] = value
+		}
+	}
+	if in.ParameterFields != nil {
+		out.ParameterFields = make([]string, len(in.ParameterFields))
+		for index, value := range in.ParameterFields {
+			out.ParameterFields[index] = value
+		}
+	}
+	return out
+}
+func toRPCMuskdeerInstanceParameterUpdate(in *v1.MuskdeerInstanceParameterUpdate) *operator.MuskdeerInstanceParameterUpdate {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerInstanceParameterUpdate)
+	out.Parameters = toRPCMuskdeerInstanceParameters(in.Parameters)
 	return out
 }
 func toAPIOnlineSession(in *operator.OnlineSession) *v1.OnlineSession {
@@ -6712,6 +7266,8 @@ func toRPCModule_Module(in v1.Module_Module) operator.Module_Module {
 		return operator.Module_PERMISSION
 	case v1.Module_LOG:
 		return operator.Module_LOG
+	case v1.Module_MUSKDEER:
+		return operator.Module_MUSKDEER
 	case v1.Module_FILE:
 		return operator.Module_FILE
 	default:
@@ -6998,6 +7554,88 @@ func toAPIMFAMethod_MFAMethod(in operator.MFAMethod_MFAMethod) v1.MFAMethod_MFAM
 	default:
 		return v1.MFAMethod_MFAMethod(in)
 	}
+}
+func toRPCMuskdeerInstanceParameters(in *v1.MuskdeerInstanceParameters) *operator.MuskdeerInstanceParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerInstanceParameters)
+	out.Execution = toRPCMuskdeerExecutionParameters(in.Execution)
+	switch value := in.Algorithm.(type) {
+	case *v1.MuskdeerInstanceParameters_MarketMaker:
+		if value == nil {
+			break
+		}
+		mapped := new(operator.MuskdeerInstanceParameters_MarketMaker)
+		mapped.MarketMaker = toRPCMuskdeerDepthParameters(value.MarketMaker)
+		out.Algorithm = mapped
+	case *v1.MuskdeerInstanceParameters_Grid:
+		if value == nil {
+			break
+		}
+		mapped := new(operator.MuskdeerInstanceParameters_Grid)
+		mapped.Grid = toRPCMuskdeerGridParameters(value.Grid)
+		out.Algorithm = mapped
+	case *v1.MuskdeerInstanceParameters_WashTrade:
+		if value == nil {
+			break
+		}
+		mapped := new(operator.MuskdeerInstanceParameters_WashTrade)
+		mapped.WashTrade = toRPCMuskdeerWashParameters(value.WashTrade)
+		out.Algorithm = mapped
+	}
+	return out
+}
+func toAPIMuskdeerExecutionParameters(in *operator.MuskdeerExecutionParameters) *v1.MuskdeerExecutionParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerExecutionParameters)
+	out.PollIntervalMs = in.PollIntervalMs
+	out.OperationTimeoutMs = in.OperationTimeoutMs
+	out.LeaseTtlMs = in.LeaseTtlMs
+	out.Leverage = in.Leverage
+	return out
+}
+func toAPIMuskdeerDepthParameters(in *operator.MuskdeerDepthParameters) *v1.MuskdeerDepthParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerDepthParameters)
+	out.Depth = in.Depth
+	out.QuantityFraction = in.QuantityFraction
+	out.ReplacementFraction = in.ReplacementFraction
+	out.BridgeSlots = in.BridgeSlots
+	return out
+}
+func toAPIMuskdeerGridParameters(in *operator.MuskdeerGridParameters) *v1.MuskdeerGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerGridParameters)
+	out.LowerPrice = in.LowerPrice
+	out.UpperPrice = in.UpperPrice
+	out.GridCount = in.GridCount
+	out.TotalBudget = in.TotalBudget
+	out.PerOrderNotional = in.PerOrderNotional
+	out.InventoryLimit = in.InventoryLimit
+	out.MaxMarketAgeMs = in.MaxMarketAgeMs
+	return out
+}
+func toAPIMuskdeerWashParameters(in *operator.MuskdeerWashParameters) *v1.MuskdeerWashParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerWashParameters)
+	out.DevelopmentOnly = in.DevelopmentOnly
+	out.Mode = in.Mode
+	out.RunId = in.RunId
+	out.IntervalMs = in.IntervalMs
+	out.MaximumEvents = in.MaximumEvents
+	out.Quantity = in.Quantity
+	out.MaximumNotional = in.MaximumNotional
+	out.QuantityFraction = in.QuantityFraction
+	return out
 }
 func toAPIClientType_ClientType(in operator.ClientType_ClientType) v1.ClientType_ClientType {
 	switch in {
@@ -7373,6 +8011,57 @@ func toRPCDatePart(in v1.DatePart) v11.DatePart {
 	default:
 		return v11.DatePart(in)
 	}
+}
+func toRPCMuskdeerExecutionParameters(in *v1.MuskdeerExecutionParameters) *operator.MuskdeerExecutionParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerExecutionParameters)
+	out.PollIntervalMs = in.PollIntervalMs
+	out.OperationTimeoutMs = in.OperationTimeoutMs
+	out.LeaseTtlMs = in.LeaseTtlMs
+	out.Leverage = in.Leverage
+	return out
+}
+func toRPCMuskdeerDepthParameters(in *v1.MuskdeerDepthParameters) *operator.MuskdeerDepthParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerDepthParameters)
+	out.Depth = in.Depth
+	out.QuantityFraction = in.QuantityFraction
+	out.ReplacementFraction = in.ReplacementFraction
+	out.BridgeSlots = in.BridgeSlots
+	return out
+}
+func toRPCMuskdeerGridParameters(in *v1.MuskdeerGridParameters) *operator.MuskdeerGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerGridParameters)
+	out.LowerPrice = in.LowerPrice
+	out.UpperPrice = in.UpperPrice
+	out.GridCount = in.GridCount
+	out.TotalBudget = in.TotalBudget
+	out.PerOrderNotional = in.PerOrderNotional
+	out.InventoryLimit = in.InventoryLimit
+	out.MaxMarketAgeMs = in.MaxMarketAgeMs
+	return out
+}
+func toRPCMuskdeerWashParameters(in *v1.MuskdeerWashParameters) *operator.MuskdeerWashParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerWashParameters)
+	out.DevelopmentOnly = in.DevelopmentOnly
+	out.Mode = in.Mode
+	out.RunId = in.RunId
+	out.IntervalMs = in.IntervalMs
+	out.MaximumEvents = in.MaximumEvents
+	out.Quantity = in.Quantity
+	out.MaximumNotional = in.MaximumNotional
+	out.QuantityFraction = in.QuantityFraction
+	return out
 }
 func toRPCNullValue(in structpb.NullValue) structpb.NullValue {
 	switch in {

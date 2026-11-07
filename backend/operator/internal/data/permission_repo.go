@@ -582,6 +582,7 @@ func (r *PermissionRepo) TruncateBizPermissions(ctx context.Context) error {
 	builder := r.dbClient.Client().Permission.Delete().
 		Where(
 			permission.Not(permission.CodeHasPrefix(constants.SystemPermissionCodePrefix)),
+			permission.Not(permission.CodeHasPrefix("muskdeer:")),
 		)
 
 	_, err := builder.Exec(ctx)

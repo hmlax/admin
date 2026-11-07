@@ -36,6 +36,7 @@ func GeneratedRegister(srv *transport.Router, services *handler.Services) {
 	RegisterConfigServiceHertzServer(srv, services.ConfigService)
 	RegisterUserServiceHertzServer(srv, services.UserService)
 	RegisterFileTransferServiceHertzServer(srv, services.FileTransferService)
+	RegisterMuskdeerServiceHertzServer(srv, services.MuskdeerService)
 	RegisterExportServiceHertzServer(srv, services.ExportService)
 	RegisterMediaServiceHertzServer(srv, services.MediaService)
 }

@@ -10,6 +10,8 @@ import (
 // ProviderSet supplies infrastructure and GORM repositories to the operator.
 var ProviderSet = wire.NewSet(
 	NewRedisClient,
+	NewMuskdeerConnection,
+	NewMuskdeerBindingRepo,
 	NewGormClient,
 	NewMinIoClient,
 	NewClientType,

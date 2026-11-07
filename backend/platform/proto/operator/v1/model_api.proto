@@ -123,7 +123,8 @@ message SysApis {
     (operator.v1.enum_values) = {
       name: "BusinessModuleFile"
       value: "FILE"
-    }
+    },
+    (operator.v1.enum_values) = { name: "BusinessModuleMuskdeer" value: "MUSKDEER" }
   ];
 
   // 接口操作名

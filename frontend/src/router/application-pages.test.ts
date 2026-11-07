@@ -6,6 +6,7 @@ import { businessRoutes as merchantRoutes } from '../../merchant-admin/routes';
 describe('application page boundaries', () => {
   it.each([
     'tenant/tenant/index.tsx',
+    'muskdeer/account-bindings/index.tsx',
     'permission/menu/index.tsx',
     'permission/api/index.tsx',
     'permission/permission/index.tsx',

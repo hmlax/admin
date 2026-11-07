@@ -38,6 +38,7 @@ type Services struct {
 	ConfigService              apiV1.ConfigServiceHTTPServer
 	UserService                apiV1.UserServiceHTTPServer
 	FileTransferService        apiV1.FileTransferServiceHTTPServer
+	MuskdeerService            apiV1.MuskdeerServiceHTTPServer
 	ExportService              apiV1.ExportServiceHTTPServer
 	MediaService               apiV1.MediaServiceHTTPServer
 }
@@ -72,6 +73,7 @@ func NewServices(conn grpc.ClientConnInterface, checker auth.AccessTokenChecker)
 		ConfigService:              &ConfigServiceProxy{client: operatorV1.NewConfigServiceClient(conn)},
 		UserService:                NewFieldPermissionUserServiceServer(&UserServiceProxy{client: operatorV1.NewUserServiceClient(conn)}),
 		FileTransferService:        &FileTransferServiceProxy{client: operatorV1.NewFileTransferServiceClient(conn)},
+		MuskdeerService:            &MuskdeerServiceProxy{client: operatorV1.NewMuskdeerServiceClient(conn)},
 		ExportService:              NewExportHTTPService(operatorV1.NewExportServiceClient(conn)),
 		MediaService:               NewMediaHTTPService(operatorV1.NewMediaServiceClient(conn)),
 	}

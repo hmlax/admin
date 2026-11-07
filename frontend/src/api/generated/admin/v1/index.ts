@@ -425,6 +425,7 @@ export type Module_Module =
   | 'FILE'
   | 'LOG'
   | 'MODULE_UNSPECIFIED'
+  | 'MUSKDEER'
   | 'OPM'
   | 'PERMISSION'
   | 'SYSTEM'
@@ -3146,6 +3147,677 @@ export function createMfaServiceClient(
     },
   };
 }
+export type MuskdeerOverviewRequest = Record<string, never>;
+
+export type MuskdeerListRequest = {
+  accountId?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+export type MuskdeerInstanceListRequest = {
+  accountId?: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  strategyType?: string;
+};
+
+export type MuskdeerInstanceRequest = {
+  id?: number;
+};
+
+export type MuskdeerCreateInstanceRequest = {
+  data?: MuskdeerInstanceDraft;
+};
+
+export type MuskdeerInstanceDraft = {
+  accountId?: string;
+  instanceKey?: string;
+  instrumentId?: number;
+  marketDataSource?: string;
+  parameters?: MuskdeerInstanceParameters;
+  templateId?: number;
+  templateRevision?: number;
+};
+
+export type MuskdeerInstanceParameters = {
+  execution?: MuskdeerExecutionParameters;
+  grid?: MuskdeerGridParameters;
+  marketMaker?: MuskdeerDepthParameters;
+  washTrade?: MuskdeerWashParameters;
+};
+
+export type MuskdeerExecutionParameters = {
+  leaseTtlMs?: number;
+  leverage?: number;
+  operationTimeoutMs?: number;
+  pollIntervalMs?: number;
+};
+
+export type MuskdeerDepthParameters = {
+  bridgeSlots?: number;
+  depth?: number;
+  quantityFraction?: string;
+  replacementFraction?: string;
+};
+
+export type MuskdeerGridParameters = {
+  gridCount?: number;
+  inventoryLimit?: string;
+  lowerPrice?: string;
+  maxMarketAgeMs?: number;
+  perOrderNotional?: string;
+  totalBudget?: string;
+  upperPrice?: string;
+};
+
+export type MuskdeerWashParameters = {
+  developmentOnly?: boolean;
+  intervalMs?: number;
+  // Zero is unlimited; no historical slot is reset or resent.
+  maximumEvents?: number;
+  maximumNotional?: string;
+  mode?: string;
+  quantity?: string;
+  quantityFraction?: string;
+  runId?: string;
+};
+
+export type MuskdeerUpdateInstanceRequest = {
+  data?: MuskdeerInstanceParameterUpdate;
+  expectedControlVersion?: number;
+  expectedRevision?: number;
+  id?: number;
+};
+
+export type MuskdeerInstanceParameterUpdate = {
+  parameters?: MuskdeerInstanceParameters;
+};
+
+export type MuskdeerRunningRequest = {
+  expectedControlVersion?: number;
+  expectedRevision?: number;
+  id?: number;
+};
+
+export type MuskdeerAccountRequest = {
+  accountId?: string;
+};
+
+export type MuskdeerRecordListRequest = {
+  accountId?: string;
+  instanceId?: number;
+  page?: number;
+  pageSize?: number;
+  runId?: string;
+  state?: string;
+  symbol?: string;
+};
+
+export type MuskdeerCancelRequest = {
+  // Required explicit intent; an absent flag must never widen cancellation.
+  cancelAll?: boolean;
+  expectedRevision?: number;
+  instanceId?: number;
+};
+
+export type MuskdeerCancelReply = {
+  acknowledged?: number;
+  confirmationPending?: boolean;
+};
+
+export type MuskdeerOverview = {
+  accounts?: number;
+  desiredRunning?: number;
+  instances?: number;
+  instruments?: number;
+  observedAtMs?: number;
+  orderRecords?: number;
+  syntheticPublished?: number;
+  syntheticUnknown?: number;
+  templates?: number;
+};
+
+export type MuskdeerTemplate = {
+  enabled?: boolean;
+  executionFields?: string[];
+  id?: number;
+  implementation?: string;
+  key?: string;
+  name?: string;
+  parameterFields?: string[];
+  requiresAccount?: boolean;
+  requiresOrderBook?: boolean;
+  revision?: number;
+  strategyType?: string;
+  tradesMode?: string;
+};
+
+export type MuskdeerTemplatePage = {
+  items?: MuskdeerTemplate[];
+  total?: number;
+};
+
+export type MuskdeerInstance = {
+  accountId?: string;
+  archived?: boolean;
+  controlVersion?: number;
+  createdAtMs?: number;
+  desiredRunning?: boolean;
+  id?: number;
+  implementation?: string;
+  instanceKey?: string;
+  instrumentId?: number;
+  marketDataSource?: string;
+  parameters?: MuskdeerInstanceParameters;
+  restartRequired?: boolean;
+  revision?: number;
+  runtimes?: MuskdeerRuntimeVersion[];
+  strategyType?: string;
+  symbol?: string;
+  templateId?: number;
+  templateRevision?: number;
+  updatedAtMs?: number;
+};
+
+export type MuskdeerRuntimeVersion = {
+  available?: boolean;
+  revision?: number;
+  service?: string;
+};
+
+export type MuskdeerInstancePage = {
+  items?: MuskdeerInstance[];
+  total?: number;
+};
+
+export type MuskdeerInstrument = {
+  baseAsset?: string;
+  executionVenue?: string;
+  id?: number;
+  minimumNotional?: string;
+  priceTick?: string;
+  quantityStep?: string;
+  quoteAsset?: string;
+  status?: string;
+  symbol?: string;
+};
+
+export type MuskdeerInstrumentPage = {
+  items?: MuskdeerInstrument[];
+  total?: number;
+};
+
+export type MuskdeerAccount = {
+  accountId?: string;
+  availableQuote?: string;
+  enabled?: boolean;
+  fundId?: number;
+  id?: number;
+  leverage?: number;
+  maximumNotional?: string;
+  maximumOrderNotional?: string;
+  observedNotional?: string;
+  reservedNotional?: string;
+  snapshotExpiresAtMs?: number;
+  symbol?: string;
+  userId?: number;
+};
+
+export type MuskdeerAccountPage = {
+  items?: MuskdeerAccount[];
+  total?: number;
+};
+
+export type MuskdeerOrderRecord = {
+  accountId?: string;
+  clientId?: string;
+  createdAtMs?: number;
+  id?: number;
+  instanceId?: number;
+  leverage?: number;
+  orderId?: string;
+  price?: string;
+  quantity?: string;
+  reservedNotional?: string;
+  revision?: number;
+  side?: string;
+  state?: string;
+  symbol?: string;
+  updatedAtMs?: number;
+};
+
+export type MuskdeerOrderPage = {
+  items?: MuskdeerOrderRecord[];
+  total?: number;
+};
+
+export type MuskdeerCancellation = {
+  accountId?: string;
+  createdAtMs?: number;
+  id?: number;
+  orderId?: string;
+  state?: string;
+  symbol?: string;
+  updatedAtMs?: number;
+};
+
+export type MuskdeerCancellationPage = {
+  items?: MuskdeerCancellation[];
+  total?: number;
+};
+
+export type MuskdeerSyntheticRecord = {
+  createdAtMs?: number;
+  id?: number;
+  instanceId?: number;
+  notional?: string;
+  price?: string;
+  quantity?: string;
+  runId?: string;
+  sequence?: number;
+  side?: string;
+  sourceTradeId?: string;
+  state?: string;
+  symbol?: string;
+  tradeId?: string;
+};
+
+export type MuskdeerSyntheticPage = {
+  items?: MuskdeerSyntheticRecord[];
+  total?: number;
+};
+
+// MuskdeerAccountSnapshot comes from the matching gateway, never from local order audit.
+export type MuskdeerAccountSnapshot = {
+  accountId?: string;
+  available?: string;
+  markPrice?: string;
+  observedAtMs?: number;
+  orders?: MuskdeerActiveOrder[];
+  positions?: MuskdeerPosition[];
+  symbol?: string;
+  validUntilMs?: number;
+};
+
+export type MuskdeerActiveOrder = {
+  clientId?: string;
+  executedQuantity?: string;
+  orderId?: string;
+  price?: string;
+  quantity?: string;
+  side?: string;
+  status?: string;
+};
+
+export type MuskdeerPosition = {
+  entryPrice?: string;
+  leverage?: string;
+  signedQuantity?: string;
+  symbol?: string;
+};
+
+export type MuskdeerAccountBinding = {
+  accountId?: string;
+  enabled?: boolean;
+  id?: number;
+  tenantId?: number;
+  version?: number;
+};
+
+export type MuskdeerBindingListRequest = {
+  accountId?: string;
+  page?: number;
+  pageSize?: number;
+  tenantId?: number;
+};
+
+export type MuskdeerBindingPage = {
+  items?: MuskdeerAccountBinding[];
+  total?: number;
+};
+
+export type MuskdeerBindingDraft = {
+  accountId?: string;
+  enabled?: boolean;
+  tenantId?: number;
+};
+
+export type MuskdeerCreateBindingRequest = {
+  data?: MuskdeerBindingDraft;
+};
+
+export type MuskdeerSetBindingEnabledRequest = {
+  enabled?: boolean;
+  expectedVersion?: number;
+  id?: number;
+};
+
+// 做市管理：平台全部账户；商户只操作平台绑定的账户。
+export interface MuskdeerService {
+  ListAccountBindings(
+    request: MuskdeerBindingListRequest,
+  ): Promise<MuskdeerBindingPage>;
+  CreateAccountBinding(
+    request: MuskdeerCreateBindingRequest,
+  ): Promise<MuskdeerAccountBinding>;
+  SetAccountBindingEnabled(
+    request: MuskdeerSetBindingEnabledRequest,
+  ): Promise<MuskdeerAccountBinding>;
+  GetOverview(
+    request: MuskdeerOverviewRequest,
+  ): Promise<MuskdeerOverview>;
+  ListTemplates(
+    request: MuskdeerListRequest,
+  ): Promise<MuskdeerTemplatePage>;
+  ListInstances(
+    request: MuskdeerInstanceListRequest,
+  ): Promise<MuskdeerInstancePage>;
+  GetInstance(
+    request: MuskdeerInstanceRequest,
+  ): Promise<MuskdeerInstance>;
+  CreateInstance(
+    request: MuskdeerCreateInstanceRequest,
+  ): Promise<MuskdeerInstance>;
+  UpdateInstance(
+    request: MuskdeerUpdateInstanceRequest,
+  ): Promise<MuskdeerInstance>;
+  StartInstance(
+    request: MuskdeerRunningRequest,
+  ): Promise<MuskdeerInstance>;
+  StopInstance(
+    request: MuskdeerRunningRequest,
+  ): Promise<MuskdeerInstance>;
+  ListInstruments(
+    request: MuskdeerListRequest,
+  ): Promise<MuskdeerInstrumentPage>;
+  ListAccounts(
+    request: MuskdeerListRequest,
+  ): Promise<MuskdeerAccountPage>;
+  ListOrderRecords(
+    request: MuskdeerRecordListRequest,
+  ): Promise<MuskdeerOrderPage>;
+  ListCancellations(
+    request: MuskdeerRecordListRequest,
+  ): Promise<MuskdeerCancellationPage>;
+  ListSyntheticRecords(
+    request: MuskdeerRecordListRequest,
+  ): Promise<MuskdeerSyntheticPage>;
+  GetAccountSnapshot(
+    request: MuskdeerAccountRequest,
+  ): Promise<MuskdeerAccountSnapshot>;
+  CancelInstanceOrders(
+    request: MuskdeerCancelRequest,
+  ): Promise<MuskdeerCancelReply>;
+}
+
+export function createMuskdeerServiceClient(
+  transport: ClientTransport,
+): MuskdeerService {
+  return {
+    ListAccountBindings(request) {
+      const path = `admin/v1/muskdeer/account-bindings`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['tenantId', request.tenantId],
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListAccountBindings',
+      }) as Promise<MuskdeerBindingPage>;
+    },
+    CreateAccountBinding(request) {
+      const path = `admin/v1/muskdeer/account-bindings`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'CreateAccountBinding',
+      }) as Promise<MuskdeerAccountBinding>;
+    },
+    SetAccountBindingEnabled(request) {
+      if (request.id === undefined || request.id === null) {
+        throw new Error('missing required field request.id');
+      }
+      const path = `admin/v1/muskdeer/account-bindings/${request.id}/set-enabled`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'SetAccountBindingEnabled',
+      }) as Promise<MuskdeerAccountBinding>;
+    },
+    GetOverview() {
+      const path = `admin/v1/muskdeer/overview`;
+      const body = null;
+      return transport.unary(path, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'GetOverview',
+      }) as Promise<MuskdeerOverview>;
+    },
+    ListTemplates(request) {
+      const path = `admin/v1/muskdeer/templates`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['search', request.search],
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListTemplates',
+      }) as Promise<MuskdeerTemplatePage>;
+    },
+    ListInstances(request) {
+      const path = `admin/v1/muskdeer/instances`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['search', request.search],
+        ['strategyType', request.strategyType],
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListInstances',
+      }) as Promise<MuskdeerInstancePage>;
+    },
+    GetInstance(request) {
+      if (request.id === undefined || request.id === null) {
+        throw new Error('missing required field request.id');
+      }
+      const path = `admin/v1/muskdeer/instances/${request.id}`;
+      const body = null;
+      return transport.unary(path, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'GetInstance',
+      }) as Promise<MuskdeerInstance>;
+    },
+    CreateInstance(request) {
+      const path = `admin/v1/muskdeer/instances`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'CreateInstance',
+      }) as Promise<MuskdeerInstance>;
+    },
+    UpdateInstance(request) {
+      if (request.id === undefined || request.id === null) {
+        throw new Error('missing required field request.id');
+      }
+      const path = `admin/v1/muskdeer/instances/${request.id}`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'PUT', body, {
+        service: 'MuskdeerService',
+        method: 'UpdateInstance',
+      }) as Promise<MuskdeerInstance>;
+    },
+    StartInstance(request) {
+      if (request.id === undefined || request.id === null) {
+        throw new Error('missing required field request.id');
+      }
+      const path = `admin/v1/muskdeer/instances/${request.id}/start`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'StartInstance',
+      }) as Promise<MuskdeerInstance>;
+    },
+    StopInstance(request) {
+      if (request.id === undefined || request.id === null) {
+        throw new Error('missing required field request.id');
+      }
+      const path = `admin/v1/muskdeer/instances/${request.id}/stop`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'StopInstance',
+      }) as Promise<MuskdeerInstance>;
+    },
+    ListInstruments(request) {
+      const path = `admin/v1/muskdeer/instruments`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['search', request.search],
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListInstruments',
+      }) as Promise<MuskdeerInstrumentPage>;
+    },
+    ListAccounts(request) {
+      const path = `admin/v1/muskdeer/accounts`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['search', request.search],
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListAccounts',
+      }) as Promise<MuskdeerAccountPage>;
+    },
+    ListOrderRecords(request) {
+      const path = `admin/v1/muskdeer/order-records`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['symbol', request.symbol],
+        ['accountId', request.accountId],
+        ['state', request.state],
+        ['instanceId', request.instanceId],
+        ['runId', request.runId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListOrderRecords',
+      }) as Promise<MuskdeerOrderPage>;
+    },
+    ListCancellations(request) {
+      const path = `admin/v1/muskdeer/cancellations`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['symbol', request.symbol],
+        ['accountId', request.accountId],
+        ['state', request.state],
+        ['instanceId', request.instanceId],
+        ['runId', request.runId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListCancellations',
+      }) as Promise<MuskdeerCancellationPage>;
+    },
+    ListSyntheticRecords(request) {
+      const path = `admin/v1/muskdeer/synthetic-records`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['page', request.page],
+        ['pageSize', request.pageSize],
+        ['symbol', request.symbol],
+        ['accountId', request.accountId],
+        ['state', request.state],
+        ['instanceId', request.instanceId],
+        ['runId', request.runId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListSyntheticRecords',
+      }) as Promise<MuskdeerSyntheticPage>;
+    },
+    GetAccountSnapshot(request) {
+      const path = `admin/v1/muskdeer/account-snapshot`;
+      const body = null;
+      const queryParams = encodeAdminQuery([
+        ['accountId', request.accountId],
+      ]);
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary(uri, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'GetAccountSnapshot',
+      }) as Promise<MuskdeerAccountSnapshot>;
+    },
+    CancelInstanceOrders(request) {
+      if (request.instanceId === undefined || request.instanceId === null) {
+        throw new Error('missing required field request.instance_id');
+      }
+      const path = `admin/v1/muskdeer/instances/${request.instanceId}/cancel-orders`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'CancelInstanceOrders',
+      }) as Promise<MuskdeerCancelReply>;
+    },
+  };
+}
 // 在线会话
 export type OnlineSession = {
   clientType?: ClientType_ClientType;
@@ -5138,6 +5810,7 @@ export class ApiClient {
   private _mediaService?: MediaService;
   private _menuService?: MenuService;
   private _mfaService?: MfaService;
+  private _muskdeerService?: MuskdeerService;
   private _onlineSessionService?: OnlineSessionService;
   private _operationAuditLogService?: OperationAuditLogService;
   private _orgUnitService?: OrgUnitService;
@@ -5226,6 +5899,10 @@ export class ApiClient {
 
   get mfaService(): MfaService {
     return this._mfaService ??= createMfaServiceClient(this._transport);
+  }
+
+  get muskdeerService(): MuskdeerService {
+    return this._muskdeerService ??= createMuskdeerServiceClient(this._transport);
   }
 
   get onlineSessionService(): OnlineSessionService {

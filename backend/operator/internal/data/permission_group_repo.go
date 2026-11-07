@@ -422,7 +422,7 @@ func (r *PermissionGroupRepo) Truncate(ctx context.Context) error {
 func (r *PermissionGroupRepo) TruncateBizGroup(ctx context.Context) error {
 	builder := r.dbClient.Client().PermissionGroup.Delete().
 		Where(
-			permissiongroup.ModuleNotIn(constants.SystemPermissionModule),
+			permissiongroup.ModuleNotIn(constants.SystemPermissionModule, "muskdeer"),
 		)
 
 	if _, err := builder.Exec(ctx); err != nil {

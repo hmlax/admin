@@ -9494,5 +9494,82 @@
       }
     ],
     "foreign_keys": []
+  },
+  {
+    "name": "sys_muskdeer_account_bindings",
+    "model": "SysMuskdeerAccountBindings",
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "increment": true
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "increment": false
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "increment": false
+      },
+      {
+        "name": "deleted_at",
+        "nullable": true,
+        "increment": false
+      },
+      {
+        "name": "created_by",
+        "nullable": true,
+        "increment": false
+      },
+      {
+        "name": "updated_by",
+        "nullable": true,
+        "increment": false
+      },
+      {
+        "name": "deleted_by",
+        "nullable": true,
+        "increment": false
+      },
+      {
+        "name": "tenant_id",
+        "nullable": false,
+        "increment": false
+      },
+      {
+        "name": "account_id",
+        "nullable": false,
+        "increment": false
+      },
+      {
+        "name": "is_enabled",
+        "nullable": false,
+        "increment": false
+      },
+      {
+        "name": "version",
+        "nullable": false,
+        "increment": false
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_muskdeer_binding_tenant",
+        "unique": false,
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      {
+        "name": "uk_muskdeer_binding_account",
+        "unique": true,
+        "columns": [
+          "account_id"
+        ]
+      }
+    ]
   }
 ]

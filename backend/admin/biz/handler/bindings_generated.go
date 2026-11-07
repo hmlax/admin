@@ -2025,6 +2025,438 @@ func BindMfaServiceVerifyMFAChallenge(service v1.MfaServiceHTTPServer) transport
 			}
 		}}
 }
+func BindMuskdeerServiceCancelInstanceOrders(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceCancelInstanceOrders,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerCancelRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.CancelInstanceOrders(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceCreateAccountBinding(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceCreateAccountBinding,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerCreateBindingRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.CreateAccountBinding(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceCreateInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceCreateInstance,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerCreateInstanceRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.CreateInstance(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceGetAccountSnapshot(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceGetAccountSnapshot,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerAccountRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.GetAccountSnapshot(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceGetInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceGetInstance,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerInstanceRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.GetInstance(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceGetOverview(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceGetOverview,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerOverviewRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.GetOverview(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListAccountBindings(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListAccountBindings,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerBindingListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListAccountBindings(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListAccounts(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListAccounts,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListAccounts(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListCancellations(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListCancellations,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerRecordListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListCancellations(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListInstances(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListInstances,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerInstanceListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListInstances(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListInstruments(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListInstruments,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListInstruments(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListOrderRecords(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListOrderRecords,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerRecordListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListOrderRecords(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListSyntheticRecords(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListSyntheticRecords,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerRecordListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListSyntheticRecords(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceListTemplates(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceListTemplates,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerListRequest)
+			if err := transport.BindRequest(c, in, ""); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.ListTemplates(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceSetAccountBindingEnabled(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceSetAccountBindingEnabled,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerSetBindingEnabledRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.SetAccountBindingEnabled(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceStartInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceStartInstance,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerRunningRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.StartInstance(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceStopInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceStopInstance,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerRunningRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.StopInstance(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
+func BindMuskdeerServiceUpdateInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceUpdateInstance,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerUpdateInstanceRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.UpdateInstance(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
 func BindOnlineSessionServiceForceLogoutSession(service v1.OnlineSessionServiceHTTPServer) transport.Binding {
 	return transport.Binding{
 		Operation: v1.OperationOnlineSessionServiceForceLogoutSession,

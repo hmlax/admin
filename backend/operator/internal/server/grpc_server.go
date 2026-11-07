@@ -52,6 +52,8 @@ func NewGRPCServer(
 	dataAccessAuditLogService *service.DataAccessAuditLogService,
 	onlineSessionService *service.OnlineSessionService,
 
+	muskdeerService *service.MuskdeerService,
+
 	// register:param ── 新模块服务形参在此行后注册(make register 工具锚点,勿删)
 	auditExportService *service.AuditExportService,
 	accessKeyService *service.AccessKeyService,
@@ -102,6 +104,7 @@ func NewGRPCServer(
 	operatorV1.RegisterConfigServiceServer(srv, &ConfigServiceAdapter{inner: configService})
 	operatorV1.RegisterUserServiceServer(srv, &UserServiceAdapter{inner: userService})
 	operatorV1.RegisterFileTransferServiceServer(srv, &FileTransferServiceAdapter{inner: fileTransferService})
+	operatorV1.RegisterMuskdeerServiceServer(srv, &MuskdeerServiceAdapter{inner: muskdeerService})
 	operatorV1.RegisterGatewayServiceServer(srv, gateway)
 	operatorV1.RegisterExportServiceServer(srv, &ExportRPCService{gateway: gateway})
 	operatorV1.RegisterMediaServiceServer(srv, &MediaRPCService{gateway: gateway})

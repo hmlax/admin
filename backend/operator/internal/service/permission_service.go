@@ -466,6 +466,9 @@ func (s *PermissionService) SyncPermissions(ctx context.Context, _ *emptypb.Empt
 	})
 
 	for _, menu := range menus.Items {
+		if data.IsMuskdeerMenu(menu.GetName(), menu.GetPath()) {
+			continue
+		}
 		title := menu.GetName()
 
 		permissionCode := s.menuPermissionConverter.ConvertCode(menu.GetPath(), title, menu.GetType())

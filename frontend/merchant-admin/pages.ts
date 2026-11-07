@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 export const pageModules = import.meta.glob<{ default: ComponentType }>([
   '../src/pages/app/**/*.tsx',
   '!../src/pages/app/tenant/**',
+  '!../src/pages/app/muskdeer/account-bindings/**',
   '!../src/pages/app/permission/{api,menu,permission}/**',
   '!../src/pages/app/system/{config,dict,language}/**',
 ]);

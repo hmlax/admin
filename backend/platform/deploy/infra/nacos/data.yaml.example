@@ -47,3 +47,13 @@ runtime:
     template_code: ''
     app_id: ''
     region: cn-hangzhou
+
+  # Independent market-making service. No business database credentials here.
+  muskdeer:
+    enabled: false
+    endpoint: 'strategy.example.internal:59003'
+    server_name: strategy.grpc
+    root_cert_file: /app/muskdeer-certs/ca.pem
+    certificate_file: /app/muskdeer-certs/operator.pem
+    private_key_file: /app/muskdeer-certs/operator.key
+    timeout_ms: 10000

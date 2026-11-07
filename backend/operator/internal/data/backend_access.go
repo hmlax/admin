@@ -69,7 +69,8 @@ func (r *ApiRepo) EnsureBuiltInAdminAPIs(ctx context.Context) error {
 
 var tenantManagerServices = map[string]struct{}{
 
-	"UserService": {}, "UserProfileService": {}, "OrgUnitService": {}, "PositionService": {}, "RoleService": {},
+	"MuskdeerService": {},
+	"UserService":     {}, "UserProfileService": {}, "OrgUnitService": {}, "PositionService": {}, "RoleService": {},
 	"FileService": {}, "FileTransferService": {}, "MediaService": {},
 
 	"OnlineSessionService": {}, "MfaService": {}, "AccessKeyService": {},
@@ -83,12 +84,15 @@ var tenantManagerOperations = map[string]struct{}{
 }
 
 var tenantManagerExcludedOperations = map[string]struct{}{
-	"OnlineSessionService_ListOnlineSession":  {},
-	"OnlineSessionService_ForceLogoutSession": {},
-	"TaskService_StopAllTask":                 {},
-	"TaskService_StartAllTask":                {},
-	"TaskService_RestartAllTask":              {},
-	"AiContentService_RebuildSearchIndex":     {},
+	"MuskdeerService_ListAccountBindings":      {},
+	"MuskdeerService_CreateAccountBinding":     {},
+	"MuskdeerService_SetAccountBindingEnabled": {},
+	"OnlineSessionService_ListOnlineSession":   {},
+	"OnlineSessionService_ForceLogoutSession":  {},
+	"TaskService_StopAllTask":                  {},
+	"TaskService_StartAllTask":                 {},
+	"TaskService_RestartAllTask":               {},
+	"AiContentService_RebuildSearchIndex":      {},
 }
 
 func (r *ApiRepo) replaceBuiltInAPIs(ctx context.Context, code string, apiIDs []uint32) (err error) {
