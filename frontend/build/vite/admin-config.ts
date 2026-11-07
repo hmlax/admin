@@ -29,27 +29,7 @@ export function createAdminConfig(appRoot: string, kind: 'platform' | 'merchant'
       plugins: [...createVitePlugins(), applicationConfigPlugin(code)],
       cacheDir: path.resolve(frontendRoot, 'node_modules/.vite', kind),
       optimizeDeps: {
-        // editor-react 产物含 monaco 的 `?worker` 导入，依赖优化器处理不了，必须走源码链路。
-        // 被 exclude 的子树其传递依赖同样不预构建，其中两类是裸 CJS、浏览器解析不了具名导出：
-        //   - @tiptap/react 从 use-sync-external-store/shim 具名导入 useSyncExternalStore
-        //   - lowlight 深引 highlight.js/lib/*（es/*.js 只是转发到 lib/*.js 的 CJS 实现）
-        // 显式纳入预构建即可，预构建会把这些 CJS 转成 ESM 并补齐 default/具名导出。
-        exclude: ['@go-wind/editor-react'],
-        include: [
-          // Shared pages and excluded ESM packages use both React JSX runtimes.
-          // Prebundle them explicitly so the browser never receives their CJS entry files.
-          'react',
-          'react-dom/client',
-          'react/jsx-runtime',
-          'react/jsx-dev-runtime',
-          'lowlight',
-          'highlight.js',
-          'highlight.js/lib/core',
-          'use-sync-external-store/shim',
-          'use-sync-external-store/shim/index.js',
-          'use-sync-external-store/shim/with-selector',
-          'use-sync-external-store/shim/with-selector.js',
-        ],
+        include: ['react', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
       },
       resolve: {
         alias: {
@@ -83,7 +63,7 @@ export function createAdminConfig(appRoot: string, kind: 'platform' | 'merchant'
           overlay: true,
         },
         // 开发态安全响应头。X-Frame-Options/HSTS/CSP 仅在生产 nginx 生效——
-        // DENY 会阻断 vue-devtools 等开发期同源 iframe，HSTS/CSP 依赖 HTTPS。
+        // DENY 会阻断 开发工具 等开发期同源 iframe，HSTS/CSP 依赖 HTTPS。
         headers: {
           'X-Content-Type-Options': 'nosniff',
           'Referrer-Policy': 'strict-origin-when-cross-origin',

@@ -28,12 +28,12 @@ type schemaBaseline struct {
 	} `json:"indexes"`
 }
 
-// The snapshot describes the pre-migration database, not runtime table selection.
+// The snapshot describes the retained framework database, not runtime table selection.
 // It prevents a generated model from silently changing a table/column or index.
 func TestGeneratedModelsPreserveDatabaseShape(t *testing.T) {
 	_, file, _, ok := runtime.Caller(0)
 	require.True(t, ok)
-	data, err := os.ReadFile(filepath.Join(filepath.Dir(file), "../../../../platform/proto/operator/testdata/legacy_schema.json"))
+	data, err := os.ReadFile(filepath.Join(filepath.Dir(file), "../../../../platform/proto/operator/testdata/core_schema.json"))
 	require.NoError(t, err)
 	var baseline []schemaBaseline
 	require.NoError(t, json.Unmarshal(data, &baseline))

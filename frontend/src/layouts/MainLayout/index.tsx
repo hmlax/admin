@@ -223,7 +223,6 @@ export const MainLayout = ({ routes: dynamicRoutes }: MainLayoutProps) => {
           fullscreen: preferences.widget?.fullscreen ?? true,
           globalSearch: preferences.widget?.globalSearch ?? true,
           languageToggle: preferences.widget?.languageToggle ?? true,
-          notification: preferences.widget?.notification ?? true,
           themeToggle: preferences.widget?.themeToggle ?? true,
           refresh: preferences.widget?.refresh ?? true,
           sidebarToggle: preferences.widget?.sidebarToggle ?? true,

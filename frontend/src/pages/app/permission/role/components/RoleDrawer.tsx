@@ -26,7 +26,6 @@ import {
   buildOrgUnitTree,
   ROLE_FIELD_RESOURCES,
 } from '../constants';
-import AiGenerateButton from '@/components/common/AiGenerateButton';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
 import { useApiAccess } from '@/core/access';
 
@@ -300,18 +299,7 @@ const RoleDrawerContent: React.FC<RoleDrawerProps> = ({ open, mode, data, onClos
 
       <ProFormTextArea
         name="description"
-        label={
-          <span className="inline-flex items-center gap-2">
-            {t('description')}
-            <AiGenerateButton
-              scene="DESCRIPTION"
-              size="small"
-              onGenerate={(content) => {
-                formRef.current?.setFieldValue('description', content);
-              }}
-            />
-          </span>
-        }
+        label={<span className="inline-flex items-center gap-2">{t('description')}</span>}
         placeholder={t('descriptionPlaceholder')}
         fieldProps={{ allowClear: true, rows: 2 }}
       />

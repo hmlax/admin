@@ -3,10 +3,10 @@ syntax = "proto3";
 package admin.v1;
 
 import "admin/http.proto";
-import "hertz/api.proto";
-import "google/protobuf/empty.proto";
-import "admin/v1/tenant_types.proto";
 import "admin/v1/pagination_types.proto";
+import "admin/v1/tenant_types.proto";
+import "google/protobuf/empty.proto";
+import "hertz/api.proto";
 
 option go_package = "go-admin/admin/biz/model/admin/v1;adminpb";
 
@@ -51,13 +51,6 @@ service TenantService {
   }
 
   // 查询租户用量与配额
-  rpc GetUsage(admin.v1.GetTenantUsageRequest) returns (admin.v1.TenantUsage) {
-    option (api.get) = "/admin/v1/tenants/:id/usage";
-  }
 
   // 清理租户数据
-  rpc CleanupData(admin.v1.CleanupTenantDataRequest) returns (google.protobuf.Empty) {
-    option (api.post) = "/admin/v1/tenants/:id/cleanup";
-    option (admin.http.body) = "*";
-  }
 }

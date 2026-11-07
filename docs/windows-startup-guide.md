@@ -7,7 +7,7 @@
 基于实际在 Windows 11 上完整跑通后编写，包含所有已知的坑和解决方案。
 
 > **阅读指引**：循序渐进的主路径见教程层
-> [教程 02 · 从零跑起来](./tutorial/02-get-it-running.md)（浓缩版主链路）；
+> [教程 02 · 从零跑起来](service_split.md)（浓缩版主链路）；
 > 本指南是**逐步全流程与 FAQ 的权威参考**——遇到教程未覆盖的报错时查本文档「常见问题」节。
 > 文档体系总入口见 [docs/README.md](./README.md)。
 
@@ -356,4 +356,3 @@ vue-vben 钉定了 `pnpm@11.18.0`（`packageManager` 字段）。确保 corepack
 ```bash
 corepack enable
 ```
-

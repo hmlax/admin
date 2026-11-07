@@ -1,47 +1,33 @@
-# 后端项目结构说明
+# 后端结构
 
-> 持久化实现已于 2026-11-04 统一到 Kratos + GORM。本文保留原设计与历史实现记录；当前代码路径、模型生成和租户约束以 [后端 CRUD 指南](crud_module_guide/backend.md) 与 [租户隔离](tenant_isolation.md) 为准。
+`backend` 下仅有三个顶级目录。
 
 ```text
 backend/
 ├── admin/
-│   ├── cmd/server/              # Hertz 原生 HTTP / SSE 入口
-│   ├── internal/server/         # 权限校验、gRPC 代理、协议编解码
-│   └── Makefile
+│   ├── main.go
+│   ├── router.go / router_gen.go
+│   ├── biz/handler/           # HTTP 服务和字段权限适配
+│   ├── biz/router/            # hz update 生成的路由注册
+│   ├── biz/model/             # 独立 HTTP proto 生成的消息
+│   ├── biz/mw/                # 认证、入口、权限、审计中间件
+│   ├── idl/proto/admin/v1/    # HTTP 路由、参数和响应定义
+│   └── internal/             # Hertz 启动及传输适配
 ├── operator/
-│   ├── cmd/server/              # Kratos gRPC 入口与手写 wiring
-│   ├── internal/
-│   │   ├── data/                # Ent、仓储、事务
-│   │   ├── server/              # gRPC 适配器与内部网关
-│   │   └── service/             # 业务、任务、对象存储
-│   └── Makefile
-├── platform/                    # 两个服务的公共依赖
-│   ├── proto/                   # 统一协议源码
-│   │   └── operator/v1/*.proto # 全部结构、RPC、HTTP 映射及 model_*.proto
-│   ├── pb/operator/             # 共享 DTO、客户端、服务端、GORM 模型
-│   ├── pkg/                     # 共享安全、配置、协议上下文等
-│   │   ├── runtimeconfig/       # 环境变量、Nacos 配置和注册发现
-│   │   ├── rpcbridge/           # 可信网关身份和 HTTP 元数据
-│   │   ├── apiroutes/           # proto 路由元数据
-│   │   └── apidocs/             # 内嵌 OpenAPI、RBAC 策略
-│   ├── tools/                   # HTTP/模型生成、代理装配及 CRUD 注册
-│   ├── scripts/                 # 部署、隔离验证
-│   ├── deploy/                  # Nacos 发布模板
-│   ├── third_party/             # 第三方协议
-│   ├── sql/                     # 数据库资产
-│   ├── artifacts/               # 本地验证产物（不入库）
-│   └── service.mk               # 两个应用共用构建目标
-├── buf.yaml                     # operator.v1 与第三方注解模块
-├── buf.gen.yaml                 # Go 生成模板
-├── buf.admin.openapi.gen.yaml   # HTTP 文档模板
-├── buf.react.admin.typescript.gen.yaml
-├── Makefile
-├── go.mod
-├── go.sum
-├── docker-compose.yaml
-└── Dockerfile
+│   ├── cmd/server/            # Kratos 启动、Wire 依赖注入
+│   └── internal/
+│       ├── service/          # 实现 gRPC 方法
+│       ├── server/           # gRPC 注册与 API/RPC 适配
+│       └── data/             # GORM 仓储；store/ 由模型 proto 生成
+└── platform/
+    ├── proto/operator/v1/    # gRPC 合约、业务数据与持久化模型
+    ├── pb/operator/          # 平铺的生成 Go 文件
+    ├── pkg/                  # 认证、隔离、配置等公共依赖
+    ├── tools/                # 协议、模型与路由适配生成器
+    ├── deploy/               # 基础设施配置模板
+    └── scripts/              # 环境、部署和验收脚本
 ```
 
-backend 只有 admin、operator、platform 三个顶级目录。两个应用分别构建和部署，共用根目录的 Go module 和 platform 的公共契约与运行库。admin 验证 HTTP 权限后通过类型化 gRPC 调用 operator；operator 只开放内部 gRPC，保留租户数据隔离与业务约束。platform 的运行库不反向导入服务的 internal 包。
+共享 `backend/go.mod`。API 与服务 protobuf 独立，网关通过显式字段转换调用 gRPC。仓储直接使用从 model proto 生成的 GORM 模型；不要手写第二份数据库 PO。
 
-开发规范见 [backend/AGENTS.md](../backend/AGENTS.md)，环境变量、Nacos、生成与部署见 [服务拆分指南](service_split.md)。
+在 `backend` 执行 `make api openapi ts`，依次生成 RPC、模型、Hertz 路由、适配器、Wire、OpenAPI 和 TypeScript。扩展方法见 [CRUD 指南](crud_module_guide/backend.md)。

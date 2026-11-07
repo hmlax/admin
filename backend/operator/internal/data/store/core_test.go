@@ -28,7 +28,7 @@ func fixture(t *testing.T) *Client {
 	})
 	require.NoError(t, err)
 	client := NewClient(db)
-	require.NoError(t, db.AutoMigrate(&User{}, &Menu{}, &AiAgentApp{}))
+	require.NoError(t, db.AutoMigrate(&User{}, &Menu{}, &Role{}))
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, sqlDB.Close()) })
@@ -91,12 +91,12 @@ func TestTransactionAndFalseValue(t *testing.T) {
 	n, err := client.User.Query().Count(ctx)
 	require.NoError(t, err)
 	require.Zero(t, n)
-	app, err := client.AiAgentApp.Create().SetName("disabled").SetTenantID(101).SetEnabled(false).Save(ctx)
+	app, err := client.Role.Create().SetName("disabled").SetTenantID(101).SetCode("disabled").SetIsProtected(false).Save(ctx)
 	require.NoError(t, err)
-	loaded, err := client.AiAgentApp.Get(ctx, app.ID)
+	loaded, err := client.Role.Get(ctx, app.ID)
 	require.NoError(t, err)
-	require.NotNil(t, loaded.Enabled)
-	require.False(t, *loaded.Enabled)
+	require.NotNil(t, loaded.IsProtected)
+	require.False(t, *loaded.IsProtected)
 }
 
 func TestTypedJSONUpdate(t *testing.T) {

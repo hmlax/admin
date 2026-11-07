@@ -1,17 +1,4 @@
-// 跨包（service 层）测试装配：导出免 bootstrap.Context 的 repo 构造器，
-// 字段初始化必须与生产 NewXxxRepo 逐字段一致，改生产构造器须同步此处。
-//
-// 说明：
-//   - 各构造器与对应 *_repo.go 的生产构造器逐字段对齐（含 mapper/converter 初始化与
-//     init() 调用），唯一差异是 log 一律 bLogger.NewHelper(bLogger.NopLogger())；
-//     dbClient 由调用方传入（测试场景为 storetest.NewClientForTest 的 SQLite 内存库）。
-//   - 生产构造器中经由 *bootstrap.Context 注入的仅是日志助手，无其他隐藏依赖；
-//     依赖 redis/minio 等外部件的构造器不在此导出。
-//   - RoleRepo / OrgUnitRepo 的关联子 repo 由本文件内 testkitXxx 私有构造器组装，
-//     组装关系对齐 internal/data/providers.go 的仓储依赖图。
-//   - NewTenantUsageRepoForTest 的 authenticator 参数按生产签名保留：
-//     TenantUsageRepo 仅在 CleanupTenantData/EnforceExpiryPolicies 中解引用它且有
-//     nil 守卫，GetUsage 不触碰；测试不覆盖吊销令牌链路时可传 nil。
+// Repository constructors for service tests. Keep fields aligned with production constructors.
 package data
 
 import (
@@ -20,8 +7,6 @@ import (
 	"github.com/tx7do/go-utils/mapper"
 
 	"go-admin/operator/internal/data/store"
-	"go-admin/operator/internal/data/store/internalmessage"
-	"go-admin/operator/internal/data/store/internalmessagerecipient"
 	"go-admin/operator/internal/data/store/orgunit"
 	"go-admin/operator/internal/data/store/permission"
 	"go-admin/operator/internal/data/store/role"
@@ -46,16 +31,6 @@ func NewTenantRepoForTest(dbClient *store.DBClient) *TenantRepo {
 	repo.init()
 
 	return repo
-}
-
-// NewTenantUsageRepoForTest 逐字段复刻 tenant_usage_repo.go 的 NewTenantUsageRepo
-// （log 换 NopLogger；authenticator 语义见文件头说明）。
-func NewTenantUsageRepoForTest(dbClient *store.DBClient, authenticator *Authenticator) *TenantUsageRepo {
-	return &TenantUsageRepo{
-		dbClient:      dbClient,
-		authenticator: authenticator,
-		log:           bLogger.NewHelper(bLogger.NopLogger()),
-	}
 }
 
 // NewRoleRepoForTest 逐字段复刻 role_repo.go 的 NewRoleRepo（log 换 NopLogger；
@@ -99,60 +74,6 @@ func NewOrgUnitRepoForTest(dbClient *store.DBClient) *OrgUnitRepo {
 		mapper:          mapper.NewCopierMapper[operatorV1.OrgUnit, store.OrgUnit](),
 		typeConverter:   mapper.NewEnumTypeConverter[operatorV1.OrgUnit_Type, orgunit.Type](operatorV1.OrgUnit_Type_name, operatorV1.OrgUnit_Type_value),
 		statusConverter: mapper.NewEnumTypeConverter[operatorV1.OrgUnit_Status, orgunit.Status](operatorV1.OrgUnit_Status_name, operatorV1.OrgUnit_Status_value),
-	}
-
-	repo.init()
-
-	return repo
-}
-
-// NewNotificationPreferenceRepoForTest 逐字段复刻 notification_preference_repo.go 的
-// NewNotificationPreferenceRepo（log 换 NopLogger）。
-func NewNotificationPreferenceRepoForTest(dbClient *store.DBClient) *NotificationPreferenceRepo {
-	return &NotificationPreferenceRepo{
-		log:      bLogger.NewHelper(bLogger.NopLogger()),
-		dbClient: dbClient,
-	}
-}
-
-// NewInternalMessageRepoForTest 逐字段复刻 internal_message_repo.go 的
-// NewInternalMessageRepo（log 换 NopLogger）。
-func NewInternalMessageRepoForTest(dbClient *store.DBClient) *InternalMessageRepo {
-	repo := &InternalMessageRepo{
-		log:             bLogger.NewHelper(bLogger.NopLogger()),
-		dbClient:        dbClient,
-		mapper:          mapper.NewCopierMapper[operatorV1.InternalMessage, store.InternalMessage](),
-		statusConverter: mapper.NewEnumTypeConverter[operatorV1.InternalMessage_Status, internalmessage.Status](operatorV1.InternalMessage_Status_name, operatorV1.InternalMessage_Status_value),
-		typeConverter:   mapper.NewEnumTypeConverter[operatorV1.InternalMessage_Type, internalmessage.Type](operatorV1.InternalMessage_Type_name, operatorV1.InternalMessage_Type_value),
-	}
-
-	repo.init()
-
-	return repo
-}
-
-// NewInternalMessageCategoryRepoForTest 逐字段复刻 internal_message_category_repo.go 的
-// NewInternalMessageCategoryRepo（log 换 NopLogger）。
-func NewInternalMessageCategoryRepoForTest(dbClient *store.DBClient) *InternalMessageCategoryRepo {
-	repo := &InternalMessageCategoryRepo{
-		log:      bLogger.NewHelper(bLogger.NopLogger()),
-		dbClient: dbClient,
-		mapper:   mapper.NewCopierMapper[operatorV1.InternalMessageCategory, store.InternalMessageCategory](),
-	}
-
-	repo.init()
-
-	return repo
-}
-
-// NewInternalMessageRecipientRepoForTest 逐字段复刻 internal_message_recipient_repo.go 的
-// NewInternalMessageRecipientRepo（log 换 NopLogger）。
-func NewInternalMessageRecipientRepoForTest(dbClient *store.DBClient) *InternalMessageRecipientRepo {
-	repo := &InternalMessageRecipientRepo{
-		log:             bLogger.NewHelper(bLogger.NopLogger()),
-		dbClient:        dbClient,
-		mapper:          mapper.NewCopierMapper[operatorV1.InternalMessageRecipient, store.InternalMessageRecipient](),
-		statusConverter: mapper.NewEnumTypeConverter[operatorV1.InternalMessageRecipient_Status, internalmessagerecipient.Status](operatorV1.InternalMessageRecipient_Status_name, operatorV1.InternalMessageRecipient_Status_value),
 	}
 
 	repo.init()

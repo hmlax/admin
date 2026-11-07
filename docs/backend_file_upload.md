@@ -198,7 +198,7 @@ sig = HMAC-SHA256(runtime.crypto_key, "{path}|{expires}")   // hex
 
 1. **客户端回执**：客户端 PUT 完成后调用服务端 confirm 接口（携带 objectKey 与 PUT 响应的 ETag）；服务端 HeadObject 校验对象存在 + 大小一致 +（非分片时）ETag 一致后才落库——伪造回执会被 HeadObject 挡住。sha256 无法在不读全量字节的前提下服务端校验，接受降级（该字段在预签名路径下留空或事后补算）。
 2. **待确认表**：presignedUploadFile 签发 URL 前，把 sourceFileName / tenantId / userId 存入一张「待确认」表，关联 objectKey；**配额预检在这一步做**（直传绕过后端，不预检就拦不住超大上传）。
-3. **定时对账兜底**：定时任务扫描到期未确认的行——对象真在（HeadObject/ListObjects 核实）则补全落库，不在则清掉；顺带清孤儿对象。与站内信「台账 + DeliverySweep」同一定式，不依赖任何事件机制，换存储后端也不用改。
+3. **定时对账兜底**：定时任务扫描到期未确认的行——对象真在（HeadObject/ListObjects 核实）则补全落库，不在则清掉；顺带清孤儿对象。不依赖任何事件机制，换存储后端也不用改。
 4. **定时清理**：待确认表加 `created_at`，由定时任务清理 24 小时未完成（拿了 URL 却未上传）的过期记录，防表无限膨胀。
 
 （备选事件源：SeaweedFS filer 的 `[notification]` webhook——`filer.toml` 配置，S3 写入底层经 filer 也会触发，支持 Kafka/PubSub/SQS/Webhook。但载荷是 SeaweedFS 自有格式需适配、送达保障弱于真消息队列，且用了仍需第 3 步对账兜底，一般不值得引入。）

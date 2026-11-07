@@ -14,6 +14,7 @@ import (
 	storetest "go-admin/operator/internal/data/storetest"
 
 	operatorV1 "go-admin/platform/pb/operator"
+	"go-admin/platform/pkg/constants"
 	"go-admin/platform/pkg/middleware/auth"
 )
 
@@ -99,4 +100,32 @@ func TestAdminPortalInitialContextCarriesFieldPermissions(t *testing.T) {
 	require.Empty(t, response.GetMenus())
 	require.Empty(t, response.GetPermissions())
 	require.Equal(t, []string{"User.mobile"}, response.GetHiddenFields())
+}
+
+func TestNavigationKeepsCoreMenusAndPlatformBoundary(t *testing.T) {
+	service := &AdminPortalService{}
+	menus := []*operatorV1.Menu{
+		{
+			Type:   operatorV1.Menu_CATALOG.Enum(),
+			Status: operatorV1.Menu_ON.Enum(),
+			Children: []*operatorV1.Menu{{
+				Name:   trans.Ptr("Tenants"),
+				Type:   operatorV1.Menu_MENU.Enum(),
+				Status: operatorV1.Menu_ON.Enum(),
+				Meta: &operatorV1.MenuMeta{
+					Authority: []string{constants.SystemPlatformAdminPermissionCode},
+				},
+			}},
+		},
+		{
+			Name:   trans.Ptr("Users"),
+			Type:   operatorV1.Menu_MENU.Enum(),
+			Status: operatorV1.Menu_ON.Enum(),
+		},
+	}
+	merchant := service.fillRouteItem(menus, false)
+	require.Len(t, merchant, 1)
+	require.Equal(t, "Users", merchant[0].GetName())
+	require.Len(t, service.fillRouteItem(menus, true), 2)
+	require.Len(t, menus[0].Children, 1, "filtering must preserve stored menu data")
 }

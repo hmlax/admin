@@ -53,7 +53,6 @@
       "mixedNav": "Mixed Menu",
       "fullContent": "Full Content"
     },
-    "content": "Content",
     "contentModes": {
       "wide": "Wide",
       "compact": "Compact"
@@ -108,7 +107,6 @@
     "themeToggle": "Theme Toggle",
     "languageToggle": "Language Toggle",
     "fullscreen": "Fullscreen",
-    "notification": "Notification",
     "lockScreen": "Lock Screen",
     "sidebarToggle": "Sidebar Toggle",
     "refresh": "Refresh",

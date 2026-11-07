@@ -39,7 +39,7 @@ func recordSessionMetaAt(
 		loginAt = time.Now().Unix()
 	}
 
-	// User-Agent 经 HTTP header 透传；非 HTTP 传输（如任务/SSE 内部调用）取不到时留空
+	// User-Agent 经 HTTP header 透传；非 HTTP 传输（如内部调用）取不到时留空
 	ua := ""
 	if header := netutil.HeaderFromContext(ctx); header != nil {
 		ua = header.Get("User-Agent")

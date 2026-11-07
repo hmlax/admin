@@ -446,13 +446,7 @@ export const LayoutPanel: React.FC = () => {
             onChange={(checked) => setPreferences({ widget: { fullscreen: checked } })}
           />
         </div>
-        <div className="preference-item">
-          <span>{t('layout.notification')}</span>
-          <Switch
-            checked={preferences.widget.notification}
-            onChange={(checked) => setPreferences({ widget: { notification: checked } })}
-          />
-        </div>
+
         <div className="preference-item">
           <span>{t('layout.lockScreen')}</span>
           <Switch

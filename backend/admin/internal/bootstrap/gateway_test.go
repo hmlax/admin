@@ -116,12 +116,9 @@ func (*testGateway) ResolvePolicy(context.Context, *operatorV1.ResolvePolicyRequ
 }
 func activeAccess() *operatorV1.TenantAccessData {
 	return &operatorV1.TenantAccessData{
-		TenantExists:     true,
-		Status:           trans.Ptr(operatorV1.Tenant_ON.String()),
-		ApiExists:        true,
-		ModuleClassified: true,
-		PlanId:           1,
-		ModuleInPlan:     true,
+		TenantExists: true,
+		Status:       trans.Ptr(operatorV1.Tenant_ON.String()),
+		ApiExists:    true,
 	}
 }
 
@@ -200,6 +197,17 @@ func TestGatewayAuthorizesBeforeForwardingAndRestoresActor(t *testing.T) {
 			access: &operatorV1.TenantAccessData{
 				TenantExists: true,
 				Status:       trans.Ptr("OFF"),
+			},
+			status: 403,
+		},
+		{
+			name:  "tenant expired",
+			token: "allowed",
+			access: &operatorV1.TenantAccessData{
+				TenantExists: true,
+				Status:       trans.Ptr(operatorV1.Tenant_ON.String()),
+				ExpiresAt:    trans.Ptr(time.Now().Add(-time.Minute).Unix()),
+				ApiExists:    true,
 			},
 			status: 403,
 		},

@@ -9,7 +9,6 @@ services:
       - '127.0.0.1:15888:8080'
     environment:
       ADMIN_API_UPSTREAM: ${ADMIN_API_UPSTREAM:-http://host.docker.internal:7788}
-      ADMIN_SSE_UPSTREAM: ${ADMIN_SSE_UPSTREAM:-http://host.docker.internal:7789}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
 
@@ -24,6 +23,5 @@ services:
     environment:
       MERCHANT_CODE: ${MERCHANT_CODE:-}
       ADMIN_API_UPSTREAM: ${ADMIN_API_UPSTREAM:-http://host.docker.internal:7788}
-      ADMIN_SSE_UPSTREAM: ${ADMIN_SSE_UPSTREAM:-http://host.docker.internal:7789}
     extra_hosts:
       - 'host.docker.internal:host-gateway'

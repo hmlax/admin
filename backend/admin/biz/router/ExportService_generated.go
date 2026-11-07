@@ -9,6 +9,4 @@ import (
 
 func RegisterExportServiceHertzServer(router *transport.Router, service apiV1.ExportServiceHTTPServer) {
 	router.RegisterHZ("GET", "/admin/v1/audit-logs:export", handler.BindExportServiceExportAuditLogs(service))
-	router.RegisterHZ("GET", "/admin/v1/ai/usage-logs:export", handler.BindExportServiceExportAIUsage(service))
-	router.RegisterHZ("GET", "/admin/v1/notification-deliveries:export", handler.BindExportServiceExportNotificationDeliveries(service))
 }

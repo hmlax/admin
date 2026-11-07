@@ -93,33 +93,6 @@ go run ./admin
 ./platform/scripts/deploy/pm2_service.sh
 ```
 
-## SSE 反向代理网关（可选）
-
-SSE 推送链路在生产拓扑中由一个独立的 nginx 反向代理网关承载，把 `/events` 透传至后端 admin-service 的 SSE transport（默认 `7789`）。该网关不随 docker-compose 启动，需单独构建与运行。
-
-构建镜像并运行容器：
-
-```bash
-bash platform/scripts/deploy/sse/build-local-docker-image.sh
-
-# 先查出网络的真名（见下），再用它启动
-docker network ls --filter name=app-tier
-docker run -d -p 8013:8080 --network <上面查到的网络名> --name sse-gateway-local sse-gateway-local
-```
-
-说明：
-
-- 网关必须与 admin-service 共处同一 Docker 网络才能访问后端。
-- **`--network app-tier` 不能照抄**：`backend/docker-compose.yaml:1-3` 只声明了
-  `networks: app-tier: {driver: bridge}`，没写 `name:`，所以 Compose 建出的真实网络名带项目名前缀
-  （默认项目名取 compose 文件所在目录名，即形如 `<目录名>_app-tier`；用了 `-p` / `COMPOSE_PROJECT_NAME`
-  则是另一个前缀）。**具体名字无法凭文档断定，用 `docker network ls --filter name=app-tier` 现场查**。
-  想钉死成 `app-tier`，在 compose 的该网络下加一行 `name: app-tier` 后 `docker compose up -d` 重建。
-  同样的照抄问题也存在于 `platform/scripts/deploy/sse/build-local-docker-image.sh` 结尾打印的示例命令里
-  （脚本只是 echo 一个 sample，不代为执行），以本节为准。
-- 配置文件 `platform/scripts/deploy/sse/nginx.conf` 已针对 SSE 关闭 gzip 与一切代理缓冲（`proxy_buffering off` / `proxy_cache off` / `proxy_request_buffering off`），并使用 HTTP/1.1 与长连接保活；这些是 SSE 实时性的必要配置，勿随意回退。
-- TLS 终止由外层负载均衡负责，与前端静态站点部署一致，网关自身仅监听 HTTP。
-- 独立部署时如后端地址变更，需修改 `nginx.conf` 中的 `upstream`。
 
 ## 生产环境密钥配置
 
@@ -145,7 +118,7 @@ openssl pkey -in jwt_private_key.pem -pubout -out jwt_public_key.pem
 | 机制 | 形态 | 说明 |
 |---|---|---|
 | [`platform/scripts/backup/pg_backup.sh`](../backend/platform/scripts/backup/pg_backup.sh) | pg_dump 物理备份（Docker 容器 / 本地直连双模式），定时全量、默认保留 30 份自动轮换，附恢复操作文档 | 部署侧脚本，cron/计划任务挂载 |
-| asynq `backup` 任务 | 应用级逻辑备份：核心表导出 JSON → gzip → 上传对象存储（SeaweedFS）`backups` 桶（日期分层对象） | 调度与机制见 [task_system.md](./task_system.md) 第 5.3 节；当前无自动恢复/演练工具链，桶内对象无生命周期清理（该文档第 10 节） |
+| asynq `backup` 任务 | 应用级逻辑备份：核心表导出 JSON → gzip → 上传对象存储（SeaweedFS）`backups` 桶（日期分层对象） | 调度与机制见 [service_split.md](./service_split.md) 第 5.3 节；当前无自动恢复/演练工具链，桶内对象无生命周期清理（该文档第 10 节） |
 
 **恢复演练**：没有验证过的备份等于没有。任一机制接入后，用一次真实恢复演练闭环
 （pg_dump 走其附带恢复文档；JSON 备份目前需手工下载反序列化）。

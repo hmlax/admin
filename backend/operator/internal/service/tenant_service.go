@@ -26,8 +26,8 @@ type TenantService struct {
 	operatorV1.UnimplementedTenantServiceServer
 	log *bLogger.Helper
 
-	tenantRepo          *data.TenantRepo
-	tenantUsageRepo     *data.TenantUsageRepo
+	tenantRepo *data.TenantRepo
+
 	userRepo            data.UserRepo
 	userCredentialsRepo *data.UserCredentialRepo
 	roleRepo            *data.RoleRepo
@@ -38,16 +38,16 @@ type TenantService struct {
 func NewTenantService(
 	ctx *bootstrap.Context,
 	tenantRepo *data.TenantRepo,
-	tenantUsageRepo *data.TenantUsageRepo,
+
 	userRepo data.UserRepo,
 	userCredentialsRepo *data.UserCredentialRepo,
 	roleRepo *data.RoleRepo,
 	authorizer *authorizer.Authorizer,
 ) *TenantService {
 	return &TenantService{
-		log:                 ctx.NewLoggerHelper("tenant/service/admin-service"),
-		tenantRepo:          tenantRepo,
-		tenantUsageRepo:     tenantUsageRepo,
+		log:        ctx.NewLoggerHelper("tenant/service/admin-service"),
+		tenantRepo: tenantRepo,
+
 		userRepo:            userRepo,
 		userCredentialsRepo: userCredentialsRepo,
 		roleRepo:            roleRepo,
@@ -332,24 +332,5 @@ func (s *TenantService) CreateTenantWithAdminUser(ctx context.Context, req *oper
 		s.log.Errorf(ctx, "refresh policies after tenant creation failed: %v", policyErr)
 	}
 
-	return &emptypb.Empty{}, nil
-}
-
-// GetUsage 查询租户用量与配额
-func (s *TenantService) GetUsage(ctx context.Context, req *operatorV1.GetTenantUsageRequest) (*operatorV1.TenantUsage, error) {
-	if req == nil || req.GetId() == 0 {
-		return nil, operatorV1.ErrorAdminBadRequest("invalid parameter")
-	}
-	return s.tenantUsageRepo.GetUsage(ctx, req.GetId())
-}
-
-// CleanupData 清理租户数据（保留租户记录，状态改为 OFF）
-func (s *TenantService) CleanupData(ctx context.Context, req *operatorV1.CleanupTenantDataRequest) (*emptypb.Empty, error) {
-	if req == nil || req.GetId() == 0 {
-		return nil, operatorV1.ErrorAdminBadRequest("invalid parameter")
-	}
-	if err := s.tenantUsageRepo.CleanupTenantData(ctx, req.GetId()); err != nil {
-		return nil, err
-	}
 	return &emptypb.Empty{}, nil
 }

@@ -11,13 +11,10 @@ import {
   PlusOutlined,
   InfoCircleOutlined,
   SafetyOutlined,
-  PrinterOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-
-import { usePrintTemplateDialog } from '@/components/common/PrintTemplatePrint';
 
 import { PaginationQuery } from '@/core';
 import { TABLE } from '@/config/constants';
@@ -56,14 +53,6 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
   const canUpdate = hasApiAccess('PUT', USER_DETAIL_API_PATH);
   const canDelete = hasApiAccess('DELETE', USER_DETAIL_API_PATH);
   const canReadDetail = hasApiAccess('GET', USER_DETAIL_API_PATH);
-  const canPrint =
-    hasApiAccess('GET', '/admin/v1/print-templates') &&
-    hasApiAccess('POST', '/admin/v1/print-templates:render-pdf');
-
-  // 行打印定式（docs/print_template.md §5）：模板按 resourceKey 匹配，无绑定回退通用模板；
-  // print 入参传数组即批量（内核份数合并单文档）
-  const { node: printDialogNode, print: printRow } = usePrintTemplateDialog();
-  const [selectedRows, setSelectedRows] = useState<UserRecord[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create');
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
@@ -233,13 +222,6 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
                 onClick: () => navigate(`/opm/users/detail/${record.id}`),
               },
               {
-                key: 'print',
-                hidden: !canPrint,
-                label: t('printTemplate:print'),
-                icon: <PrinterOutlined />,
-                onClick: () => printRow('system/user', record),
-              },
-              {
                 key: 'edit',
                 hidden: !canUpdate,
                 label: t('common:button.edit'),
@@ -329,14 +311,6 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
             };
           }}
           rowKey="id"
-          rowSelection={
-            canPrint
-              ? {
-                  onChange: (_keys, rows) => setSelectedRows(rows),
-                  selections: true,
-                }
-              : false
-          }
           search={{ optionRender: searchOptionRender, labelWidth: 'auto', defaultCollapsed: true }}
           pagination={{
             defaultPageSize: TABLE.DEFAULT_PAGE_SIZE,
@@ -351,16 +325,6 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
                 columns={columns}
                 filename="users"
               />,
-              canPrint ? (
-                <Button
-                  key="print-batch"
-                  icon={<PrinterOutlined />}
-                  disabled={selectedRows.length === 0}
-                  onClick={() => printRow('system/user', selectedRows)}
-                >
-                  {t('printTemplate:batchPrint')}
-                </Button>
-              ) : null,
               canCreate ? (
                 <Button
                   key="create"
@@ -406,8 +370,6 @@ const UserList: React.FC<UserListProps> = ({ tenantId, orgUnitId }) => {
           }}
         />
       )}
-
-      {printDialogNode}
     </>
   );
 };

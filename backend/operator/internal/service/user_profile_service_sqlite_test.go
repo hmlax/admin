@@ -118,9 +118,9 @@ func newUserProfileServiceForTest(t *testing.T) userProfileServiceTestEnv {
 		roleRepo:           data.NewRoleRepoForTest(dbClient),
 		userCredentialRepo: userCredentialRepo,
 		authenticator:      authenticator,
-		notifier:           nil,
-		vcodeCache:         nil,
-		mc:                 nil,
+
+		vcodeCache: nil,
+		mc:         nil,
 	}
 	return userProfileServiceTestEnv{svc: svc, stub: stub, dbClient: dbClient, tokenCache: tokenCache}
 }

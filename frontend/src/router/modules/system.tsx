@@ -40,17 +40,6 @@ export const systemRoutes: AppRouteObject[] = [
         },
       },
       {
-        name: 'tasks',
-        path: 'tasks', // 相对路径，最终为 /system/tasks
-        element: createLazyRoute(() => import('@/pages/app/system/task')),
-        meta: {
-          title: 'routes:tasks',
-          icon: 'lucide:list-todo', // Iconify 格式
-          order: 3,
-          // permission: 'sys:platform_admin', // 平台管理员或租户管理员权限（开发阶段暂时注释）
-        },
-      },
-      {
         name: 'login-policies',
         path: 'login-policies', // 相对路径，最终为 /system/login-policies
         element: createLazyRoute(() => import('@/pages/app/system/login-policy')),
@@ -84,39 +73,6 @@ export const systemRoutes: AppRouteObject[] = [
         },
       },
       {
-        name: 'server-monitor',
-        path: 'server-monitor', // 相对路径，最终为 /system/server-monitor
-        element: createLazyRoute(() => import('@/pages/app/system/server-monitor')),
-        meta: {
-          title: 'routes:server-monitor',
-          icon: 'lucide:activity', // Iconify 格式
-          order: 7,
-          // permission: 'sys:platform_admin', // 仅平台管理员权限（开发阶段暂时注释）
-        },
-      },
-      {
-        name: 'monitor-alerts',
-        path: 'monitor-alerts', // 相对路径，最终为 /system/monitor-alerts
-        element: createLazyRoute(() => import('@/pages/app/system/monitor-alert')),
-        meta: {
-          title: 'routes:monitor-alerts',
-          icon: 'lucide:bell-plus', // Iconify 格式
-          order: 8,
-          // permission: 'sys:platform_admin', // 仅平台管理员权限（开发阶段暂时注释）
-        },
-      },
-      {
-        name: 'scripts',
-        path: 'scripts', // 相对路径，最终为 /system/scripts
-        element: createLazyRoute(() => import('@/pages/app/system/script')),
-        meta: {
-          title: 'routes:scripts',
-          icon: 'lucide:file-code-2', // Iconify 格式
-          order: 9,
-          // permission: 'sys:platform_admin', // 仅平台管理员权限（开发阶段暂时注释）
-        },
-      },
-      {
         name: 'configs',
         path: 'configs', // 相对路径，最终为 /system/configs
         element: createLazyRoute(() => import('@/pages/app/system/config')),
@@ -135,16 +91,6 @@ export const systemRoutes: AppRouteObject[] = [
           title: 'routes:accessKeys',
           icon: 'lucide:key-round',
           order: 11,
-        },
-      },
-      {
-        name: 'print-templates',
-        path: 'print-templates', // 相对路径，最终为 /system/print-templates
-        element: createLazyRoute(() => import('@/pages/app/system/print-template')),
-        meta: {
-          title: 'routes:print-templates',
-          icon: 'lucide:printer',
-          order: 12,
         },
       },
     ],

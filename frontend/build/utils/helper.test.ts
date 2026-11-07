@@ -15,17 +15,14 @@ describe('frontend environment', () => {
     ['platform', 'production'],
     ['merchant', 'development'],
     ['merchant', 'production'],
-  ])(
-    'loads the required %s %s settings, including local preview proxies',
-    (kind, mode) => {
-      const appRoot = fileURLToPath(new URL(`../../${kind}-admin/`, import.meta.url));
-      const env = loadEnv(mode, appRoot, 'VITE_');
-      expect(() => handleEnv(env)).not.toThrow();
-      expect(env.VITE_APP_TITLE).toContain('Go Admin');
-      expect(env.VITE_AES_KEY).toHaveLength(16);
-      expect(handleEnv(env).VITE_PROXY).toHaveLength(2);
-    },
-  );
+  ])('loads the required %s %s settings, including local preview proxies', (kind, mode) => {
+    const appRoot = fileURLToPath(new URL(`../../${kind}-admin/`, import.meta.url));
+    const env = loadEnv(mode, appRoot, 'VITE_');
+    expect(() => handleEnv(env)).not.toThrow();
+    expect(env.VITE_APP_TITLE).toContain('Go Admin');
+    expect(env.VITE_AES_KEY).toHaveLength(16);
+    expect(handleEnv(env).VITE_PROXY).toHaveLength(1);
+  });
 
   it('keeps refresh-token requests at the API root when restoring a nested page', () => {
     const env = loadEnv('development', root, 'VITE_');
@@ -43,17 +40,11 @@ describe('frontend environment', () => {
   });
 
   it('stops startup with the missing variable names when the environment files are absent', () => {
-    expect(() => handleEnv({})).toThrow(/VITE_API_URL.*VITE_SSE_URL.*VITE_APP_TITLE.*VITE_AES_KEY/);
+    expect(() => handleEnv({})).toThrow(/VITE_API_URL.*VITE_APP_TITLE.*VITE_AES_KEY/);
   });
 
-  it.each(['', 'MerchantA'])('pins the portal header for API and SSE proxies (%s)', (code) => {
-    const proxies = createProxy(
-      [
-        ['/admin', 'http://127.0.0.1:7788'],
-        ['/events', 'http://127.0.0.1:7789'],
-      ],
-      code,
-    );
+  it.each(['', 'MerchantA'])('pins the portal header for API proxies (%s)', (code) => {
+    const proxies = createProxy([['/admin', 'http://127.0.0.1:7788']], code);
     for (const proxy of Object.values(proxies)) {
       const on = vi.fn();
       proxy.configure?.({ on } as never, {} as never);

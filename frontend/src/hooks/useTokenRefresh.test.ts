@@ -7,7 +7,6 @@ const auth = vi.hoisted(() => ({
 }));
 vi.mock('@/stores/auth', () => ({ useAuthStore: { getState: () => auth } }));
 vi.mock('@/api/hooks/user-profile', () => ({ fetchUserProfile: vi.fn() }));
-vi.mock('@/core/transport/sse', () => ({ globalSSEClient: {} }));
 
 beforeEach(() => {
   vi.resetModules();

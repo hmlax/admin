@@ -24,8 +24,7 @@ type UserProfileService struct {
 	roleRepo           *data.RoleRepo
 	userCredentialRepo *data.UserCredentialRepo
 	authenticator      *data.Authenticator
-	// notifier 是唯一的对外通知出口（邮箱绑定验证码邮件），渠道选择与 SMTP 细节不外泄。
-	notifier   Notifier
+
 	vcodeCache *data.VCodeCache
 	mc         *oss.MinIOClient
 
@@ -39,7 +38,7 @@ func NewUserProfileService(
 	roleRepo *data.RoleRepo,
 	userCredentialRepo *data.UserCredentialRepo,
 	authenticator *data.Authenticator,
-	notifier Notifier,
+
 	vcodeCache *data.VCodeCache,
 	mc *oss.MinIOClient,
 	mailer *TransactionMailer,
@@ -50,10 +49,10 @@ func NewUserProfileService(
 		roleRepo:           roleRepo,
 		userCredentialRepo: userCredentialRepo,
 		authenticator:      authenticator,
-		notifier:           notifier,
-		vcodeCache:         vcodeCache,
-		mc:                 mc,
-		mailer:             mailer,
+
+		vcodeCache: vcodeCache,
+		mc:         mc,
+		mailer:     mailer,
 	}
 }
 

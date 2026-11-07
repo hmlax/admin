@@ -19,7 +19,6 @@
   "header": {
     "profile": "Profile",
     "settings": "Preferences",
-    "inbox": "Inbox",
     "lockScreen": "Lock Screen",
     "logout": "Logout",
     "logoutConfirmTitle": "Notice",
@@ -27,7 +26,6 @@
     "fullscreen": "Fullscreen",
     "exitFullscreen": "Exit Fullscreen",
     "helpDoc": "Help Docs",
-    "notification": "Notifications",
     "guest": "Guest",
     "switchToLight": "Switch to Light Mode",
     "switchToDark": "Switch to Dark Mode",
@@ -42,7 +40,6 @@
     "noResults": "No matching pages found",
     "noHistory": "No recent searches",
     "searchRecent": "Recent",
-    "semanticTitle": "Semantic Search",
     "searchSelect": "Select",
     "searchSwitch": "Switch",
     "searchClose": "Close"

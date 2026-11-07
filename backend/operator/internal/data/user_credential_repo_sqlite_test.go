@@ -866,3 +866,56 @@ func TestUserCredentialRepoSqlite_Delete(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, remain, "删除后表内应归零")
 }
+
+func TestCredentialLifecycleUsesDeploymentAESKey(t *testing.T) {
+	for _, key := range []string{"0123456789abcdef", "0123456789abcdefghijklmn", "0123456789abcdefghijklmnopqrstuv"} {
+		t.Run(fmt.Sprintf("AES%d", len(key)*8), func(t *testing.T) {
+			repo := newUserCredentialRepoSqlite(t)
+			repo.credentialKey = []byte(key)
+			ctx := storetest.NewSystemContext(t.Context())
+			const identifier = "deployment-key-user"
+			const initial = "Initial7!Pass"
+			const changed = "Changed8!Pass"
+			const reset = "ResetNew9!Pass"
+			encrypt := func(plain string, aesKey []byte) string {
+				t.Helper()
+				ciphertext, err := crypto.AesEncrypt([]byte(plain), aesKey, nil)
+				require.NoError(t, err)
+				return base64.StdEncoding.EncodeToString(ciphertext)
+			}
+			require.NoError(t, repo.Create(ctx, &operatorV1.CreateUserCredentialRequest{
+				Data: &operatorV1.UserCredential{
+					UserId:         trans.Ptr(uint32(77)),
+					TenantId:       trans.Ptr(uint32(0)),
+					IdentityType:   operatorV1.UserCredential_USERNAME.Enum(),
+					Identifier:     trans.Ptr(identifier),
+					CredentialType: operatorV1.UserCredential_PASSWORD_HASH.Enum(),
+					Credential:     trans.Ptr(initial),
+					Status:         operatorV1.UserCredential_ENABLED.Enum(),
+				},
+			}))
+			_, err := repo.FindUserCredential(ctx, 0, operatorV1.UserCredential_USERNAME, identifier, encrypt(initial, crypto.DefaultAESKey), true)
+			require.Error(t, err, "the legacy key must not authenticate a configured deployment")
+			userID, err := repo.FindUserCredential(ctx, 0, operatorV1.UserCredential_USERNAME, identifier, encrypt(initial, []byte(key)), true)
+			require.NoError(t, err)
+			require.Equal(t, uint32(77), userID)
+			require.NoError(t, repo.ChangeCredential(ctx, &operatorV1.ChangeCredentialRequest{
+				IdentityType:  operatorV1.UserCredential_USERNAME,
+				Identifier:    identifier,
+				OldCredential: encrypt(initial, []byte(key)),
+				NewCredential: encrypt(changed, []byte(key)),
+				NeedDecrypt:   true,
+			}))
+			require.NoError(t, repo.ResetCredentialForUser(ctx, 0, 77, &operatorV1.ResetCredentialRequest{
+				IdentityType:  operatorV1.UserCredential_USERNAME,
+				Identifier:    identifier,
+				NewCredential: encrypt(reset, []byte(key)),
+				NeedDecrypt:   true,
+			}))
+			_, err = repo.FindUserCredential(ctx, 0, operatorV1.UserCredential_USERNAME, identifier, encrypt(changed, []byte(key)), true)
+			require.Error(t, err, "reset must invalidate the prior password")
+			_, err = repo.FindUserCredential(ctx, 0, operatorV1.UserCredential_USERNAME, identifier, encrypt(reset, []byte(key)), true)
+			require.NoError(t, err)
+		})
+	}
+}

@@ -103,7 +103,7 @@ get_go_local_version() {
 }
 
 # 获取 Go 最新稳定版本号（通过官方 API）
-# 成功: 输出版本号 (如 "go1.25.3")
+# 成功: 输出版本号 (如 "go1.27.3")
 # 失败: return 1 (不输出任何内容)
 get_go_latest_version() {
     if ! command -v curl &> /dev/null; then
@@ -225,7 +225,7 @@ install_golang() {
 
   log "Go 未安装，开始安装最新版本..."
   local latest_version
-  latest_version=$(get_go_latest_version) || latest_version="go1.25.3"
+  latest_version=$(get_go_latest_version) || latest_version="go1.27.3"
   log "将安装版本: $latest_version"
 
   install_go_version "$latest_version" "$GO_OS" "$GO_ARCH"

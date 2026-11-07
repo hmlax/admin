@@ -5,8 +5,8 @@
 ## 布局与职责
 
 - `frontend/platform-admin/`：平台管理后台；`frontend/merchant-admin/`：商户管理后台。两套 React 19 + Ant Design 应用独立启动、构建和部署，共享 `frontend/src/`。开发前读 `frontend/AGENTS.md`。
-- `backend/admin/`：Hertz HTTP API（7788）、SSE（7789）；负责 JWT、Redis 会话吊销、RBAC、租户入口门禁、字段权限及审计。
-- `backend/operator/`：Kratos gRPC（7790）；负责业务、GORM、Redis、对象存储与任务，不提供 HTTP 监听。
+- `backend/admin/`：Hertz HTTP API（7788）；负责 JWT、Redis 会话吊销、RBAC、租户入口门禁、字段权限及审计。
+- `backend/operator/`：Kratos gRPC（7790）；负责业务、GORM、Redis、对象存储，不提供 HTTP 监听。
 - `backend/platform/`：公共依赖、共享协议和生成代码、配置安全库、代码生成及部署工具。backend 下只保留 admin、operator、platform 三个顶级目录。
 - 两个后端项目共用 `backend/go.mod`，各自维护独立的 API/RPC protobuf 契约、构建和部署。
 - operator 的 gRPC 数据结构、方法和持久化模型定义在 `backend/platform/proto/operator/v1/*.proto`（`operator.v1`），生成到 `backend/platform/pb/operator/`。API 使用独立的 `backend/admin/idl/proto/admin/v1/*.proto`（`admin.v1`）定义 HTTP 路由及自己的请求、响应、分页和业务 DTO，生成到 `backend/admin/biz/model/admin/v1/`。两套业务 protobuf 不共用、不互相 import、不使用类型别名；handler 通过显式逐字段转换调用 operator gRPC。前端只使用 `generated/admin/v1`。
@@ -35,4 +35,4 @@
 ## 专题
 
 已有资源加字段先读 `docs/field_change_guide.md`；新增资源读 `docs/crud_module_guide/`；表单关闭行为读 `docs/form_drawer_close_guard.md`。
-认证、租户、套餐、任务、SSE、数据范围、AI、打印、BI 分别参考 `docs/authentication.md`、`docs/tenant_isolation.md`、`docs/plan_billing.md`、`docs/task_system.md`、`docs/sse_architecture.md`、`docs/data_scope_design.md`、`docs/ai_module.md`、`docs/print_template.md`、`docs/bi_dashboard.md`。这些文档中的旧单体/多前端路径以本指南和 `docs/service_split.md` 为准。
+认证、多租户、数据范围与服务配置分别参考 `docs/authentication.md`、`docs/tenant_isolation.md`、`docs/data_scope_design.md` 和 `docs/service_split.md`。

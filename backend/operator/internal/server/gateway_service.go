@@ -4,17 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
-	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/tx7do/go-crud/viewer"
 	"github.com/tx7do/go-utils/authorizer"
-	"github.com/tx7do/kratos-transport/transport/sse"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go-admin/operator/internal/data"
@@ -34,9 +29,8 @@ type GatewayService struct {
 	DataAccessAudit *data.DataAccessAuditLogRepo
 	PolicyAudit     *data.PolicyEvaluationLogRepo
 	AuditExport     *service.AuditExportService
-	DataExport      *service.DataExportService
-	Files           *service.FileTransferService
-	Redis           *redis.Client
+
+	Files *service.FileTransferService
 }
 
 func (s *GatewayService) GetPolicies(ctx context.Context, _ *emptypb.Empty) (*operatorV1.PoliciesResponse, error) {
@@ -135,10 +129,6 @@ func (s *GatewayService) Export(ctx context.Context, req *operatorV1.ExportReque
 	switch req.GetResource() {
 	case operatorV1.ExportRequest_AUDIT:
 		err = s.AuditExport.ServeExport(w, r)
-	case operatorV1.ExportRequest_AI_USAGE:
-		err = s.DataExport.ServeAiUsageExport(w, r)
-	case operatorV1.ExportRequest_NOTIFICATION_DELIVERY:
-		err = s.DataExport.ServeNotificationDeliveryExport(w, r)
 	default:
 		return nil, fmt.Errorf("unknown export resource")
 	}
@@ -158,70 +148,4 @@ func (s *GatewayService) ReadMedia(ctx context.Context, req *operatorV1.MediaReq
 		return nil, err
 	}
 	return w.response(), nil
-}
-
-const eventChannelPrefix = "go-admin:sse:"
-
-func (s *GatewayService) Publish(ctx context.Context, stream sse.StreamID, event *sse.Event) {
-	s.TryPublish(ctx, stream, event)
-}
-func (s *GatewayService) TryPublish(ctx context.Context, stream sse.StreamID, event *sse.Event) bool {
-	data, err := proto.Marshal(&operatorV1.Event{
-		Id:      event.ID,
-		Data:    event.Data,
-		Event:   event.Event,
-		Retry:   event.Retry,
-		Comment: event.Comment,
-	})
-	if err != nil {
-		slog.ErrorContext(ctx, "encode SSE event", "error", err)
-		return false
-	}
-	result := s.Redis.Publish(ctx, eventChannelPrefix+string(stream), data)
-	if result.Err() != nil {
-		slog.ErrorContext(ctx, "publish SSE event", "error", result.Err())
-		return false
-	}
-	return result.Val() > 0
-}
-func (s *GatewayService) SubscribeEvents(req *operatorV1.SubscribeRequest, stream operatorV1.GatewayService_SubscribeEventsServer) error {
-	ctx := stream.Context()
-	subscription := s.Redis.Subscribe(ctx, eventChannelPrefix+req.GetStream())
-	defer func() {
-		if closeErr := subscription.Close(); closeErr != nil {
-			slog.Error("close gateway subscription", "error", closeErr)
-		}
-	}()
-	if _, err := subscription.Receive(ctx); err != nil {
-		return err
-	}
-	// Initial comment lets the gateway finish headers after subscription is ready.
-	if err := stream.Send(&operatorV1.Event{Comment: []byte("connected")}); err != nil {
-		return err
-	}
-	// PubSub owns its receive goroutine; Close above stops it on cancellation.
-	messages := subscription.Channel(redis.WithChannelSize(1))
-	heartbeat := time.NewTicker(15 * time.Second)
-	defer heartbeat.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-heartbeat.C:
-			if err := stream.Send(&operatorV1.Event{Comment: []byte("heartbeat")}); err != nil {
-				return err
-			}
-		case message, ok := <-messages:
-			if !ok {
-				return fmt.Errorf("SSE event subscription closed")
-			}
-			event := new(operatorV1.Event)
-			if err := proto.Unmarshal([]byte(message.Payload), event); err != nil {
-				return err
-			}
-			if err := stream.Send(event); err != nil {
-				return err
-			}
-		}
-	}
 }

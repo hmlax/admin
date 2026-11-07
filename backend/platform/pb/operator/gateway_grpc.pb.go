@@ -27,7 +27,6 @@ const (
 	GatewayService_ResolvePolicy_FullMethodName       = "/operator.v1.GatewayService/ResolvePolicy"
 	GatewayService_Export_FullMethodName              = "/operator.v1.GatewayService/Export"
 	GatewayService_ReadMedia_FullMethodName           = "/operator.v1.GatewayService/ReadMedia"
-	GatewayService_SubscribeEvents_FullMethodName     = "/operator.v1.GatewayService/SubscribeEvents"
 )
 
 // GatewayServiceClient is the client API for GatewayService service.
@@ -43,7 +42,6 @@ type GatewayServiceClient interface {
 	ResolvePolicy(ctx context.Context, in *ResolvePolicyRequest, opts ...grpc.CallOption) (*ResolvePolicyResponse, error)
 	Export(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (*FileResponse, error)
 	ReadMedia(ctx context.Context, in *MediaRequest, opts ...grpc.CallOption) (*FileResponse, error)
-	SubscribeEvents(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
 }
 
 type gatewayServiceClient struct {
@@ -124,25 +122,6 @@ func (c *gatewayServiceClient) ReadMedia(ctx context.Context, in *MediaRequest, 
 	return out, nil
 }
 
-func (c *gatewayServiceClient) SubscribeEvents(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &GatewayService_ServiceDesc.Streams[0], GatewayService_SubscribeEvents_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[SubscribeRequest, Event]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GatewayService_SubscribeEventsClient = grpc.ServerStreamingClient[Event]
-
 // GatewayServiceServer is the server API for GatewayService service.
 // All implementations must embed UnimplementedGatewayServiceServer
 // for forward compatibility.
@@ -156,7 +135,6 @@ type GatewayServiceServer interface {
 	ResolvePolicy(context.Context, *ResolvePolicyRequest) (*ResolvePolicyResponse, error)
 	Export(context.Context, *ExportRequest) (*FileResponse, error)
 	ReadMedia(context.Context, *MediaRequest) (*FileResponse, error)
-	SubscribeEvents(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error
 	mustEmbedUnimplementedGatewayServiceServer()
 }
 
@@ -187,9 +165,6 @@ func (UnimplementedGatewayServiceServer) Export(context.Context, *ExportRequest)
 }
 func (UnimplementedGatewayServiceServer) ReadMedia(context.Context, *MediaRequest) (*FileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReadMedia not implemented")
-}
-func (UnimplementedGatewayServiceServer) SubscribeEvents(*SubscribeRequest, grpc.ServerStreamingServer[Event]) error {
-	return status.Error(codes.Unimplemented, "method SubscribeEvents not implemented")
 }
 func (UnimplementedGatewayServiceServer) mustEmbedUnimplementedGatewayServiceServer() {}
 func (UnimplementedGatewayServiceServer) testEmbeddedByValue()                        {}
@@ -338,17 +313,6 @@ func _GatewayService_ReadMedia_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GatewayService_SubscribeEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(SubscribeRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(GatewayServiceServer).SubscribeEvents(m, &grpc.GenericServerStream[SubscribeRequest, Event]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GatewayService_SubscribeEventsServer = grpc.ServerStreamingServer[Event]
-
 // GatewayService_ServiceDesc is the grpc.ServiceDesc for GatewayService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -385,12 +349,6 @@ var GatewayService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GatewayService_ReadMedia_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "SubscribeEvents",
-			Handler:       _GatewayService_SubscribeEvents_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "operator/v1/gateway.proto",
 }

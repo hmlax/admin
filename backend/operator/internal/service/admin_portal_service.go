@@ -17,6 +17,7 @@ import (
 	"go-admin/operator/internal/data"
 
 	operatorV1 "go-admin/platform/pb/operator"
+	"go-admin/platform/pkg/constants"
 	"go-admin/platform/pkg/middleware/auth"
 )
 
@@ -27,9 +28,8 @@ type AdminPortalService struct {
 	roleRepo       *data.RoleRepo
 	userRepo       data.UserRepo
 	permissionRepo *data.PermissionRepo
-	planModuleRepo *data.PlanModuleRepo
-	tenantRepo     *data.TenantRepo
-	apiRepo        *data.ApiRepo
+
+	apiRepo *data.ApiRepo
 }
 
 func NewAdminPortalService(
@@ -38,8 +38,7 @@ func NewAdminPortalService(
 	roleRepo *data.RoleRepo,
 	userRepo data.UserRepo,
 	permissionRepo *data.PermissionRepo,
-	planModuleRepo *data.PlanModuleRepo,
-	tenantRepo *data.TenantRepo,
+
 	apiRepo *data.ApiRepo,
 ) *AdminPortalService {
 	return &AdminPortalService{
@@ -48,9 +47,8 @@ func NewAdminPortalService(
 		roleRepo:       roleRepo,
 		userRepo:       userRepo,
 		permissionRepo: permissionRepo,
-		planModuleRepo: planModuleRepo,
-		tenantRepo:     tenantRepo,
-		apiRepo:        apiRepo,
+
+		apiRepo: apiRepo,
 	}
 }
 
@@ -182,7 +180,7 @@ func (s *AdminPortalService) GetInitialContext(ctx context.Context, in *emptypb.
 	}, nil
 }
 
-func (s *AdminPortalService) fillRouteItem(menus []*operatorV1.Menu) []*operatorV1.MenuRouteItem {
+func (s *AdminPortalService) fillRouteItem(menus []*operatorV1.Menu, platform bool) []*operatorV1.MenuRouteItem {
 	if len(menus) == 0 {
 		return nil
 	}
@@ -190,6 +188,10 @@ func (s *AdminPortalService) fillRouteItem(menus []*operatorV1.Menu) []*operator
 	var routers []*operatorV1.MenuRouteItem
 
 	for _, v := range menus {
+		authority := v.GetMeta().GetAuthority()
+		if !platform && len(authority) == 1 && authority[0] == constants.SystemPlatformAdminPermissionCode {
+			continue
+		}
 		if v.GetStatus() != operatorV1.Menu_ON {
 			continue
 		}
@@ -207,9 +209,12 @@ func (s *AdminPortalService) fillRouteItem(menus []*operatorV1.Menu) []*operator
 		}
 
 		if len(v.Children) > 0 {
-			item.Children = s.fillRouteItem(v.Children)
+			item.Children = s.fillRouteItem(v.Children, platform)
 		}
 
+		if v.GetType() == operatorV1.Menu_CATALOG && len(item.Children) == 0 {
+			continue
+		}
 		routers = append(routers, item)
 	}
 
@@ -258,40 +263,5 @@ func (s *AdminPortalService) GetNavigation(ctx context.Context, _ *emptypb.Empty
 	}
 	menuList.Items = filterRoleMenuTree(menuList.Items, granted)
 
-	// 套餐模块白名单过滤：仅对租户用户（tenantId>0）生效。
-	// 平台管理员（tenantId=0）不过滤，看到全部授权菜单。
-	tid := operator.GetTenantId()
-	if tid > 0 {
-		menuList.Items, err = s.filterMenusByPlanWhitelist(ctx, menuList.Items, tid)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &operatorV1.ListRouteResponse{Items: s.fillRouteItem(menuList.Items)}, nil
-}
-
-// filterMenusByPlanWhitelist 按当前租户订阅套餐的模块白名单过滤菜单。
-// 菜单的 module 字段不在白名单内（或套餐无白名单）则剔除。
-func (s *AdminPortalService) filterMenusByPlanWhitelist(ctx context.Context, items []*operatorV1.Menu, tenantId uint32) ([]*operatorV1.Menu, error) {
-	// 查租户的 plan_id
-	t, err := s.tenantRepo.Get(ctx, &operatorV1.GetTenantRequest{
-		QueryBy: &operatorV1.GetTenantRequest_Id{
-			Id: tenantId,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	if t == nil || t.PlanId == nil || *t.PlanId == 0 {
-		return nil, nil
-	}
-	planId := *t.PlanId
-
-	// 查该套餐的白名单模块集合
-	allowed, err := s.planModuleRepo.ListModulesByPlanId(ctx, planId)
-	if err != nil {
-		return nil, err
-	}
-	return filterPlanMenuTree(items, allowed), nil
+	return &operatorV1.ListRouteResponse{Items: s.fillRouteItem(menuList.Items, operator.GetIsPlatformAdmin())}, nil
 }

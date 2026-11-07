@@ -73,4 +73,16 @@ func TestServiceSmokeSchema(t *testing.T) {
 			}
 		}
 	}
+	// Explicit fixture IDs do not advance a PostgreSQL sequence. New tenant roles
+	// must receive IDs after the seeded system roles, just as on a migrated DB.
+	statement := &gorm.Statement{DB: db}
+	if err := statement.Parse(&Role{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.WithContext(t.Context()).Exec(
+		"SELECT setval(pg_get_serial_sequence(?, ?), ?, true)",
+		statement.Schema.Table, statement.Schema.PrioritizedPrimaryField.DBName, len(constants.DefaultRoles),
+	).Error; err != nil {
+		t.Fatal(err)
+	}
 }

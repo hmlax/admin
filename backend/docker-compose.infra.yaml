@@ -38,7 +38,6 @@ services:
     depends_on: [operator]
     ports:
       - '127.0.0.1:7788:7788'
-      - '127.0.0.1:7789:7789'
     environment:
       <<: *runtime
     healthcheck:

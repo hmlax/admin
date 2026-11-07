@@ -15,6 +15,4 @@ func RegisterTenantServiceHertzServer(router *transport.Router, service apiV1.Te
 	router.RegisterHZ("DELETE", "/admin/v1/tenants/:id", handler.BindTenantServiceDelete(service))
 	router.RegisterHZ("POST", "/admin/v1/tenants:with-admin", handler.BindTenantServiceCreateTenantWithAdminUser(service))
 	router.RegisterHZ("GET", "/admin/v1/tenants:exists", handler.BindTenantServiceTenantExists(service))
-	router.RegisterHZ("GET", "/admin/v1/tenants/:id/usage", handler.BindTenantServiceGetUsage(service))
-	router.RegisterHZ("POST", "/admin/v1/tenants/:id/cleanup", handler.BindTenantServiceCleanupData(service))
 }

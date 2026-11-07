@@ -3,9 +3,7 @@ package tenant
 
 import (
 	fmt "fmt"
-	predicatex "go-admin/operator/internal/data/store/predicatex"
 	queryscope "go-admin/operator/internal/data/store/queryscope"
-	operator "go-admin/platform/pb/operator"
 	time "time"
 )
 
@@ -592,119 +590,6 @@ func ByAuditStatus(descending ...bool) queryscope.Scope {
 	return queryscope.OrderBy("audit_status", len(descending) > 0 && descending[0])
 }
 
-const FieldSubscriptionAt = "subscription_at"
-
-func SubscriptionAtEQ(v time.Time) queryscope.Scope { return queryscope.Equal("subscription_at", v) }
-func SubscriptionAtNEQ(v time.Time) queryscope.Scope {
-	return queryscope.NotEqual("subscription_at", v)
-}
-func SubscriptionAtGT(v time.Time) queryscope.Scope { return queryscope.Greater("subscription_at", v) }
-func SubscriptionAtGTE(v time.Time) queryscope.Scope {
-	return queryscope.GreaterEqual("subscription_at", v)
-}
-func SubscriptionAtLT(v time.Time) queryscope.Scope { return queryscope.Less("subscription_at", v) }
-func SubscriptionAtLTE(v time.Time) queryscope.Scope {
-	return queryscope.LessEqual("subscription_at", v)
-}
-func SubscriptionAtIn(values ...time.Time) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.In("subscription_at", args...)
-}
-func SubscriptionAtNotIn(values ...time.Time) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.NotIn("subscription_at", args...)
-}
-func SubscriptionAtIsNil() queryscope.Scope  { return queryscope.IsNull("subscription_at") }
-func SubscriptionAtNotNil() queryscope.Scope { return queryscope.NotNull("subscription_at") }
-func BySubscriptionAt(descending ...bool) queryscope.Scope {
-	return queryscope.OrderBy("subscription_at", len(descending) > 0 && descending[0])
-}
-
-const FieldUnsubscribeAt = "unsubscribe_at"
-
-func UnsubscribeAtEQ(v time.Time) queryscope.Scope  { return queryscope.Equal("unsubscribe_at", v) }
-func UnsubscribeAtNEQ(v time.Time) queryscope.Scope { return queryscope.NotEqual("unsubscribe_at", v) }
-func UnsubscribeAtGT(v time.Time) queryscope.Scope  { return queryscope.Greater("unsubscribe_at", v) }
-func UnsubscribeAtGTE(v time.Time) queryscope.Scope {
-	return queryscope.GreaterEqual("unsubscribe_at", v)
-}
-func UnsubscribeAtLT(v time.Time) queryscope.Scope  { return queryscope.Less("unsubscribe_at", v) }
-func UnsubscribeAtLTE(v time.Time) queryscope.Scope { return queryscope.LessEqual("unsubscribe_at", v) }
-func UnsubscribeAtIn(values ...time.Time) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.In("unsubscribe_at", args...)
-}
-func UnsubscribeAtNotIn(values ...time.Time) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.NotIn("unsubscribe_at", args...)
-}
-func UnsubscribeAtIsNil() queryscope.Scope  { return queryscope.IsNull("unsubscribe_at") }
-func UnsubscribeAtNotNil() queryscope.Scope { return queryscope.NotNull("unsubscribe_at") }
-func ByUnsubscribeAt(descending ...bool) queryscope.Scope {
-	return queryscope.OrderBy("unsubscribe_at", len(descending) > 0 && descending[0])
-}
-
-const FieldSubscriptionPlan = "subscription_plan"
-
-func SubscriptionPlanEQ(v string) queryscope.Scope { return queryscope.Equal("subscription_plan", v) }
-func SubscriptionPlanNEQ(v string) queryscope.Scope {
-	return queryscope.NotEqual("subscription_plan", v)
-}
-func SubscriptionPlanGT(v string) queryscope.Scope { return queryscope.Greater("subscription_plan", v) }
-func SubscriptionPlanGTE(v string) queryscope.Scope {
-	return queryscope.GreaterEqual("subscription_plan", v)
-}
-func SubscriptionPlanLT(v string) queryscope.Scope { return queryscope.Less("subscription_plan", v) }
-func SubscriptionPlanLTE(v string) queryscope.Scope {
-	return queryscope.LessEqual("subscription_plan", v)
-}
-func SubscriptionPlanIn(values ...string) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.In("subscription_plan", args...)
-}
-func SubscriptionPlanNotIn(values ...string) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.NotIn("subscription_plan", args...)
-}
-func SubscriptionPlanIsNil() queryscope.Scope  { return queryscope.IsNull("subscription_plan") }
-func SubscriptionPlanNotNil() queryscope.Scope { return queryscope.NotNull("subscription_plan") }
-func SubscriptionPlanContains(v string) queryscope.Scope {
-	return queryscope.Contains("subscription_plan", v)
-}
-func SubscriptionPlanContainsFold(v string) queryscope.Scope {
-	return queryscope.ContainsFold("subscription_plan", v)
-}
-func SubscriptionPlanHasPrefix(v string) queryscope.Scope {
-	return queryscope.HasPrefix("subscription_plan", v)
-}
-func SubscriptionPlanHasSuffix(v string) queryscope.Scope {
-	return queryscope.HasSuffix("subscription_plan", v)
-}
-func SubscriptionPlanEqualFold(v string) queryscope.Scope {
-	return queryscope.EqualFold("subscription_plan", v)
-}
-func BySubscriptionPlan(descending ...bool) queryscope.Scope {
-	return queryscope.OrderBy("subscription_plan", len(descending) > 0 && descending[0])
-}
-
 const FieldExpiredAt = "expired_at"
 
 func ExpiredAtEQ(v time.Time) queryscope.Scope  { return queryscope.Equal("expired_at", v) }
@@ -732,38 +617,6 @@ func ExpiredAtNotNil() queryscope.Scope { return queryscope.NotNull("expired_at"
 func ByExpiredAt(descending ...bool) queryscope.Scope {
 	return queryscope.OrderBy("expired_at", len(descending) > 0 && descending[0])
 }
-
-const FieldPlanID = "plan_id"
-
-func PlanIDEQ(v uint32) queryscope.Scope  { return queryscope.Equal("plan_id", v) }
-func PlanIDNEQ(v uint32) queryscope.Scope { return queryscope.NotEqual("plan_id", v) }
-func PlanIDGT(v uint32) queryscope.Scope  { return queryscope.Greater("plan_id", v) }
-func PlanIDGTE(v uint32) queryscope.Scope { return queryscope.GreaterEqual("plan_id", v) }
-func PlanIDLT(v uint32) queryscope.Scope  { return queryscope.Less("plan_id", v) }
-func PlanIDLTE(v uint32) queryscope.Scope { return queryscope.LessEqual("plan_id", v) }
-func PlanIDIn(values ...uint32) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.In("plan_id", args...)
-}
-func PlanIDNotIn(values ...uint32) queryscope.Scope {
-	args := make([]any, len(values))
-	for i, v := range values {
-		args[i] = v
-	}
-	return queryscope.NotIn("plan_id", args...)
-}
-func PlanIDIsNil() queryscope.Scope  { return queryscope.IsNull("plan_id") }
-func PlanIDNotNil() queryscope.Scope { return queryscope.NotNull("plan_id") }
-func ByPlanID(descending ...bool) queryscope.Scope {
-	return queryscope.OrderBy("plan_id", len(descending) > 0 && descending[0])
-}
 func And(predicates ...queryscope.Scope) queryscope.Scope { return queryscope.And(predicates...) }
 func Or(predicates ...queryscope.Scope) queryscope.Scope  { return queryscope.Or(predicates...) }
 func Not(predicate queryscope.Scope) queryscope.Scope     { return queryscope.Not(predicate) }
-func HasPlanWith(predicates ...queryscope.Scope) queryscope.Scope {
-	return predicatex.Relation[operator.SysTenants, operator.SysPlans]("Plan", predicates...)
-}
-func HasPlan() queryscope.Scope { return HasPlanWith() }

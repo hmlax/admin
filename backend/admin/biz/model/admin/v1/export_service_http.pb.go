@@ -5,12 +5,8 @@ import (
 	context "context"
 )
 
-const OperationExportServiceExportAIUsage = "/operator.v1.ExportService/ExportAIUsage"
 const OperationExportServiceExportAuditLogs = "/operator.v1.ExportService/ExportAuditLogs"
-const OperationExportServiceExportNotificationDeliveries = "/operator.v1.ExportService/ExportNotificationDeliveries"
 
 type ExportServiceHTTPServer interface {
-	ExportAIUsage(context.Context, *ExportFileRequest) (*BinaryFileResponse, error)
 	ExportAuditLogs(context.Context, *AuditExportRequest) (*BinaryFileResponse, error)
-	ExportNotificationDeliveries(context.Context, *ExportFileRequest) (*BinaryFileResponse, error)
 }

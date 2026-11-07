@@ -15,7 +15,7 @@ import {
   refreshTokenMutation,
   verifyMfaMutation,
 } from '@/api';
-import { startRefreshTimer, stopRefreshTimer, disconnectSSEServer } from '@/hooks/useTokenRefresh';
+import { startRefreshTimer, stopRefreshTimer } from '@/hooks/useTokenRefresh';
 import { queryClient } from '@/core/query-client';
 import { setCaptchaHeaders } from '@/core/transport/rest';
 
@@ -236,7 +236,6 @@ export const useAuthStore = create<AuthState>()(
       // 清除状态后由 React 组件响应状态变化自然重定向
       logout: async () => {
         stopRefreshTimer();
-        disconnectSSEServer();
         try {
           // 服务端登出失败不影响本地清理，但必须留痕（token 失效/网络/权限问题的线索）
           await logoutMutation.execute({}).catch((error) => {
@@ -294,7 +293,6 @@ export const useAuthStore = create<AuthState>()(
       // 只清除状态，不做页面跳转（让 React 组件响应状态变化自然重定向）
       forceLogout: () => {
         stopRefreshTimer();
-        disconnectSSEServer();
         console.warn('Force logout: clearing auth state');
         // 清除 queryClient 缓存，防止缓存污染导致重新登录失败
         queryClient.clear();

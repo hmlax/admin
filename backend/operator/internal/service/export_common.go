@@ -126,7 +126,7 @@ func boolStr(v *bool) string {
 // authorizeExportRequest 校验 Bearer token 并重建 auth/GORM 两层上下文。
 // 返回 nil 表示已写好 401 响应，调用方直接 return。
 //
-// viewer 重建与 asynq handler 的惯例同款：平台管理员 SystemContext，
+// viewer 按调用者身份重建：平台管理员 SystemContext，
 // 租户用户 UserContext（后续 repo 查询由 mixin 谓词自动收窄到本租户）。
 // 是否放行租户用户由各 handler 在拿到 operator 后自行定夺（审计/台账=平台闸）。
 func authorizeExportRequest(

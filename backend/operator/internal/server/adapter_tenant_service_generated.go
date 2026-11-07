@@ -35,9 +35,3 @@ func (s *TenantServiceAdapter) CreateTenantWithAdminUser(ctx context.Context, in
 func (s *TenantServiceAdapter) TenantExists(ctx context.Context, in *operator.TenantExistsRequest) (*operator.TenantExistsResponse, error) {
 	return s.inner.TenantExists(ctx, in)
 }
-func (s *TenantServiceAdapter) GetUsage(ctx context.Context, in *operator.GetTenantUsageRequest) (*operator.TenantUsage, error) {
-	return s.inner.GetUsage(ctx, in)
-}
-func (s *TenantServiceAdapter) CleanupData(ctx context.Context, in *operator.CleanupTenantDataRequest) (*emptypb.Empty, error) {
-	return s.inner.CleanupData(ctx, in)
-}

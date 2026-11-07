@@ -93,15 +93,15 @@ func TestIDLFileBindingsPreserveMultipartAndRange(t *testing.T) {
 
 type contractExports struct {
 	operatorV1.ExportServiceClient
-	request *operatorV1.ExportFileRequest
+	request *operatorV1.AuditExportRequest
 }
 
-func (c *contractExports) ExportAIUsage(_ context.Context, in *operatorV1.ExportFileRequest, _ ...grpc.CallOption) (*operatorV1.BinaryFileResponse, error) {
+func (c *contractExports) ExportAuditLogs(_ context.Context, in *operatorV1.AuditExportRequest, _ ...grpc.CallOption) (*operatorV1.BinaryFileResponse, error) {
 	c.request = in
 	return &operatorV1.BinaryFileResponse{
 		Content:     []byte("name,count\nhello,2\n"),
 		ContentType: "text/csv",
-		Disposition: `attachment; filename="usage.csv"`,
+		Disposition: `attachment; filename="audit.csv"`,
 	}, nil
 }
 
@@ -109,71 +109,26 @@ func TestIDLExportBindingsUseTypedQueriesAndBinaryReplies(t *testing.T) {
 	router := contractRouter(t)
 	client := &contractExports{}
 	RegisterExportServiceHertzServer(router, newExportHTTPService(client))
-	request := httptest.NewRequest(http.MethodGet, "/admin/v1/ai/usage-logs:export?format=csv&maxRows=23&query=hello", nil)
-	request = request.WithContext(auth.NewContext(request.Context(), &operatorV1.UserTokenPayload{UserId: 42}))
+	request := httptest.NewRequest(http.MethodGet, "/admin/v1/audit-logs:export?format=csv&maxRows=23&query=hello", nil)
+	request = request.WithContext(auth.NewContext(request.Context(), &operatorV1.UserTokenPayload{
+		UserId:          42,
+		IsPlatformAdmin: trans.Ptr(true),
+	}))
 	response := httptest.NewRecorder()
 	serveNative(router, response, request)
-	if response.Code != 200 || response.Body.String() != "name,count\nhello,2\n" || response.Header().Get("Content-Type") != "text/csv" || !strings.Contains(response.Header().Get("Content-Disposition"), "usage.csv") {
+	if response.Code != 200 || response.Body.String() != "name,count\nhello,2\n" || response.Header().Get("Content-Type") != "text/csv" || !strings.Contains(response.Header().Get("Content-Disposition"), "audit.csv") {
 		t.Fatalf("export reply = %d %s headers=%v", response.Code, response.Body.String(), response.Header())
 	}
 	if in := client.request; in.GetFormat() != "csv" || in.GetMaxRows() != 23 || in.GetQuery() != "hello" {
 		t.Fatalf("typed export query = %v", in)
 	}
 	response = httptest.NewRecorder()
-	serveNative(router, response, httptest.NewRequest(http.MethodGet, "/admin/v1/ai/usage-logs:export?maxRows=invalid", nil))
+	serveNative(router, response, httptest.NewRequest(http.MethodGet, "/admin/v1/audit-logs:export?maxRows=invalid", nil))
 	var failure apiV1.HTTPErrorResponse
 	if err := protojson.Unmarshal(response.Body.Bytes(), &failure); err != nil {
 		t.Fatal(err)
 	}
 	if response.Code != 400 || failure.GetCode() != 400 || failure.GetReason() == "" {
 		t.Fatalf("typed binding error = %d %v", response.Code, &failure)
-	}
-}
-
-type contractEvents struct {
-	request *apiV1.EventSubscriptionRequest
-}
-
-func (s *contractEvents) Subscribe(_ context.Context, in *apiV1.EventSubscriptionRequest, send func(*apiV1.EventFrame) error) error {
-	s.request = in
-	return send(&apiV1.EventFrame{
-		Id:    []byte("17"),
-		Event: []byte("message"),
-		Data:  []byte("first\nsecond"),
-	})
-}
-func TestIDLStreamBindingEncodesFramesAndChecksOwnership(t *testing.T) {
-	router := contractRouter(t)
-	events := &contractEvents{}
-	RegisterEventServiceHertzServer(router, events)
-	response := httptest.NewRecorder()
-	serveNative(router, response, httptest.NewRequest(http.MethodGet, apiV1.EventServiceSubscribeHTTPPath+"?stream=42&token=allowed", nil))
-	if response.Code != 200 || response.Header().Get("Content-Type") != "text/event-stream" || response.Body.String() != "id: 17\nevent: message\ndata: first\ndata: second\n\n" || events.request.GetStream() != "42" || events.request.GetToken() != "allowed" || !response.Flushed {
-		t.Fatalf("SSE binding = %d %q request=%v", response.Code, response.Body.String(), events.request)
-	}
-	checker := auth.NewAccessTokenCheckerFromFuncs(func(_ context.Context, token string, _ bool) (bool, *operatorV1.UserTokenPayload) {
-		return token == "allowed", &operatorV1.UserTokenPayload{UserId: 42}
-	}, nil)
-	router = contractRouter(t)
-	// A nil client makes any accidental forwarding fail the test.
-	RegisterEventServiceHertzServer(router, newEventHTTPService(nil, checker, operatorV1.NewGatewayServiceClient(nil)))
-	for _, test := range []struct {
-		query  string
-		status int
-	}{
-		{
-			query:  "?stream=42&token=invalid",
-			status: 401,
-		},
-		{
-			query:  "?stream=43&token=allowed",
-			status: 403,
-		},
-	} {
-		response = httptest.NewRecorder()
-		serveNative(router, response, httptest.NewRequest(http.MethodGet, apiV1.EventServiceSubscribeHTTPPath+test.query, nil))
-		if response.Code != test.status || !strings.HasPrefix(response.Header().Get("Content-Type"), "application/json") {
-			t.Fatalf("SSE authorization = %d %s", response.Code, response.Body.String())
-		}
 	}
 }

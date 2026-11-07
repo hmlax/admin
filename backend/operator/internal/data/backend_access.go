@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"go-admin/operator/internal/data/store"
@@ -57,10 +56,8 @@ func (r *ApiRepo) EnsureBuiltInAdminAPIs(ctx context.Context) error {
 		}
 		service, _, _ := strings.Cut(row.GetOperation(), "_")
 		_, tenantOwned := tenantManagerServices[service]
-		_, sharedRead := tenantManagerReadServices[service]
 		_, tenantOperation := tenantManagerOperations[row.GetOperation()]
-		sharedRead = sharedRead && row.GetMethod() == http.MethodGet
-		if tenantOwned || sharedRead || tenantOperation {
+		if tenantOwned || tenantOperation {
 			tenantIDs = append(tenantIDs, row.ID)
 		}
 	}
@@ -71,22 +68,13 @@ func (r *ApiRepo) EnsureBuiltInAdminAPIs(ctx context.Context) error {
 }
 
 var tenantManagerServices = map[string]struct{}{
-	"DashboardService": {},
-	"UserService":      {}, "UserProfileService": {}, "OrgUnitService": {}, "PositionService": {}, "RoleService": {},
+
+	"UserService": {}, "UserProfileService": {}, "OrgUnitService": {}, "PositionService": {}, "RoleService": {},
 	"FileService": {}, "FileTransferService": {}, "MediaService": {},
-	"InternalMessageService": {}, "InternalMessageRecipientService": {}, "NotificationPreferenceService": {},
-	"OnlineSessionService": {}, "MfaService": {}, "MyTenantUsageService": {}, "AccessKeyService": {},
+
+	"OnlineSessionService": {}, "MfaService": {}, "AccessKeyService": {},
 	"LoginAuditLogService": {}, "ApiAuditLogService": {}, "OperationAuditLogService": {},
 	"DataAccessAuditLogService": {}, "PermissionAuditLogService": {}, "PolicyEvaluationLogService": {},
-	"AiAgentService": {}, "AiChatService": {}, "AiConversationService": {}, "AiMessageService": {},
-	"AiKnowledgeBaseService": {}, "AiQueryService": {}, "AiUsageLogService": {}, "AiContentService": {},
-}
-
-var tenantManagerReadServices = map[string]struct{}{
-	// Registered job handlers and periodic scheduler keys are platform-wide.
-	// Tenant managers may inspect their rows; dispatch and mutation stay platform-owned.
-	"TaskService":                    {},
-	"InternalMessageCategoryService": {}, "AiProviderService": {}, "PrintTemplateService": {},
 }
 
 var tenantManagerOperations = map[string]struct{}{
@@ -97,7 +85,6 @@ var tenantManagerOperations = map[string]struct{}{
 var tenantManagerExcludedOperations = map[string]struct{}{
 	"OnlineSessionService_ListOnlineSession":  {},
 	"OnlineSessionService_ForceLogoutSession": {},
-	"DashboardService_GetAiInsights":          {},
 	"TaskService_StopAllTask":                 {},
 	"TaskService_StartAllTask":                {},
 	"TaskService_RestartAllTask":              {},

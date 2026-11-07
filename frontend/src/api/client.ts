@@ -15,7 +15,6 @@ const transport: ClientTransport = {
     return requestApi({ body, headers, method, path });
   },
   serverStream(path) {
-    // SSE 流由 transport/sse 模块独立管理，此处不应被调用
     throw new Error(`serverStream not supported via ApiClient: ${path}`);
   },
   duplexStream(path) {

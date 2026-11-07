@@ -8,7 +8,6 @@ import (
 
 	"github.com/tx7do/go-crud/viewer"
 
-	"github.com/tx7do/go-utils/trans"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go-admin/platform/pkg/mailtext"
@@ -77,33 +76,16 @@ func (s *AuthenticationService) ForgotPassword(ctx context.Context, req *operato
 		}
 	}
 
-	sendReq := &operatorV1.SendDirectNotificationRequest{
-		EventType:       operatorV1.EventType_PASSWORD_RESET_CODE,
-		Target:          identifier,
-		RecipientUserId: trans.Ptr(userId),
-	}
+	var sendErr error
 	if identityType == operatorV1.UserCredential_PHONE {
-		// 短信正文由服务商审核模板渲染，code 经 params 交给渠道；台账文案只做记录。
-		sendReq.Channel = trans.Ptr(operatorV1.Channel_SMS)
-		sendReq.Params = map[string]string{"code": code}
-		sendReq.Title, sendReq.Content = mailtext.SmsPasswordResetCode(ctx, code)
+		sendErr = s.mailer.sendSMS(ctx, identifier, code)
 	} else {
-		sendReq.Title, sendReq.Content = renderPwdResetCode(ctx, s.mailer, code)
+		title, body := mailtext.PasswordResetCode(ctx, code)
+		sendErr = s.mailer.sendEmail(ctx, identifier, title, body)
 	}
-
-	resp, err := s.notifier.SendDirect(ctx, sendReq)
-	if err != nil {
-		s.log.Errorf(ctx, "forgot-password: send code to [%s] failed (delivery %d): %s",
-			identifier, resp.GetDeliveryId(), err.Error())
-		// SKIPPED＝一条都没发出去：没配启用的对应渠道。这与"渠道报错"是两回事，
-		// 前者要管理员去渠道页配置，分开报才不用翻日志才知道差哪一步。
-		if resp.GetStatus() == operatorV1.DeliveryStatus_SKIPPED {
-			if identityType == operatorV1.UserCredential_PHONE {
-				return nil, operatorV1.ErrorAuthenticationInternalServerError("sms channel is not configured")
-			}
-			return nil, operatorV1.ErrorAuthenticationInternalServerError("email channel is not configured")
-		}
-		return nil, operatorV1.ErrorAuthenticationInternalServerError("send verification message failed")
+	if sendErr != nil {
+		s.log.Errorf(ctx, "forgot-password: verification delivery failed: %s", sendErr)
+		return nil, operatorV1.ErrorAuthenticationInternalServerError(errorVerificationDelivery)
 	}
 
 	s.log.Infof(ctx, "forgot-password: reset code sent to [%s] for user [%d]", identifier, userId)

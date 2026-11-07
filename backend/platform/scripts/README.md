@@ -2,8 +2,8 @@
 
 本目录包含项目的各种自动化脚本，按功能分为三个主要模块：环境配置、Docker 部署和应用服务管理。
 
-租户与套餐端到端验收：在 `backend` 执行 `make infra-test-tenant`，使用 `test/tenant_lifecycle.py`
-创建套餐、配额和新租户，验证登录、权限、租户隔离及会话完整流程，并保留可登录的测试账号。
+租户与权限端到端验收：在 `backend` 执行 `make infra-test-tenant`，使用 `test/tenant_lifecycle.py`
+创建新租户和管理员，验证登录、权限、租户隔离及会话完整流程，并保留可登录的测试账号。
 运行条件、参数和报告说明见 [租户生命周期自动化](../../../docs/tenant_lifecycle_e2e.md)。
 
 ---

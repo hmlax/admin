@@ -48,7 +48,12 @@ export async function generateRoutesByBackend(
     }
 
     // 3. 先过滤权限，再归位路径并选可访问的目录默认页
-    const visibleRoutes = filterBackendPermissions(menuRoutes, permissions);
+    const visibleRoutes = filterBackendPermissions(
+      menuRoutes,
+      permissions,
+      layoutMap,
+      normalizedPageMap,
+    );
     rebaseBackendTree(visibleRoutes);
     return convertRoutes(visibleRoutes, layoutMap, normalizedPageMap, forbiddenElement);
   } catch (error) {
@@ -57,7 +62,12 @@ export async function generateRoutesByBackend(
   }
 }
 
-function filterBackendPermissions(nodes: BackendRoute[], permissions: string[]): BackendRoute[] {
+function filterBackendPermissions(
+  nodes: BackendRoute[],
+  permissions: string[],
+  layoutMap: ComponentRecord,
+  pageMap: ComponentRecord,
+): BackendRoute[] {
   const result: BackendRoute[] = [];
   for (const node of nodes) {
     const meta = node.meta ? { ...node.meta } : undefined;
@@ -70,9 +80,20 @@ function filterBackendPermissions(nodes: BackendRoute[], permissions: string[]):
     const grantedNode = { ...node, meta };
     if (!hasPermission(grantedNode, permissions) && !meta?.menuVisibleWithForbidden) continue;
     const children = node.children
-      ? filterBackendPermissions(node.children, permissions)
+      ? filterBackendPermissions(node.children, permissions, layoutMap, pageMap)
       : undefined;
     const catalog = node.component === 'BasicLayout' || !node.component;
+    // Installed databases can retain menu rows for pages removed from the framework.
+    if (
+      node.component &&
+      !layoutMap[node.component] &&
+      !meta?.link &&
+      !meta?.iframeSrc &&
+      !resolveComponent(node.component, layoutMap, pageMap)
+    )
+      continue;
+
+    if (catalog && !children?.length && !node.redirect && !meta?.link && !meta?.iframeSrc) continue;
     if (catalog && node.children?.length && !children?.length) continue;
     result.push({
       ...grantedNode,
@@ -80,6 +101,21 @@ function filterBackendPermissions(nodes: BackendRoute[], permissions: string[]):
     });
   }
   return result;
+}
+
+function resolveComponent(
+  component: string,
+  layouts: ComponentRecord,
+  pages: ComponentRecord,
+): ComponentType | undefined {
+  if (layouts[component]) return layouts[component];
+  const normalized = normalizeViewPath(component);
+  return (
+    pages[normalized] ??
+    pages[`${normalized}.tsx`] ??
+    pages[`${normalized}/index`] ??
+    pages[`${normalized}/index.tsx`]
+  );
 }
 
 /**
@@ -109,30 +145,7 @@ function convertRoutes(
     if (forbidden && forbiddenElement) {
       route.element = forbiddenElement;
     } else if (componentPath) {
-      let Component: ComponentType | undefined;
-
-      // 1. 优先匹配布局组件
-      if (layoutMap[componentPath]) {
-        Component = layoutMap[componentPath];
-      }
-      // 2. 匹配页面组件（标准化路径后查找）
-      else {
-        const normalizedPath = normalizeViewPath(componentPath);
-        // 尝试多种后缀组合
-        const candidates = [
-          normalizedPath,
-          normalizedPath.endsWith('.tsx') ? normalizedPath : `${normalizedPath}.tsx`,
-          normalizedPath.endsWith('/index') ? normalizedPath : `${normalizedPath}/index`,
-          `${normalizedPath}/index.tsx`,
-        ];
-
-        for (const candidate of candidates) {
-          if (pageMap[candidate]) {
-            Component = pageMap[candidate];
-            break;
-          }
-        }
-      }
+      const Component = resolveComponent(componentPath, layoutMap, pageMap);
 
       // 3. 渲染元素：必须用 Suspense 包裹 lazy 组件
       if (Component) {

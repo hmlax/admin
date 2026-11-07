@@ -380,10 +380,7 @@ const BusinessModuleDict BusinessModule = "DICT"
 const BusinessModuleTenant BusinessModule = "TENANT"
 const BusinessModulePermission BusinessModule = "PERMISSION"
 const BusinessModuleLog BusinessModule = "LOG"
-const BusinessModuleInternalMessage BusinessModule = "INTERNAL_MESSAGE"
 const BusinessModuleFile BusinessModule = "FILE"
-const BusinessModuleTask BusinessModule = "TASK"
-const BusinessModuleAi BusinessModule = "AI"
 
 func BusinessModuleValidator(v string) error {
 	switch v {
@@ -401,13 +398,7 @@ func BusinessModuleValidator(v string) error {
 		return nil
 	case "LOG":
 		return nil
-	case "INTERNAL_MESSAGE":
-		return nil
 	case "FILE":
-		return nil
-	case "TASK":
-		return nil
-	case "AI":
 		return nil
 	}
 	return fmt.Errorf("invalid BusinessModule: %s", v)

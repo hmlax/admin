@@ -4,12 +4,7 @@
 
 > **定位**：六类审计日志采集机制的唯一权威说明——采集层架构、生产者字段、脱敏与指纹、
 > 防递归、管道接线点位、管理页与归档、设计沿革与留空字段。
-> 改审计采集、加新日志字段、排"审计没落库"前先读它。归档任务的调度语义见
-> [task_system.md](./task_system.md) 第 5.2 节；等保口径见根 [README.md](../README.md) 安全章节。
->
-> **状态**：设计定稿于 2026-08-28，三类型补全（操作 / 数据访问 / 权限变更）连同策略评估
-> 包装均已实施并通过 e2e（各节内注日期）。本文档已由设计稿重组为参考形态；
-> 方案比选过程保留于第 7 节设计沿革。
+> 改审计采集或日志字段前先阅读本文。
 
 ## 1. 机制总览
 
@@ -113,10 +108,7 @@ schema 无 `geo_location`/`success` 字段，故不采集这两项。
   `frontend/admin/react/src/pages/app/log/api-audit-log/index.tsx:241-242`）；vue-element 走
   `frontend/admin/vue-element/src/components/Pro/ProPage/ExportModal.vue` 的导出弹窗
   （csv / html / xml / txt / xlsx）；vue-vben 六类页面同样带 xlsx 导出。
-- **归档**：系统级 asynq 周期任务（每日 03:30，`audit_log_archive`）：超保留期行导出
-  JSONL 归档文件后从库删除。调度/注册机制见 [task_system.md](./task_system.md) 第 5.2 节；
-  参数：`AUDIT_ARCHIVE_DIR`（默认 `./data/audit-archive`）、`AUDIT_RETENTION_DAYS`
-  （默认 180，库内留存天数）。
+- **留存**：由部署侧独立安排归档与清理，当前框架不启动周期归档任务。
 - 留存策略（库内 180 天 + 归档文件留痕）为等保 ≥6 个月要求的落地形态。
 
 ## 7. 设计沿革（方案比选记录，2026-08-28）

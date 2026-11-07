@@ -23,9 +23,6 @@ const (
 )
 
 // sendContactVCode 向指定联系方式发送业务验证码（绑定场景），按种类分渠道。
-//
-// 手机号一路显式点名 Channel=SMS：存量库没有 PHONE_BIND_CODE 的路由规则行
-// （播种只发生 在空表时），依赖路由等于让手机绑定在老实例上必失败。
 func (s *UserProfileService) sendContactVCode(ctx context.Context, kind, contact string) error {
 	code := generateVCode()
 	if err := s.vcodeCache.Save("bind_contact", contact, code, 10*time.Minute); err != nil {
@@ -43,47 +40,29 @@ func (s *UserProfileService) sendContactVCode(ctx context.Context, kind, contact
 		}
 	}
 
-	sendReq := &operatorV1.SendDirectNotificationRequest{
-		Target:  contact,
-		Content: "",
+	var sendErr error
+	if kind == contactKindPhone {
+		sendErr = s.mailer.sendSMS(ctx, contact, code)
+	} else {
+		title, body := mailtext.ContactBindCode(ctx, code)
+		sendErr = s.mailer.sendEmail(ctx, contact, title, body)
 	}
-	switch kind {
-	case contactKindPhone:
-		sendReq.EventType = operatorV1.EventType_PHONE_BIND_CODE
-		sendReq.Channel = trans.Ptr(operatorV1.Channel_SMS)
-		// 短信正文由服务商审核模板渲染，code 经 params 交给渠道；台账文案只做记录。
-		sendReq.Params = map[string]string{"code": code}
-		sendReq.Title, sendReq.Content = mailtext.PhoneBindCode(ctx, code)
-	default:
-		sendReq.EventType = operatorV1.EventType_CONTACT_BIND_CODE
-		sendReq.Title, sendReq.Content = renderContactBindCode(ctx, s.mailer, code)
+	if sendErr != nil {
+		s.log.Errorf(ctx, "bind-contact: verification delivery failed: %s", sendErr)
+		return operatorV1.ErrorAuthenticationInternalServerError(errorVerificationDelivery)
 	}
 
-	resp, err := s.notifier.SendDirect(ctx, sendReq)
-	if err != nil {
-		s.log.Errorf(ctx, "bind-contact: send %s code to [%s] failed (delivery %d): %s",
-			kind, contact, resp.GetDeliveryId(), err.Error())
-		if resp.GetStatus() == operatorV1.DeliveryStatus_SKIPPED {
-			if kind == contactKindPhone {
-				return operatorV1.ErrorAuthenticationInternalServerError("sms channel is not configured")
-			}
-			return operatorV1.ErrorAuthenticationInternalServerError("email channel is not configured")
-		}
-		return operatorV1.ErrorAuthenticationInternalServerError("send verification message failed")
-	}
 	return nil
 }
 
 // BindContact 绑定手机号码/邮箱（第一步）：向新联系方式发送验证码。
-// 短信渠道接入后 MOBILE 分支已启用：验证码经 SMS 渠道下发（需已配置启用的短信渠道）。
+// 短信渠道接入后 MOBILE 分支已启用：验证码经 SMS 渠道下发（需配置 runtime.sms）。
 func (s *UserProfileService) BindContact(ctx context.Context, req *operatorV1.BindContactRequest) (*emptypb.Empty, error) {
 	if phone := req.GetPhone(); phone != nil {
 		contact := strings.TrimSpace(phone.GetPhone())
 		if contact == "" {
 			return nil, operatorV1.ErrorAuthenticationBadRequest("phone is required")
 		}
-		// 服务入口先做一次与投递侧同判据的格式校验：错误在第一步就回给用户，
-		// 而不是等 SendDirect 把它记成一条 SKIPPED 台账。
 		if _, _, err := sms.NormalizePhoneNumber(contact); err != nil {
 			return nil, operatorV1.ErrorAuthenticationBadRequest("invalid phone number")
 		}

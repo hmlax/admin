@@ -5,15 +5,11 @@ import { businessRoutes as merchantRoutes } from '../../merchant-admin/routes';
 
 describe('application page boundaries', () => {
   it.each([
-    'tenant/plan/index.tsx',
     'tenant/tenant/index.tsx',
     'permission/menu/index.tsx',
     'permission/api/index.tsx',
     'permission/permission/index.tsx',
-    'notification/channel/index.tsx',
-    'notification/template/index.tsx',
     'system/config/index.tsx',
-    'system/server-monitor/index.tsx',
   ])('includes %s only in the platform build', (page) => {
     const key = `../src/pages/app/${page}`;
     expect(platformPages).toHaveProperty(key);
@@ -25,9 +21,7 @@ describe('application page boundaries', () => {
     'permission/role/index.tsx',
     'opm/user/list/index.tsx',
     'opm/user/profile/index.tsx',
-    'internal-message/inbox/index.tsx',
     'system/file/index.tsx',
-    'ai/chat/index.tsx',
   ])('retains %s for authorized merchant menus', (page) => {
     expect(Object.keys(merchantPages)).toContain(`../src/pages/app/${page}`);
   });

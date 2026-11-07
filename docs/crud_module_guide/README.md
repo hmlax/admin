@@ -50,4 +50,4 @@ npm run build
 
 已有部署需重新生成内嵌 OpenAPI、重启 operator，并在管理页执行「接口同步」；新增菜单使用「菜单同步」。默认种子只影响全新数据库。
 
-需要列表打印时使用 React 的 `usePrintTemplateDialog()`；资源匹配、批量打印和 PDF 部署依赖见 [打印模板](../print_template.md)。
+需要列表打印时使用 React 的 `usePrintTemplateDialog()`；资源匹配、批量打印和 PDF 部署依赖见 [打印模板](../service_split.md)。

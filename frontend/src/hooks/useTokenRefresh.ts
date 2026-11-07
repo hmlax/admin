@@ -1,11 +1,10 @@
-import { applicationHeaders, refreshExpiryCookieName } from '@/config/application';
+import { refreshExpiryCookieName } from '@/config/application';
 /**
  * Token 定时刷新管理
  * 主动定时刷新 access_token，避免请求时才被动刷新导致延迟
  * 对齐 Vue 版 use-token-refresh.ts
  */
 import { fetchUserProfile } from '@/api/hooks/user-profile';
-import { globalSSEClient } from '@/core/transport/sse';
 import { useAuthStore } from '@/stores/auth';
 
 // ==============================
@@ -111,10 +110,9 @@ function scheduleRefresh(): void {
       // 执行刷新
       const newToken = await useAuthStore.getState().refreshToken();
 
-      // token 刷新成功后，使用新 token 重连 SSE
+      // 刷新后补全用户资料，供页面和权限判断使用。
       if (newToken) {
         // react 无刷新后 userInfo 拉取路径（AuthGuard 只查 token），刷新页面后 userInfo 为 null。
-        // SSE streamID 已改为 userId，无 userInfo 则无法重连，故在首次 tick 时惰性补拉一次。
         // 运行于此处可保证 queryClient 已就绪（mount 后），与 login 内 fetchUserProfile 同源。
         if (useAuthStore.getState().userInfo === null) {
           try {
@@ -128,7 +126,6 @@ function scheduleRefresh(): void {
             console.error('[TokenRefresh] lazy fetch user profile failed:', e);
           }
         }
-        reconnectSSEServer();
       }
     } catch (error) {
       console.error('[TokenRefresh] 定时刷新失败:', error);
@@ -164,55 +161,4 @@ export function stopRefreshTimer(): void {
     globalThis.clearTimeout(refreshTimer);
     refreshTimer = null;
   }
-}
-
-/**
- * 重连 SSE 服务器（使用最新的 access token）
- * 在 token 刷新成功后调用，确保 SSE 连接携带新凭证
- */
-export function reconnectSSEServer(): void {
-  const { accessToken, userInfo } = useAuthStore.getState();
-
-  // streamID 已改为 userId，鉴权仍走 Authorization 头。两者缺一不可。
-  if (!accessToken || userInfo?.id == null) {
-    console.warn('[TokenRefresh] No access token or userId, skip SSE reconnect');
-    return;
-  }
-
-  // 仅在当前已有 SSE 连接时才重连，避免无连接时意外建立连接
-  const currentStatus = globalSSEClient.getStatus();
-  if (currentStatus === 'disconnected') {
-    console.log('[TokenRefresh] SSE is disconnected, skip reconnect');
-    return;
-  }
-
-  const sseUrl = `${import.meta.env.VITE_SSE_URL ?? '/api/sse'}?stream=${userInfo.id}`;
-  globalSSEClient.setHeaders({ ...applicationHeaders(), Authorization: `Bearer ${accessToken}` });
-  globalSSEClient.reconnect(sseUrl);
-  console.log('[TokenRefresh] SSE reconnected with new token');
-}
-
-/**
- * 连接 SSE 服务器
- * 使用当前 access token 建立 SSE 连接
- */
-export function connectSSEServer(): void {
-  const { accessToken, userInfo } = useAuthStore.getState();
-
-  // streamID 已改为 userId，鉴权仍走 Authorization 头。两者缺一不可。
-  if (!accessToken || userInfo?.id == null) {
-    console.warn('[TokenRefresh] No access token or userId, skip SSE connection');
-    return;
-  }
-
-  const sseUrl = `${import.meta.env.VITE_SSE_URL ?? '/api/sse'}?stream=${userInfo.id}`;
-  globalSSEClient.setHeaders({ ...applicationHeaders(), Authorization: `Bearer ${accessToken}` });
-  globalSSEClient.connect(sseUrl);
-}
-
-/**
- * 关闭 SSE 连接
- */
-export function disconnectSSEServer(): void {
-  globalSSEClient.close();
 }

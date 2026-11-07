@@ -62,7 +62,7 @@ make ts
 ## 装完之后：跑起来
 
 前后端都装好后，最短路径三条命令（完整版见
-[教程 02 · 从零跑起来](./tutorial/02-get-it-running.md)与
+[教程 02 · 从零跑起来](service_split.md)与
 [Windows 本地开发启动指南](./windows-startup-guide.md)）：
 
 ```shell

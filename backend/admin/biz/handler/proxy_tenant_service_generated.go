@@ -11,17 +11,6 @@ import (
 
 type TenantServiceProxy struct{ client operator.TenantServiceClient }
 
-func (s *TenantServiceProxy) CleanupData(ctx context.Context, in *v1.CleanupTenantDataRequest) (*emptypb.Empty, error) {
-	request := toRPCCleanupTenantDataRequest(in)
-	if err := transport.ValidateRequest(request); err != nil {
-		return nil, err
-	}
-	reply, err := s.client.CleanupData(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	return toAPIEmpty(reply), nil
-}
 func (s *TenantServiceProxy) Create(ctx context.Context, in *v1.CreateTenantRequest) (*emptypb.Empty, error) {
 	request := toRPCCreateTenantRequest(in)
 	if err := transport.ValidateRequest(request); err != nil {
@@ -65,17 +54,6 @@ func (s *TenantServiceProxy) Get(ctx context.Context, in *v1.GetTenantRequest) (
 		return nil, err
 	}
 	return toAPITenant(reply), nil
-}
-func (s *TenantServiceProxy) GetUsage(ctx context.Context, in *v1.GetTenantUsageRequest) (*v1.TenantUsage, error) {
-	request := toRPCGetTenantUsageRequest(in)
-	if err := transport.ValidateRequest(request); err != nil {
-		return nil, err
-	}
-	reply, err := s.client.GetUsage(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	return toAPITenantUsage(reply), nil
 }
 func (s *TenantServiceProxy) List(ctx context.Context, in *v1.PagingRequest) (*v1.ListTenantResponse, error) {
 	request := toRPCPagingRequest(in)

@@ -18,15 +18,14 @@ import (
 	"github.com/tx7do/kratos-bootstrap/bootstrap"
 
 	"go-admin/admin/biz/handler"
-	apiV1 "go-admin/admin/biz/model/admin/v1"
 	"go-admin/admin/biz/mw"
-	"go-admin/admin/biz/router"
 	"go-admin/admin/internal/transport"
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/rpcbridge"
 	"go-admin/platform/pkg/runtimeconfig"
 	"go-admin/platform/pkg/security"
 	"go-admin/platform/pkg/serviceid"
+
 	"google.golang.org/grpc"
 )
 
@@ -143,24 +142,6 @@ func New(ctx *bootstrap.Context, register RegisterRoutes) ([]*HTTPServer, func()
 	services.EnableSwagger = cfg.GetServer().GetRest().GetEnableSwagger()
 	register(apiRouter, services)
 	servers := []*HTTPServer{api}
-	if sseCfg := cfg.GetServer().GetSse(); sseCfg != nil && sseCfg.GetAddr() != "" {
-		if sseCfg.GetPath() != "" && sseCfg.GetPath() != apiV1.EventServiceSubscribeHTTPPath {
-			closeAll()
-			return nil, nil, fmt.Errorf("SSE path is defined by admin/idl/proto/admin/v1/events.proto; run make hz to regenerate the contract")
-		}
-		stream, err := NewHTTPServer(sseCfg.GetAddr(), settings.SSEAdvertiseAddr, cfg)
-		if err != nil {
-			closeAll()
-			return nil, nil, err
-		}
-		router.RegisterEventServiceHertzServer(stream.router, services.EventService)
-		cleanup = append(cleanup, func() {
-			stream.cancel()
-			if err := stream.listener.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
-				slog.Warn("close SSE listener", "error", err)
-			}
-		})
-		servers = append(servers, stream)
-	}
+
 	return servers, closeAll, nil
 }

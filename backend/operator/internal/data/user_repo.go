@@ -25,7 +25,6 @@ import (
 
 	"go-admin/operator/internal/data/store"
 	"go-admin/operator/internal/data/store/user"
-	"go-admin/platform/pkg/scripting"
 
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/constants"
@@ -524,11 +523,6 @@ func (r *userRepo) CreateWithTx(ctx context.Context, tx *store.Tx, data *operato
 
 	var entity *store.User
 	if entity, err = builder.Save(ctx); err != nil {
-		// 脚本 before 钩子否决：业务性拒绝，透传原因（400 语义）而非 500
-		if scripting.IsScriptVetoed(err) {
-			r.log.Warnf(ctx, "insert user vetoed by script: %s", err.Error())
-			return nil, operatorV1.ErrorIdentityBadRequest("rejected by script hook: %s", err.Error())
-		}
 		r.log.Errorf(ctx, "insert user failed: %s", err.Error())
 		return nil, operatorV1.ErrorIdentityInternalServerError("insert user failed")
 	}

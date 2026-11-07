@@ -13,8 +13,6 @@
   "auditStatusPlaceholder": "Select audit status",
   "status": "Status",
   "statusPlaceholder": "Select status",
-  "subscriptionPlan": "Subscription Plan",
-  "subscriptionPlanPlaceholder": "Select subscription plan",
   "expiredAt": "Expires At",
   "expiredAtPlaceholder": "Select expiry time",
   "createdAt": "Created At",
@@ -81,17 +79,6 @@
     "FREEZE": "Frozen"
   },
   "statusUnknown": "Unknown",
-  "usageSection": "Usage & Quotas",
-  "usageUserCount": "Current User Count",
-  "usageStorage": "Storage Used",
-  "usageApiCalls": "API Call Count",
-  "usagePlan": "Subscription Plan",
-  "usageNoPlan": "No plan associated",
   "quotaType": "Quota Type",
-  "quotaValue": "Quota Limit",
-  "cleanupData": "Cleanup Data",
-  "cleanupConfirmTitle": "Confirm Tenant Data Cleanup",
-  "cleanupConfirmDesc": "This will hard-delete all business data for this tenant (users, roles, orgs, files, etc.), keeping the tenant record but setting its status to OFF. This is irreversible. Continue?",
-  "cleanupSuccess": "Tenant data cleaned up",
-  "cleanupFailed": "Cleanup failed"
+  "quotaValue": "Quota Limit"
 }

@@ -41,12 +41,14 @@ export const staticRoutes: AppRouteObject[] = [
       </AuthGuard>
     ),
     meta: { hideInMenu: true, hideInTab: true },
-    children: [{
-      name: 'user-profile',
-      index: true,
-      element: createLazyRoute(() => import('@/pages/app/opm/user/profile')),
-      meta: { title: 'routes:user-profile', hideInMenu: true, hideInTab: false },
-    }],
+    children: [
+      {
+        name: 'user-profile',
+        index: true,
+        element: createLazyRoute(() => import('@/pages/app/opm/user/profile')),
+        meta: { title: 'routes:user-profile', hideInMenu: true, hideInTab: false },
+      },
+    ],
   },
   {
     path: '/internal-message/inbox',
@@ -56,11 +58,6 @@ export const staticRoutes: AppRouteObject[] = [
       </AuthGuard>
     ),
     meta: { hideInMenu: true, hideInTab: true },
-    children: [{
-      name: 'personal-inbox',
-      index: true,
-      element: createLazyRoute(() => import('@/pages/app/internal-message/inbox')),
-      meta: { title: 'routes:inbox', hideInMenu: true, hideInTab: false },
-    }],
+    children: [],
   },
 ];

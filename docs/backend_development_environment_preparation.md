@@ -76,7 +76,7 @@ CLI 工具（buf、hz、golangci-lint 等）在另一个目标里，`make init` 
 ## 装完之后：跑起来
 
 代理与插件都配好后，最短路径两条命令（完整版见
-[教程 02 · 从零跑起来](./tutorial/02-get-it-running.md)、
+[教程 02 · 从零跑起来](service_split.md)、
 [Windows 本地开发启动指南](./windows-startup-guide.md)与
 [后端项目部署](./backend_deploy.md)）：
 
@@ -185,7 +185,7 @@ go env -w GOPROXY=https://goproxy.bj.bcebos.com/,direct
 ```bash
 unset GOPROXY
 
-# or 
+# or
 
 Clear-Variable GOPROXY
 ```

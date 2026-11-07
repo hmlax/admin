@@ -24,16 +24,14 @@ def available_port():
 
 def main():
     env = os.environ.copy()
-    grpc_port, http_port, sse_port = available_port(), available_port(), available_port()
+    grpc_port, http_port = available_port(), available_port()
     group = 'GO_ADMIN_SMOKE_' + str(time.time_ns())
     nacos = 'http://' + port('nacos', 8848)
     env.update(NACOS_ADDR=nacos, NACOS_GROUP=group, NACOS_NAMESPACE_ID='', NACOS_USERNAME='', NACOS_PASSWORD='')
     documents = {
         'server.yaml': {
             'server': {'rest': {'addr': '127.0.0.1:' + str(http_port), 'timeout': '30s'},
-                       'grpc': {'addr': '127.0.0.1:' + str(grpc_port), 'timeout': '30s'},
-                       'sse': {'addr': '127.0.0.1:' + str(sse_port), 'path': '/events'},
-                       'asynq': {'uri': 'redis://' + port('redis', 6379) + '/1', 'concurrency': 1, 'shutdown_timeout': '2s'}},
+                       'grpc': {'addr': '127.0.0.1:' + str(grpc_port), 'timeout': '30s'},},
             'logger': {'type': 'std'}, 'authz': {'type': 'casbin'},
         },
         'data.yaml': {
@@ -102,21 +100,6 @@ def main():
             assert any(cookie.name == 'refresh_token' and cookie.has_nonstandard_attr('HttpOnly') for cookie in jar), 'HttpOnly refresh cookie missing'
             profile = request('GET', '/admin/v1/me', token=token)
             assert profile.get('username') == 'admin', 'operator context did not resolve current user'
-            event_url = 'http://127.0.0.1:' + str(sse_port) + '/events?stream=' + str(profile['id'])
-            event_request = urllib.request.Request(event_url, headers={'Authorization': 'Bearer ' + token})
-            with urllib.request.urlopen(event_request, timeout=5) as response:
-                assert response.headers.get_content_type() == 'text/event-stream', 'SSE content type lost'
-                assert response.readline() == b': connected\n', 'SSE did not flush the operator ready frame'
-                assert response.readline() == b'\n', 'SSE frame terminator lost'
-            # Closing the browser stream must release the operator subscription.
-            channel = 'go-admin:sse:' + str(profile['id'])
-            for _ in range(30):
-                subscribers = subprocess.check_output(COMPOSE + ['exec', '-T', 'redis', 'redis-cli', '--raw', 'PUBSUB', 'NUMSUB', channel], text=True).splitlines()
-                if subscribers[-1] == '0':
-                    break
-                time.sleep(0.1)
-            else:
-                raise AssertionError('disconnected SSE left an operator Redis subscriber')
             refreshed = request('POST', '/admin/v1/refresh-token', {'grant_type': 'refresh_token', 'client_type': 'admin'})
             token = refreshed['access_token']
             code = 'service_split_smoke_' + str(time.time_ns())
@@ -146,7 +129,7 @@ def main():
                 raise AssertionError('revoked access token still accepted')
             except urllib.error.HTTPError as error:
                 assert error.code == 401, 'expected revoked-token response 401'
-            print('PASS: seeded login, captcha forwarding, HttpOnly refresh cookies, current user, SSE flush/disconnect, refresh rotation, typed CRUD/batch, logout/revocation')
+            print('PASS: seeded login, captcha forwarding, HttpOnly refresh cookies, current user, refresh rotation, typed CRUD/batch, logout/revocation')
         except Exception:
             for log in logs:
                 log.flush()

@@ -8,7 +8,7 @@ export function createSessionRouter(
   session: { authenticated: boolean; user: Pick<BasicUserInfo, 'tenantId'> | null },
   options: GenerateMenuAndRoutesOptions,
 ) {
-  // Tenant menus are the intersection of role permissions and plan modules.
+  // Tenant menus are granted by server-side role permissions.
   // Saved UI preferences cannot replace that server-controlled route tree.
   const mode =
     session.authenticated &&

@@ -16,15 +16,14 @@ import (
 )
 
 const (
-	tenantActive            = "ON"
-	expiryReadOnly          = "READONLY"
+	tenantActive       = "ON"
+	errorTenantExpired = "tenant has expired"
+
 	errorAccessDenied       = "access denied"
 	errorUnauthorizedAccess = "unauthorized access"
 	errorTenantInactive     = "tenant is not active"
-	errorTenantReadOnly     = "tenant is read-only due to expiry"
-	errorModuleNotAllowed   = "module not allowed"
-	errorAPICallQuota       = "plan quota exceeded: API_CALL"
-	ErrorPlatformRequired   = "platform administrator required"
+
+	ErrorPlatformRequired = "platform administrator required"
 )
 
 type tenantChecker struct {
@@ -40,35 +39,25 @@ func (s *tenantChecker) CheckTenantAccess(ctx context.Context, id uint32, path, 
 	if err != nil {
 		return err
 	}
-	return checkTenantAccess(data, method, time.Now())
+	return checkTenantAccess(data, time.Now())
 }
-func checkTenantAccess(data *operatorV1.TenantAccessData, method string, now time.Time) error {
+func checkTenantAccess(data *operatorV1.TenantAccessData, now time.Time) error {
 	if data == nil || !data.GetTenantExists() {
 		return operatorV1.ErrorAdminForbidden(errorAccessDenied)
 	}
 	if data.Status != nil && data.GetStatus() != tenantActive {
 		return operatorV1.ErrorAdminForbidden(errorTenantInactive)
 	}
-	if data.ExpiresAt != nil && data.GetExpiresAt() < now.Unix() && data.GetExpiryPolicy() == expiryReadOnly {
-		switch method {
-		case "GET", "HEAD", "OPTIONS":
-		default:
-			return operatorV1.ErrorAdminForbidden(errorTenantReadOnly)
-		}
+	if data.ExpiresAt != nil && data.GetExpiresAt() <= now.Unix() {
+		return operatorV1.ErrorAdminForbidden(errorTenantExpired)
 	}
-	if !data.GetApiExists() || !data.GetModuleClassified() || data.GetPlanId() == 0 || !data.GetModuleInPlan() {
-		return operatorV1.ErrorAdminForbidden(errorModuleNotAllowed)
-	}
-	if data.ApiCallLimit != nil && data.ApiCallCount != nil && data.GetApiCallCount() >= data.GetApiCallLimit() {
-		return operatorV1.ErrorAdminForbidden(errorAPICallQuota)
+	if !data.GetApiExists() {
+		return operatorV1.ErrorAdminForbidden(errorAccessDenied)
 	}
 	return nil
 }
 
-var platformServices = map[string]bool{
-	"NotificationChannelService": true, "NotificationRuleService": true, "NotificationService": true,
-	"NotificationTemplateService": true, "MonitorAlertService": true, "TaskMonitorService": true,
-}
+var platformServices = map[string]bool{"TenantService": true}
 
 type policiesKey struct{}
 
@@ -78,7 +67,7 @@ func checkBoundary(ctx context.Context, exchange *httpmeta.Exchange, client oper
 		return ctx, err
 	}
 	parts := strings.Split(strings.TrimPrefix(exchange.OperationName, "/operator.v1."), "/")
-	platformOnly := platformServices[parts[0]] || exchange.OperationName == "/operator.v1.DashboardService/GetAiInsights" || exchange.OperationName == operatorV1.OperationExportServiceExportAuditLogs || exchange.OperationName == operatorV1.OperationExportServiceExportNotificationDeliveries
+	platformOnly := platformServices[parts[0]] || exchange.OperationName == operatorV1.OperationExportServiceExportAuditLogs
 	if platformOnly && !actor.GetIsPlatformAdmin() {
 		return ctx, operatorV1.ErrorAdminForbidden(ErrorPlatformRequired)
 	}

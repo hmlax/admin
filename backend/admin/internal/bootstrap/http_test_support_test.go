@@ -15,19 +15,18 @@ type Router = transport.Router
 type hzBinding = transport.Binding
 
 var (
-	newAPIRouter                           = transport.NewAPIRouter
-	bindRequest                            = transport.BindRequest
-	failRequest                            = transport.FailRequest
-	traceIDFromContext                     = mw.TraceIDFromContext
-	clientIPFromContext                    = mw.ClientIPFromContext
-	NewRestMiddleware                      = mw.NewRestMiddleware
-	newTenantChecker                       = mw.NewTenantChecker
-	newExportHTTPService                   = handler.NewExportHTTPService
-	newEventHTTPService                    = handler.NewEventHTTPService
+	newAPIRouter         = transport.NewAPIRouter
+	bindRequest          = transport.BindRequest
+	failRequest          = transport.FailRequest
+	traceIDFromContext   = mw.TraceIDFromContext
+	clientIPFromContext  = mw.ClientIPFromContext
+	NewRestMiddleware    = mw.NewRestMiddleware
+	newTenantChecker     = mw.NewTenantChecker
+	newExportHTTPService = handler.NewExportHTTPService
+
 	registerSwagger                        = router.RegisterSwagger
 	RegisterFileTransferServiceHertzServer = router.RegisterFileTransferServiceHertzServer
 	RegisterExportServiceHertzServer       = router.RegisterExportServiceHertzServer
-	RegisterEventServiceHertzServer        = router.RegisterEventServiceHertzServer
 )
 
 func registerServices(h *transport.Router, conn grpc.ClientConnInterface) {

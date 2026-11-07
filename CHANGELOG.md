@@ -31,7 +31,7 @@
   （`?id=N` 渲染库中行）、设计器（`?id=N` 加载库中仪表盘自动保存回写；无 id 本地草稿）、
   仪表盘管理（列表 + 全屏设计器抽屉 + 复制/删除）。演示数据 static 内嵌；真实业务由宿主
   经数据集 resolver 注入。页级全屏（仪表盘/设计器均可）。内置「基础仪表盘模板」启动播种。
-  详见 [docs/bi_dashboard.md](./docs/bi_dashboard.md)。
+  详见 [docs/service_split.md](./docs/service_split.md)。
 - **打印模板（单据打印设计器）**：可视化拖拽设计打印模板（文本 / 表格 / 条码 / 二维码，毫米精确
   布局，多页跨页表头），内核 fork 自 worm-vue3-print（MIT，go-wind-print 仓自维护）。模板按资源
   绑定（resourceKey），任意列表行可一键打印——模板匹配精确绑定优先、通用模板（未绑定）兜底；
@@ -39,7 +39,7 @@
   （`POST /admin/v1/print-templates:render-pdf`，后端 Chromium 渲染，Docker 构建参数
   `WITH_PRINT_BROWSER=1` 启用浏览器层）/ 静默打印（对接 worm 客户端）。三端管理页齐备
   （暗色适配、复制内置模板派生），内置种子含通用 A4/A5 模板与用户工牌演示。设计/部署详见
-  [docs/print_template.md](./docs/print_template.md)；采用者给自己的模块接打印见
+  [docs/service_split.md](./docs/service_split.md)；采用者给自己的模块接打印见
   [docs/crud_module_guide](./docs/crud_module_guide/README.md) 行打印节。
 
 ### 变更
@@ -222,7 +222,7 @@
 - AI 模块（全栈，三端齐备）：模型提供商管理（密钥加密存储 / 连通性测试）、
   SSE 流式对话（多会话 / 历史持久化 / 会话重命名）、用量配额记账与用量统计页
   （含当月汇总 RPC），并登记进业务模块枚举与套餐白名单映射链（租户按套餐开通）。
-  详见 `docs/ai_module.md` 与教程第 10 章。
+  详见 `docs/service_split.md` 与教程第 10 章。
 - 知识库 RAG：文档上传（txt / md / docx / pdf 抽取文本）→ 切片向量化（pgvector）
   入库 → 对话按知识库检索注入上下文；三端管理页与聊天知识库选择器齐备；
   向量重索引任务（ai_doc_reindex）、切片批量入库与 embedding 全链计量、
@@ -250,7 +250,7 @@
 - README（三语）：顶部新增「从这里开始」导览——链接文档索引（含按角色推荐阅读路径）与渐进教程，
   「快速开始」上移至技术栈与安全合规之前，压缩新人首屏到可行动路径的距离。
 - `docs/README.md`：通知域条目不再于索引内转载分阶段实施状态史，
-  各阶段落地状态以 `notification_domain_design.md` 文内状态标记与验收清单为准
+  各阶段落地状态以 `service_split.md` 文内状态标记与验收清单为准
   （对齐该文档「实施进度更新时改本文状态标记、不另开文档」的单一事实源约定）。
 - 全仓文档审计修订：`backend_file_upload.md` 上传请求体改记 JSON+base64 现状
   （2026-09-17 三端切换，multipart 保留为兼容回退）；`crud_module_guide` 步数 10→11、
@@ -290,7 +290,7 @@
   执行审计落 `sys_script_logs`（脚本/触发方式/版本/成败/耗时/错误），
   管理页可查可清理；跨实例变更经 Redis pub/sub 自动重同步；
   三端管理页齐备（Monaco 编辑器、钩子点自动补全、试运行对话框、执行日志抽屉）。
-  详见 `docs/script_system.md`。
+  详见 `docs/service_split.md`。
 - 设计语言规范：`docs/design-language.md` 作为三端视觉唯一权威值表
   （颜色/圆角/布局尺寸），React 端主题偏好值已同步对齐。
 - 在线用户（会话管理）：登录 / 刷新轮换 / MFA 验证通过时在 Redis 记录会话元数据

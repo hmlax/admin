@@ -19,9 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ExportService_ExportAuditLogs_FullMethodName              = "/operator.v1.ExportService/ExportAuditLogs"
-	ExportService_ExportAIUsage_FullMethodName                = "/operator.v1.ExportService/ExportAIUsage"
-	ExportService_ExportNotificationDeliveries_FullMethodName = "/operator.v1.ExportService/ExportNotificationDeliveries"
+	ExportService_ExportAuditLogs_FullMethodName = "/operator.v1.ExportService/ExportAuditLogs"
 )
 
 // ExportServiceClient is the client API for ExportService service.
@@ -32,8 +30,6 @@ const (
 // BinaryFileResponse; these endpoints retain the corresponding list permissions.
 type ExportServiceClient interface {
 	ExportAuditLogs(ctx context.Context, in *AuditExportRequest, opts ...grpc.CallOption) (*BinaryFileResponse, error)
-	ExportAIUsage(ctx context.Context, in *ExportFileRequest, opts ...grpc.CallOption) (*BinaryFileResponse, error)
-	ExportNotificationDeliveries(ctx context.Context, in *ExportFileRequest, opts ...grpc.CallOption) (*BinaryFileResponse, error)
 }
 
 type exportServiceClient struct {
@@ -54,26 +50,6 @@ func (c *exportServiceClient) ExportAuditLogs(ctx context.Context, in *AuditExpo
 	return out, nil
 }
 
-func (c *exportServiceClient) ExportAIUsage(ctx context.Context, in *ExportFileRequest, opts ...grpc.CallOption) (*BinaryFileResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BinaryFileResponse)
-	err := c.cc.Invoke(ctx, ExportService_ExportAIUsage_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *exportServiceClient) ExportNotificationDeliveries(ctx context.Context, in *ExportFileRequest, opts ...grpc.CallOption) (*BinaryFileResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BinaryFileResponse)
-	err := c.cc.Invoke(ctx, ExportService_ExportNotificationDeliveries_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ExportServiceServer is the server API for ExportService service.
 // All implementations must embed UnimplementedExportServiceServer
 // for forward compatibility.
@@ -82,8 +58,6 @@ func (c *exportServiceClient) ExportNotificationDeliveries(ctx context.Context, 
 // BinaryFileResponse; these endpoints retain the corresponding list permissions.
 type ExportServiceServer interface {
 	ExportAuditLogs(context.Context, *AuditExportRequest) (*BinaryFileResponse, error)
-	ExportAIUsage(context.Context, *ExportFileRequest) (*BinaryFileResponse, error)
-	ExportNotificationDeliveries(context.Context, *ExportFileRequest) (*BinaryFileResponse, error)
 	mustEmbedUnimplementedExportServiceServer()
 }
 
@@ -96,12 +70,6 @@ type UnimplementedExportServiceServer struct{}
 
 func (UnimplementedExportServiceServer) ExportAuditLogs(context.Context, *AuditExportRequest) (*BinaryFileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ExportAuditLogs not implemented")
-}
-func (UnimplementedExportServiceServer) ExportAIUsage(context.Context, *ExportFileRequest) (*BinaryFileResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ExportAIUsage not implemented")
-}
-func (UnimplementedExportServiceServer) ExportNotificationDeliveries(context.Context, *ExportFileRequest) (*BinaryFileResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ExportNotificationDeliveries not implemented")
 }
 func (UnimplementedExportServiceServer) mustEmbedUnimplementedExportServiceServer() {}
 func (UnimplementedExportServiceServer) testEmbeddedByValue()                       {}
@@ -142,42 +110,6 @@ func _ExportService_ExportAuditLogs_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExportService_ExportAIUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExportServiceServer).ExportAIUsage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ExportService_ExportAIUsage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExportServiceServer).ExportAIUsage(ctx, req.(*ExportFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ExportService_ExportNotificationDeliveries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExportFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExportServiceServer).ExportNotificationDeliveries(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ExportService_ExportNotificationDeliveries_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExportServiceServer).ExportNotificationDeliveries(ctx, req.(*ExportFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // ExportService_ServiceDesc is the grpc.ServiceDesc for ExportService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -188,14 +120,6 @@ var ExportService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExportAuditLogs",
 			Handler:    _ExportService_ExportAuditLogs_Handler,
-		},
-		{
-			MethodName: "ExportAIUsage",
-			Handler:    _ExportService_ExportAIUsage_Handler,
-		},
-		{
-			MethodName: "ExportNotificationDeliveries",
-			Handler:    _ExportService_ExportNotificationDeliveries_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

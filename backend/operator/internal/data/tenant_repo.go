@@ -82,7 +82,7 @@ func (r *TenantRepo) List(ctx context.Context, req *paginationV1.PagingRequest) 
 		return nil, operatorV1.ErrorIdentityBadRequest("invalid parameter")
 	}
 
-	builder := r.dbClient.Client().Tenant.Query().WithPlan()
+	builder := r.dbClient.Client().Tenant.Query()
 	countBuilder := r.dbClient.Client().Tenant.Query()
 
 	whereSelectors, _, err := r.repository.BuildListSelectorWithPaging(builder, req)
@@ -102,9 +102,7 @@ func (r *TenantRepo) List(ctx context.Context, req *paginationV1.PagingRequest) 
 	dtos := make([]*operatorV1.Tenant, 0, len(entities))
 	for _, entity := range entities {
 		dto := r.mapper.ToDTO(entity)
-		if entity.Plan != nil {
-			dto.PlanId = &entity.Plan.ID
-		}
+
 		dtos = append(dtos, dto)
 	}
 
@@ -139,7 +137,7 @@ func (r *TenantRepo) Get(ctx context.Context, req *operatorV1.GetTenantRequest) 
 		return nil, operatorV1.ErrorIdentityBadRequest("invalid parameter")
 	}
 
-	builder := r.dbClient.Client().Tenant.Query().WithPlan()
+	builder := r.dbClient.Client().Tenant.Query()
 
 	var whereCond []queryscope.Scope
 	switch req.QueryBy.(type) {
@@ -172,9 +170,6 @@ func (r *TenantRepo) Get(ctx context.Context, req *operatorV1.GetTenantRequest) 
 	}
 
 	dto := r.mapper.ToDTO(entity)
-	if entity.Plan != nil {
-		dto.PlanId = &entity.Plan.ID
-	}
 
 	return dto, nil
 }
@@ -233,11 +228,7 @@ func (r *TenantRepo) CreateWithTx(ctx context.Context, tx *store.Tx, data *opera
 		SetNillableStatus(r.statusConverter.ToEntity(data.Status)).
 		SetNillableType(r.typeConverter.ToEntity(data.Type)).
 		SetNillableAuditStatus(r.auditStatusConverter.ToEntity(data.AuditStatus)).
-		SetNillableSubscriptionPlan(data.SubscriptionPlan).
 		SetNillableExpiredAt(timeutil.TimestamppbToTime(data.ExpiredAt)).
-		SetNillableSubscriptionAt(timeutil.TimestamppbToTime(data.SubscriptionAt)).
-		SetNillableUnsubscribeAt(timeutil.TimestamppbToTime(data.UnsubscribeAt)).
-		SetNillablePlanID(data.PlanId).
 		SetNillableCreatedBy(data.CreatedBy).
 		SetCreatedAt(time.Now())
 
@@ -290,11 +281,7 @@ func (r *TenantRepo) Update(ctx context.Context, req *operatorV1.UpdateTenantReq
 				SetNillableStatus(r.statusConverter.ToEntity(req.Data.Status)).
 				SetNillableType(r.typeConverter.ToEntity(req.Data.Type)).
 				SetNillableAuditStatus(r.auditStatusConverter.ToEntity(req.Data.AuditStatus)).
-				SetNillableSubscriptionPlan(req.Data.SubscriptionPlan).
 				SetNillableExpiredAt(timeutil.TimestamppbToTime(req.Data.ExpiredAt)).
-				SetNillableSubscriptionAt(timeutil.TimestamppbToTime(req.Data.SubscriptionAt)).
-				SetNillableUnsubscribeAt(timeutil.TimestamppbToTime(req.Data.UnsubscribeAt)).
-				SetNillablePlanID(req.Data.PlanId).
 				SetNillableUpdatedBy(req.Data.UpdatedBy).
 				SetUpdatedAt(time.Now())
 		},

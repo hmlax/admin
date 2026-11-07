@@ -10,7 +10,7 @@ import { createServer } from 'vite';
 afterEach(() => vi.unstubAllEnvs());
 
 it.each(['platform', 'merchant'])(
-  '%s serves the excluded editor package with a browser-compatible JSX runtime',
+  '%s serves the shared application with a browser-compatible JSX runtime',
   async (kind) => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('VITE_MERCHANT_CODE', 'RuntimeTest');
@@ -26,12 +26,14 @@ it.each(['platform', 'merchant'])(
       await server.listen();
       const port = (server.httpServer?.address() as AddressInfo).port;
       const base = `http://127.0.0.1:${port}`;
-      const editor = fileURLToPath(import.meta.resolve('@go-wind/editor-react'));
-      const response = await fetch(`${base}/@fs${editor}`);
+      const entry = fileURLToPath(
+        new URL('../../src/pages/app/dashboard/analytics/index.tsx', import.meta.url),
+      );
+      const response = await fetch(`${base}/@fs${entry}`);
       expect(response.status).toBe(200);
       const source = await response.text();
       expect(source).not.toMatch(/\.pnpm\/react@[^"']+\/react\/jsx-runtime\.js/);
-      const runtimePath = source.match(/"([^"\n]+\/deps\/react_jsx-runtime\.js[^"\n]*)"/);
+      const runtimePath = source.match(/"([^"\n]+\/deps\/react_jsx(?:-dev)?-runtime\.js[^"\n]*)"/);
       expect(runtimePath, 'JSX runtime must be served as optimized ESM').not.toBeNull();
       const runtime = await fetch(`${base}${runtimePath![1]}`);
       expect(runtime.status).toBe(200);

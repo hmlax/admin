@@ -35,3 +35,11 @@ func TestAuditExportColumnHeaders(t *testing.T) {
 		})
 	}
 }
+
+func headersOf[T any](columns []exportColumn[T]) []string {
+	headers := make([]string, 0, len(columns))
+	for _, column := range columns {
+		headers = append(headers, column.header)
+	}
+	return headers
+}

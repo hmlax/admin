@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tx7do/go-utils/password"
 	operatorV1 "go-admin/platform/pb/operator"
+
+	"github.com/tx7do/go-utils/password"
 )
 
 // TestDefaultPasswordMeetsPolicy 种子密码必须通过等保复杂度策略。
@@ -29,5 +30,32 @@ func TestDefaultUserCredentialsUsePolicyCompliantPassword(t *testing.T) {
 		assert.Equal(t, DefaultUserPassword, credential.GetCredential(),
 			"PASSWORD_HASH 种子凭证的 Credential 必须引用 DefaultUserPassword")
 		assert.NoError(t, password.ValidateComplexity(credential.GetCredential(), DefaultPasswordMinLen))
+	}
+}
+
+func TestSeedMenusAndPermissionReferencesAreConnected(t *testing.T) {
+	ids := make(map[uint32]bool, len(DefaultMenus))
+	children := make(map[uint32]int)
+	for _, menu := range DefaultMenus {
+		if ids[menu.GetId()] {
+			t.Fatalf("duplicate menu ID %d", menu.GetId())
+		}
+		ids[menu.GetId()] = true
+		children[menu.GetParentId()]++
+	}
+	for _, menu := range DefaultMenus {
+		if menu.GetParentId() != 0 && !ids[menu.GetParentId()] {
+			t.Errorf("menu %d has missing parent", menu.GetId())
+		}
+		if menu.GetComponent() == "BasicLayout" && children[menu.GetId()] == 0 {
+			t.Errorf("catalog %d is empty", menu.GetId())
+		}
+	}
+	for _, permission := range DefaultPermissions {
+		for _, id := range permission.GetMenuIds() {
+			if !ids[id] {
+				t.Errorf("permission %s references missing menu %d", permission.GetCode(), id)
+			}
+		}
 	}
 }

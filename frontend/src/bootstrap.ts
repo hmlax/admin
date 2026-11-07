@@ -4,10 +4,7 @@ import { usePreferencesStore } from '@/core/preferences';
 import { type HttpResponse, RequestClient } from '@/core/transport/rest';
 import i18n from 'i18next';
 import { useAuthStore } from '@/stores';
-import {
-  connectSSEServer,
-  startRefreshTimer,
-} from '@/hooks/useTokenRefresh';
+import { startRefreshTimer } from '@/hooks/useTokenRefresh';
 import { fetchUserProfile } from '@/api/hooks/user-profile';
 
 /**
@@ -87,9 +84,7 @@ async function _initI18n() {
           // userInfo.id 的页面把字面量 "undefined" 当用户 ID 发出去（后端解析 500），
           // 而补拉要等下一个刷新定时器 tick（最长约 90 分钟）。短暂重试消化后端
           // 重启窗口期，仍失败则强制登出收敛到干净的重登录。
-          type Profile = Parameters<
-            ReturnType<typeof useAuthStore.getState>['setUserInfo']
-          >[0];
+          type Profile = Parameters<ReturnType<typeof useAuthStore.getState>['setUserInfo']>[0];
           let profile: Profile | null = null;
           let lastError: unknown = null;
           for (let attempt = 1; attempt <= 3 && !profile; attempt += 1) {
@@ -108,8 +103,7 @@ async function _initI18n() {
           }
           if (profile) {
             useAuthStore.getState().setUserInfo(profile);
-            // 恢复 SSE 连接与刷新定时器
-            connectSSEServer();
+            // 恢复刷新定时器
             startRefreshTimer();
             console.log('[Bootstrap] session silently restored via refresh cookie');
           } else {

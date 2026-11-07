@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	operatorV1 "go-admin/platform/pb/operator"
+
 	"google.golang.org/protobuf/compiler/protogen"
 )
 

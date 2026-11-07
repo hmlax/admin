@@ -9,7 +9,6 @@ import ContentContainer from '@/layouts/components/PageContainer/ContentContaine
 import { TabEnum } from './types';
 import BasicInfoPage from './BasicInfoPage';
 import ApiLogPage from './ApiLogPage';
-import InternalMessagePage from './InternalMessagePage';
 import EditPasswordModal from './EditPasswordModal';
 
 /**
@@ -108,7 +107,6 @@ const UserDetail = () => {
             items={[
               { key: TabEnum.BASIC_INFO, label: t('tab.basicInfo') },
               { key: TabEnum.API_AUDIT_LOG, label: t('tab.apiAuditLog') },
-              { key: TabEnum.INTERNAL_MESSAGE, label: t('tab.internalMessage') },
             ]}
           />
         </div>
@@ -117,7 +115,6 @@ const UserDetail = () => {
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           {activeTab === TabEnum.BASIC_INFO && <BasicInfoPage userId={userId} />}
           {activeTab === TabEnum.API_AUDIT_LOG && <ApiLogPage userId={userId} />}
-          {activeTab === TabEnum.INTERNAL_MESSAGE && <InternalMessagePage userId={userId} />}
         </div>
       </div>
 

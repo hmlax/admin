@@ -20,7 +20,6 @@
   "header": {
     "profile": "个人中心",
     "settings": "偏好设置",
-    "inbox": "收件箱",
     "lockScreen": "锁定屏幕",
     "logout": "退出登录",
     "logoutConfirmTitle": "提示",
@@ -28,7 +27,6 @@
     "fullscreen": "全屏",
     "exitFullscreen": "退出全屏",
     "helpDoc": "帮助文档",
-    "notification": "通知",
     "guest": "访客",
     "switchToLight": "切换到亮色模式",
     "switchToDark": "切换到暗色模式",
@@ -43,7 +41,6 @@
     "noResults": "未找到相关页面",
     "noHistory": "暂无最近搜索",
     "searchRecent": "最近",
-    "semanticTitle": "语义搜索",
     "searchSelect": "选择",
     "searchSwitch": "切换",
     "searchClose": "关闭"

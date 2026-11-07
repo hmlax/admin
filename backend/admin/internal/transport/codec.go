@@ -2,7 +2,6 @@ package transport
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log/slog"
 	"mime"
@@ -13,11 +12,11 @@ import (
 	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/http1/resp"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 
 	apiV1 "go-admin/admin/biz/model/admin/v1"
 	operatorV1 "go-admin/platform/pb/operator"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -202,63 +201,6 @@ func encodeDownload(c *app.RequestContext, reply *apiV1.DownloadFileResponse) er
 	c.SetStatusCode(http.StatusPartialContent)
 	c.Response.SetBody(output.Bytes())
 	return nil
-}
-func WriteEvent(c *app.RequestContext, frame *apiV1.EventFrame, started *bool) error {
-	if !*started {
-		c.Response.Header.SetContentType("text/event-stream")
-		c.Response.Header.Set("Cache-Control", "no-cache")
-		c.Response.Header.Set("X-Accel-Buffering", "no")
-		if c.Response.GetHijackWriter() == nil {
-			c.Response.HijackWriter(resp.NewChunkedBodyWriter(&c.Response, c.GetWriter()))
-		}
-		*started = true
-		c.Set(streamStartedKey, true)
-	}
-	writer := c.Response.GetHijackWriter()
-	fields := []struct {
-		name string
-		data []byte
-	}{
-		{
-			name: "id",
-			data: frame.GetId(),
-		},
-		{
-			name: "event",
-			data: frame.GetEvent(),
-		},
-		{
-			name: "retry",
-			data: frame.GetRetry(),
-		},
-		{
-			name: "",
-			data: frame.GetComment(),
-		},
-		{
-			name: "data",
-			data: frame.GetData(),
-		},
-	}
-	for _, field := range fields {
-		if len(field.data) == 0 {
-			continue
-		}
-		for _, line := range strings.Split(strings.ReplaceAll(string(field.data), "\r", ""), "\n") {
-			if _, err := fmt.Fprintf(writer, "%s: %s\n", field.name, line); err != nil {
-				return err
-			}
-		}
-	}
-	if _, err := fmt.Fprint(writer, "\n"); err != nil {
-		return err
-	}
-	return writer.Flush()
-}
-func LogStreamError(ctx context.Context, err error) {
-	if ctx.Err() == nil {
-		slog.WarnContext(ctx, "SSE stream closed", "error", err)
-	}
 }
 
 func validResponseHeaders(values ...string) bool {

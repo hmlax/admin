@@ -43,9 +43,9 @@ type SysApis struct {
 	// 业务模块描述
 
 	ModuleDescription *string `gorm:"column:module_description;type:varchar(255);comment:业务模块描述" json:"module_description,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
-	// 所属业务功能模块（用于套餐白名单过滤）
+	// 所属业务功能模块
 
-	BusinessModule *string `gorm:"column:business_module;type:varchar(255);index:idx_sys_api_res_business_module,priority:1;comment:所属业务功能模块（用于套餐白名单过滤）" json:"business_module,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false" orm_enum:"DASHBOARD,OPM,SYSTEM,DICT,TENANT,PERMISSION,LOG,INTERNAL_MESSAGE,FILE,TASK,AI"`
+	BusinessModule *string `gorm:"column:business_module;type:varchar(255);index:idx_sys_api_res_business_module,priority:1;comment:所属业务功能模块" json:"business_module,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false" orm_enum:"DASHBOARD,OPM,SYSTEM,DICT,TENANT,PERMISSION,LOG,FILE"`
 	// 接口操作名
 
 	Operation *string `gorm:"column:operation;type:varchar(255);comment:接口操作名" json:"operation,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`

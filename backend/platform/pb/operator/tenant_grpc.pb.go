@@ -28,8 +28,6 @@ const (
 	TenantService_Delete_FullMethodName                    = "/operator.v1.TenantService/Delete"
 	TenantService_CreateTenantWithAdminUser_FullMethodName = "/operator.v1.TenantService/CreateTenantWithAdminUser"
 	TenantService_TenantExists_FullMethodName              = "/operator.v1.TenantService/TenantExists"
-	TenantService_GetUsage_FullMethodName                  = "/operator.v1.TenantService/GetUsage"
-	TenantService_CleanupData_FullMethodName               = "/operator.v1.TenantService/CleanupData"
 )
 
 // TenantServiceClient is the client API for TenantService service.
@@ -52,10 +50,6 @@ type TenantServiceClient interface {
 	CreateTenantWithAdminUser(ctx context.Context, in *CreateTenantWithAdminUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 租户是否存在
 	TenantExists(ctx context.Context, in *TenantExistsRequest, opts ...grpc.CallOption) (*TenantExistsResponse, error)
-	// 查询租户用量与配额
-	GetUsage(ctx context.Context, in *GetTenantUsageRequest, opts ...grpc.CallOption) (*TenantUsage, error)
-	// 清理租户数据
-	CleanupData(ctx context.Context, in *CleanupTenantDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type tenantServiceClient struct {
@@ -136,26 +130,6 @@ func (c *tenantServiceClient) TenantExists(ctx context.Context, in *TenantExists
 	return out, nil
 }
 
-func (c *tenantServiceClient) GetUsage(ctx context.Context, in *GetTenantUsageRequest, opts ...grpc.CallOption) (*TenantUsage, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(TenantUsage)
-	err := c.cc.Invoke(ctx, TenantService_GetUsage_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *tenantServiceClient) CleanupData(ctx context.Context, in *CleanupTenantDataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, TenantService_CleanupData_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // TenantServiceServer is the server API for TenantService service.
 // All implementations must embed UnimplementedTenantServiceServer
 // for forward compatibility.
@@ -176,10 +150,6 @@ type TenantServiceServer interface {
 	CreateTenantWithAdminUser(context.Context, *CreateTenantWithAdminUserRequest) (*emptypb.Empty, error)
 	// 租户是否存在
 	TenantExists(context.Context, *TenantExistsRequest) (*TenantExistsResponse, error)
-	// 查询租户用量与配额
-	GetUsage(context.Context, *GetTenantUsageRequest) (*TenantUsage, error)
-	// 清理租户数据
-	CleanupData(context.Context, *CleanupTenantDataRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedTenantServiceServer()
 }
 
@@ -210,12 +180,6 @@ func (UnimplementedTenantServiceServer) CreateTenantWithAdminUser(context.Contex
 }
 func (UnimplementedTenantServiceServer) TenantExists(context.Context, *TenantExistsRequest) (*TenantExistsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TenantExists not implemented")
-}
-func (UnimplementedTenantServiceServer) GetUsage(context.Context, *GetTenantUsageRequest) (*TenantUsage, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUsage not implemented")
-}
-func (UnimplementedTenantServiceServer) CleanupData(context.Context, *CleanupTenantDataRequest) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method CleanupData not implemented")
 }
 func (UnimplementedTenantServiceServer) mustEmbedUnimplementedTenantServiceServer() {}
 func (UnimplementedTenantServiceServer) testEmbeddedByValue()                       {}
@@ -364,42 +328,6 @@ func _TenantService_TenantExists_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TenantService_GetUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTenantUsageRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TenantServiceServer).GetUsage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: TenantService_GetUsage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TenantServiceServer).GetUsage(ctx, req.(*GetTenantUsageRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TenantService_CleanupData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CleanupTenantDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TenantServiceServer).CleanupData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: TenantService_CleanupData_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TenantServiceServer).CleanupData(ctx, req.(*CleanupTenantDataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // TenantService_ServiceDesc is the grpc.ServiceDesc for TenantService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -434,14 +362,6 @@ var TenantService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TenantExists",
 			Handler:    _TenantService_TenantExists_Handler,
-		},
-		{
-			MethodName: "GetUsage",
-			Handler:    _TenantService_GetUsage_Handler,
-		},
-		{
-			MethodName: "CleanupData",
-			Handler:    _TenantService_CleanupData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

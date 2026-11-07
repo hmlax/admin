@@ -2,8 +2,8 @@ type EnvConfigs = Record<string, string>;
 
 // env数据
 interface ViteEnv {
-    VITE_SERVER_PORT: number;
-    VITE_PROXY: [string, string][];
+  VITE_SERVER_PORT: number;
+  VITE_PROXY: [string, string][];
 }
 
 /**
@@ -11,25 +11,25 @@ interface ViteEnv {
  * @param envConfigs
  */
 export function handleEnv(envConfigs: EnvConfigs): ViteEnv {
-    const required = ['VITE_API_URL', 'VITE_SSE_URL', 'VITE_APP_TITLE', 'VITE_AES_KEY'];
-    const missing = required.filter((name) => !envConfigs[name]?.trim());
-    if (missing.length > 0) {
-        throw new Error(
-            `Missing frontend environment variables: ${missing.join(', ')}. ` +
-            'Check the selected application directory and its .env files.',
-        );
-    }
+  const required = ['VITE_API_URL', 'VITE_APP_TITLE', 'VITE_AES_KEY'];
+  const missing = required.filter((name) => !envConfigs[name]?.trim());
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing frontend environment variables: ${missing.join(', ')}. ` +
+        'Check the selected application directory and its .env files.',
+    );
+  }
 
-    const {VITE_SERVER_PORT, VITE_PROXY} = envConfigs;
+  const { VITE_SERVER_PORT, VITE_PROXY } = envConfigs;
 
-    const proxy: [string, string][] = VITE_PROXY ? JSON.parse(VITE_PROXY.replace(/'/g, '"')) : [];
+  const proxy: [string, string][] = VITE_PROXY ? JSON.parse(VITE_PROXY.replace(/'/g, '"')) : [];
 
-    const res: ViteEnv = {
-        VITE_SERVER_PORT: Number(VITE_SERVER_PORT) || 15888,
-        VITE_PROXY: proxy,
-    };
+  const res: ViteEnv = {
+    VITE_SERVER_PORT: Number(VITE_SERVER_PORT) || 15888,
+    VITE_PROXY: proxy,
+  };
 
-    return res;
+  return res;
 }
 
 /**
@@ -37,11 +37,11 @@ export function handleEnv(envConfigs: EnvConfigs): ViteEnv {
  * @param id - 标识符
  */
 export function splitJSModules(id: string) {
-    // pnpm兼容
-    const pnpmName = id.includes('.pnpm') ? '.pnpm/' : '';
-    const fileName = `node_modules/${pnpmName}`;
+  // pnpm兼容
+  const pnpmName = id.includes('.pnpm') ? '.pnpm/' : '';
+  const fileName = `node_modules/${pnpmName}`;
 
-    const result = id.split(fileName)[1].split('/')[0].toString();
+  const result = id.split(fileName)[1].split('/')[0].toString();
 
-    return result;
+  return result;
 }

@@ -1,5 +1,5 @@
 import { getErrorMessage } from '@/utils/error';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   DrawerForm,
   ProFormText,
@@ -8,19 +8,12 @@ import {
   ProFormDateTimePicker,
 } from '@ant-design/pro-components';
 import type { ProFormInstance } from '@ant-design/pro-components';
-import { Button, message, Divider, Popconfirm, Descriptions, Progress } from 'antd';
+import { Button, message, Divider } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useDrawerCloseGuard } from '@/components/common/use-drawer-close-guard';
-import {
-  useUpdateTenant,
-  useCreateTenantWithAdminUser,
-  useGetTenantUsage,
-  useCleanupTenantData,
-} from '@/api/hooks/tenant';
+import { useUpdateTenant, useCreateTenantWithAdminUser } from '@/api/hooks/tenant';
 import { toProtoTimestamp } from '@/utils/datetime';
-import { fetchListPlans } from '@/api/hooks/plan';
-import { PaginationQuery } from '@/core';
 import type {
   Tenant,
   Tenant_Type,
@@ -66,34 +59,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
   const updateMutation = useUpdateTenant();
   const createMutation = useCreateTenantWithAdminUser();
 
-  // 编辑模式下加载租户用量与配额对比数据。
-  const usageQuery = useGetTenantUsage(
-    { id: data?.id ?? 0 },
-    { enabled: open && mode === 'edit' && !!data?.id },
-  );
-  const cleanupMutation = useCleanupTenantData();
-
-  // 套餐下拉数据
-  const [planOptions, setPlanOptions] = useState<{ label: string; value: number }[]>([]);
-
-  // 打开抽屉时加载套餐目录下拉
-  useEffect(() => {
-    if (open) {
-      fetchListPlans(new PaginationQuery({ formValues: {} }))
-        .then((res) => {
-          const options = (res.items || []).map((item) => ({
-            label: item.name ?? String(item.id),
-            value: item.id ?? 0,
-          }));
-          setPlanOptions(options);
-        })
-        .catch((error: unknown) => {
-          console.error('Load options failed:', error);
-          setPlanOptions([]);
-        });
-    }
-  }, [open]);
-
   // 当 Drawer 打开时，设置表单初始值
   useEffect(() => {
     if (open) {
@@ -105,7 +70,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
             tenantType: data.type,
             auditStatus: data.auditStatus,
             status: data.status,
-            planId: data.planId,
             expiredAt: data.expiredAt,
             remark: data.remark,
           });
@@ -139,7 +103,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
             type: values.tenantType as Tenant_Type,
             auditStatus: values.auditStatus as Tenant_AuditStatus,
             status: values.status as Tenant_Status,
-            planId: values.planId,
             expiredAt: toProtoTimestamp(values.expiredAt),
             remark: values.remark,
           },
@@ -172,7 +135,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
             type: values.tenantType as Tenant_Type,
             auditStatus: values.auditStatus as Tenant_AuditStatus,
             status: values.status as Tenant_Status,
-            planId: values.planId,
             expiredAt: toProtoTimestamp(values.expiredAt),
             remark: values.remark,
           },
@@ -295,14 +257,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
         fieldProps={SELECT_FILTER_PROPS}
       />
 
-      <ProFormSelect
-        name="planId"
-        label={t('subscriptionPlan')}
-        placeholder={t('subscriptionPlanPlaceholder')}
-        options={planOptions}
-        fieldProps={SELECT_FILTER_PROPS}
-      />
-
       <ProFormDateTimePicker
         name="expiredAt"
         label={t('expiredAt')}
@@ -323,77 +277,6 @@ const TenantDrawer: React.FC<TenantDrawerProps> = ({ open, mode, data, onClose, 
       />
 
       {/* 编辑模式下显示用量与配额对比 + 清理数据按钮 */}
-      {mode === 'edit' && usageQuery.data && (
-        <>
-          <Divider style={{ margin: '24px 0 16px' }}>{t('usageSection')}</Divider>
-          <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label={t('usageUserCount')}>
-              {usageQuery.data.userCount ?? 0}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('usageStorage')}>
-              {usageQuery.data.storageUsedBytes ?? 0} bytes
-            </Descriptions.Item>
-            <Descriptions.Item label={t('usageApiCalls')}>
-              {usageQuery.data.apiCallCount ?? 0}
-            </Descriptions.Item>
-            <Descriptions.Item label={t('usagePlan')}>
-              {usageQuery.data.planName ?? t('usageNoPlan')}
-            </Descriptions.Item>
-          </Descriptions>
-          {usageQuery.data.quotas && usageQuery.data.quotas.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              {usageQuery.data.quotas.map((q, idx) => {
-                let label = q.quotaType?.toString() ?? '';
-                let current = 0;
-                let limit = q.quotaValue ?? 0;
-                if (q.quotaType === 'USER_LIMIT') {
-                  label = t('usageUserCount');
-                  current = usageQuery.data.userCount ?? 0;
-                } else if (q.quotaType === 'STORAGE') {
-                  label = t('usageStorage');
-                  current = usageQuery.data.storageUsedBytes ?? 0;
-                } else if (q.quotaType === 'API_CALL') {
-                  label = t('usageApiCalls');
-                  current = usageQuery.data.apiCallCount ?? 0;
-                }
-                const pct = limit > 0 ? Math.min(100, (current / limit) * 100) : 0;
-                return (
-                  <div key={idx} style={{ marginBottom: 12 }}>
-                    <div style={{ marginBottom: 4 }}>
-                      {label}: {current} / {limit}
-                    </div>
-                    <Progress percent={pct} size="small" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div style={{ marginTop: 24 }}>
-            <Popconfirm
-              title={t('cleanupConfirmTitle')}
-              description={t('cleanupConfirmDesc')}
-              okText={t('common:button.confirm')}
-              okButtonProps={{ danger: true }}
-              cancelText={t('common:button.cancel')}
-              onConfirm={async () => {
-                try {
-                  await cleanupMutation.mutateAsync({ id: data?.id ?? 0 });
-                  message.success(t('cleanupSuccess'));
-                  queryClient.invalidateQueries({ queryKey: ['listTenants'] });
-                  onClose();
-                } catch (err: unknown) {
-                  console.error('Operation failed:', err);
-                  message.error(getErrorMessage(err) || t('cleanupFailed'));
-                }
-              }}
-            >
-              <Button danger loading={cleanupMutation.isPending}>
-                {t('cleanupData')}
-              </Button>
-            </Popconfirm>
-          </div>
-        </>
-      )}
 
       {/* 创建模式下显示管理员账号配置 */}
       {mode === 'create' && (

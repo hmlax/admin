@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/google/wire"
-	"github.com/redis/go-redis/v9"
 	"github.com/tx7do/go-utils/authorizer"
 
 	"go-admin/operator/internal/data"
@@ -10,7 +9,7 @@ import (
 )
 
 // ProviderSet supplies the internal gRPC transport and background worker.
-var ProviderSet = wire.NewSet(NewGatewayService, NewGRPCServer, NewAsynqServer)
+var ProviderSet = wire.NewSet(NewGatewayService, NewGRPCServer)
 
 // NewGatewayService connects service event publishers before transports start.
 func NewGatewayService(
@@ -23,12 +22,9 @@ func NewGatewayService(
 	dataAccessAudit *data.DataAccessAuditLogRepo,
 	policyAudit *data.PolicyEvaluationLogRepo,
 	auditExport *service.AuditExportService,
-	dataExport *service.DataExportService,
+
 	files *service.FileTransferService,
-	redis *redis.Client,
-	messages *service.InternalMessageService,
-	chat *service.AiChatService,
-	agents *service.AiAgentService,
+
 ) *GatewayService {
 	gateway := &GatewayService{
 		Policies:        policies,
@@ -40,12 +36,9 @@ func NewGatewayService(
 		DataAccessAudit: dataAccessAudit,
 		PolicyAudit:     policyAudit,
 		AuditExport:     auditExport,
-		DataExport:      dataExport,
-		Files:           files,
-		Redis:           redis,
+
+		Files: files,
 	}
-	messages.RegisterInternalMessagePublisher(gateway)
-	chat.RegisterAiChatPublisher(gateway)
-	agents.RegisterAiAgentRunPublisher(gateway)
+
 	return gateway
 }

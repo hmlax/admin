@@ -61,22 +61,9 @@ type SysTenants struct {
 	// 审核状态
 
 	AuditStatus *string `gorm:"column:audit_status;type:varchar(255);index:idx_sys_tenant_status_audit_status,priority:2;comment:审核状态" json:"audit_status,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false" orm_enum:"PENDING,APPROVED,REJECTED"`
-	// 订阅时间
-
-	SubscriptionAt *time.Time `gorm:"column:subscription_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_sys_tenant_subscription_at,priority:1;comment:订阅时间" json:"subscription_at,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
-	// 取消订阅时间
-
-	UnsubscribeAt *time.Time `gorm:"column:unsubscribe_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;comment:取消订阅时间" json:"unsubscribe_at,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
-	// 订阅套餐
-
-	SubscriptionPlan *string `gorm:"column:subscription_plan;type:varchar(255);comment:订阅套餐" json:"subscription_plan,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
 	// 租户有效期
 
 	ExpiredAt *time.Time `gorm:"column:expired_at;autoCreateTime:false;autoUpdateTime:false;type:timestamp;index:idx_sys_tenant_type_expired_at,priority:2;index:idx_sys_tenant_expired_at,priority:1;comment:租户有效期" json:"expired_at,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
-	//
-
-	PlanID *uint32   `gorm:"column:plan_id;type:bigint" json:"plan_id,omitempty" orm_min_len:"0" orm_max_len:"0" orm_immutable:"false"`
-	Plan   *SysPlans `gorm:"foreignKey:PlanID;references:ID" json:"-"`
 }
 
 func (x *SysTenants) GetId() uint32 {
@@ -198,38 +185,10 @@ func (x *SysTenants) GetAuditStatus() string {
 	var zero string
 	return zero
 }
-func (x *SysTenants) GetSubscriptionAt() *time.Time {
-	if x != nil {
-		return x.SubscriptionAt
-	}
-	var zero *time.Time
-	return zero
-}
-func (x *SysTenants) GetUnsubscribeAt() *time.Time {
-	if x != nil {
-		return x.UnsubscribeAt
-	}
-	var zero *time.Time
-	return zero
-}
-func (x *SysTenants) GetSubscriptionPlan() string {
-	if x != nil && x.SubscriptionPlan != nil {
-		return *x.SubscriptionPlan
-	}
-	var zero string
-	return zero
-}
 func (x *SysTenants) GetExpiredAt() *time.Time {
 	if x != nil {
 		return x.ExpiredAt
 	}
 	var zero *time.Time
-	return zero
-}
-func (x *SysTenants) GetPlanId() uint32 {
-	if x != nil && x.PlanID != nil {
-		return *x.PlanID
-	}
-	var zero uint32
 	return zero
 }

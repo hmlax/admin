@@ -62,9 +62,9 @@ func newTenantServiceForTest(t *testing.T) *TenantService {
 	t.Helper()
 	dbClient := storetest.NewClientForTest(t)
 	return &TenantService{
-		log:                 bLogger.NewHelper(bLogger.NopLogger()),
-		tenantRepo:          data.NewTenantRepoForTest(dbClient),
-		tenantUsageRepo:     data.NewTenantUsageRepoForTest(dbClient, nil),
+		log:        bLogger.NewHelper(bLogger.NopLogger()),
+		tenantRepo: data.NewTenantRepoForTest(dbClient),
+
 		userRepo:            &tenantServiceUserRepoStub{},
 		userCredentialsRepo: nil,
 		roleRepo:            data.NewRoleRepoForTest(dbClient),

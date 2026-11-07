@@ -228,15 +228,11 @@ func validate(cfg *Configuration, name string) error {
 	if cfg.Runtime.CryptoKey == "" {
 		return fmt.Errorf("runtime.crypto_key is required")
 	}
-	if cfg.Runtime.AuditRetentionDays < 0 {
-		return fmt.Errorf("runtime.audit_retention_days must not be negative")
-	}
 	switch name {
 	case serviceid.AdminService:
 		if cfg.GetServer().GetRest().GetAddr() == "" {
 			return fmt.Errorf("server.rest.addr is required")
 		}
-		cfg.Server.Asynq = nil
 	case serviceid.OperatorService:
 		if cfg.GetServer().GetGrpc().GetAddr() == "" || cfg.GetData().GetDatabase().GetSource() == "" {
 			return fmt.Errorf("server.grpc.addr and data.database.source are required")

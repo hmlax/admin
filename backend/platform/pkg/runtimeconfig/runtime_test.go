@@ -2,10 +2,11 @@ package runtimeconfig
 
 import (
 	"errors"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
 const testServerConfig = `server:
@@ -14,8 +15,6 @@ const testServerConfig = `server:
   grpc:
     addr: ':7790'
     timeout: 17s
-  asynq:
-    uri: 'redis://queue:6379/13'
 runtime:
   sso:
     issuer: https://idp.example.com
@@ -70,15 +69,9 @@ func TestNacosIsTheOnlyApplicationConfigurationSource(t *testing.T) {
 	if cfg.GetAuthn().GetJwt().GetKey() != "nacos-test-signing-key" || cfg.Runtime.CryptoKey != "0123456789abcdef" || cfg.Runtime.SSO.Issuer != "https://idp.example.com" {
 		t.Fatal("security settings did not use Nacos")
 	}
-	if cfg.GetServer().GetAsynq().GetUri() != "redis://queue:6379/13" {
-		t.Fatal("operator task configuration missing")
-	}
-	admin, err := loadDocuments(fixture, "admin")
+	_, err = loadDocuments(fixture, "admin")
 	if err != nil {
 		t.Fatal(err)
-	}
-	if admin.GetServer().GetAsynq() != nil {
-		t.Fatal("admin must never run operator tasks")
 	}
 }
 func TestMissingOrUnavailableNacosConfigurationFailsStartup(t *testing.T) {
@@ -101,7 +94,7 @@ func TestMissingOrUnavailableNacosConfigurationFailsStartup(t *testing.T) {
 	}
 }
 func TestInvalidApplicationSettingsAreRejected(t *testing.T) {
-	for _, document := range []string{"runtime:\n  notification_delivery_stale_minutes: invalid\n", "runtime:\n  unknown_option: true\n"} {
+	for _, document := range []string{"runtime:\n  smtp:\n    port: invalid\n", "runtime:\n  unknown_option: true\n"} {
 		if _, err := Decode([]byte(document)); err == nil {
 			t.Fatal("invalid runtime settings accepted")
 		}

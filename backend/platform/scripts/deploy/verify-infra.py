@@ -108,19 +108,13 @@ def main():
         'grant_type': 'refresh_token', 'client_type': 'admin',
     })
     token = refreshed['access_token']
-    stream_base = os.environ.get('SSE_SMOKE_URL', 'http://127.0.0.1:7789')
-    query = urllib.parse.urlencode({'stream': str(user['id'])})
-    with urllib.request.urlopen(urllib.request.Request(stream_base + '/events?' + query,
-                                                       headers={'Authorization': 'Bearer ' + token}), timeout=10) as response:
-        assert response.headers.get_content_type() == 'text/event-stream', 'SSE content type mismatch'
-        assert response.readline().strip() == b': connected', 'SSE subscription did not reach operator'
     request('POST', '/admin/v1/logout', {}, token=token)
     try:
         request('GET', '/admin/v1/me', token=token)
         raise AssertionError('revoked token was accepted')
     except urllib.error.HTTPError as error:
         assert error.code == 401, 'expected revoked-token HTTP 401'
-    print('PASS: Nacos discovery, lowercase captcha login, profile, initial menus/permissions, refresh cookie, live SSE and logout/revocation')
+    print('PASS: Nacos discovery, lowercase captcha login, profile, initial menus/permissions, refresh cookie and logout/revocation')
 
 
 if __name__ == '__main__':

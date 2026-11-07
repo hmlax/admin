@@ -2,25 +2,14 @@ syntax = "proto3";
 
 package operator.v1;
 
-option go_package = "go-admin/platform/pb/operator;operatorpb";
-
 import "operator/v1/http_transport.proto";
+
+option go_package = "go-admin/platform/pb/operator;operatorpb";
 
 // Download exports. The response is encoded as a file with headers from
 // BinaryFileResponse; these endpoints retain the corresponding list permissions.
 service ExportService {
-  rpc ExportAuditLogs(AuditExportRequest) returns (BinaryFileResponse) {
-  }
-  rpc ExportAIUsage(ExportFileRequest) returns (BinaryFileResponse) {
-  }
-  rpc ExportNotificationDeliveries(ExportFileRequest) returns (BinaryFileResponse) {
-  }
-}
-message ExportFileRequest {
-  string format = 1;
-  uint32 max_rows = 2 [json_name = "maxRows"];
-  // Existing list-filter expression, shared with the list API.
-  string query = 3;
+  rpc ExportAuditLogs(AuditExportRequest) returns (BinaryFileResponse) {}
 }
 message AuditExportRequest {
   string type = 1;

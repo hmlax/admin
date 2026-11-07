@@ -33,7 +33,6 @@ type UserService struct {
 	positionRepo *data.PositionRepo
 	orgUnitRepo  *data.OrgUnitRepo
 	tenantRepo   *data.TenantRepo
-	usageRepo    *data.TenantUsageRepo
 
 	membershipRepo *data.MembershipRepo
 
@@ -48,7 +47,7 @@ func NewUserService(
 	positionRepo *data.PositionRepo,
 	orgUnitRepo *data.OrgUnitRepo,
 	tenantRepo *data.TenantRepo,
-	usageRepo *data.TenantUsageRepo,
+
 	membershipRepo *data.MembershipRepo,
 	authenticator *data.Authenticator,
 ) *UserService {
@@ -60,9 +59,9 @@ func NewUserService(
 		positionRepo:       positionRepo,
 		orgUnitRepo:        orgUnitRepo,
 		tenantRepo:         tenantRepo,
-		usageRepo:          usageRepo,
-		membershipRepo:     membershipRepo,
-		authenticator:      authenticator,
+
+		membershipRepo: membershipRepo,
+		authenticator:  authenticator,
 	}
 
 	svc.init()
@@ -420,16 +419,6 @@ func (s *UserService) Create(ctx context.Context, req *operatorV1.CreateUserRequ
 	targetTenantID := req.Data.GetTenantId()
 	if targetTenantID == 0 {
 		targetTenantID = operator.GetTenantId()
-	}
-	if targetTenantID > 0 && s.usageRepo != nil {
-		usage, uerr := s.usageRepo.GetUsage(ctx, targetTenantID)
-		if uerr == nil {
-			if limit, ok := quotaLimitFromUsages(usage.GetQuotas(), operatorV1.PlanQuota_USER_LIMIT); ok {
-				if uint64(usage.GetUserCount()) >= limit {
-					return nil, quotaExceededError("USER_LIMIT", limit, usage.GetUserCount())
-				}
-			}
-		}
 	}
 
 	// 创建用户

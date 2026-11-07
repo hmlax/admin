@@ -154,36 +154,6 @@ func (b *TenantCreate) SetNillableAuditStatus(v *string) *TenantCreate {
 	}
 	return b
 }
-func (b *TenantCreate) SetSubscriptionAt(v time.Time) *TenantCreate {
-	b.set("subscription_at", v)
-	return b
-}
-func (b *TenantCreate) SetNillableSubscriptionAt(v *time.Time) *TenantCreate {
-	if v != nil {
-		b.set("subscription_at", *v)
-	}
-	return b
-}
-func (b *TenantCreate) SetUnsubscribeAt(v time.Time) *TenantCreate {
-	b.set("unsubscribe_at", v)
-	return b
-}
-func (b *TenantCreate) SetNillableUnsubscribeAt(v *time.Time) *TenantCreate {
-	if v != nil {
-		b.set("unsubscribe_at", *v)
-	}
-	return b
-}
-func (b *TenantCreate) SetSubscriptionPlan(v string) *TenantCreate {
-	b.set("subscription_plan", v)
-	return b
-}
-func (b *TenantCreate) SetNillableSubscriptionPlan(v *string) *TenantCreate {
-	if v != nil {
-		b.set("subscription_plan", *v)
-	}
-	return b
-}
 func (b *TenantCreate) SetExpiredAt(v time.Time) *TenantCreate { b.set("expired_at", v); return b }
 func (b *TenantCreate) SetNillableExpiredAt(v *time.Time) *TenantCreate {
 	if v != nil {
@@ -191,14 +161,6 @@ func (b *TenantCreate) SetNillableExpiredAt(v *time.Time) *TenantCreate {
 	}
 	return b
 }
-func (b *TenantCreate) SetPlanID(v uint32) *TenantCreate { b.set("plan_id", v); return b }
-func (b *TenantCreate) SetNillablePlanID(v *uint32) *TenantCreate {
-	if v != nil {
-		b.set("plan_id", *v)
-	}
-	return b
-}
-func (b *TenantCreate) AddPlanID(v uint32) *TenantCreate { b.add("plan_id", v); return b }
 
 type TenantUpdate struct{ *Update[Tenant] }
 
@@ -350,43 +312,7 @@ func (b *TenantUpdate) SetNillableAuditStatus(v *string) *TenantUpdate {
 	}
 	return b
 }
-func (b *TenantUpdate) ClearAuditStatus() *TenantUpdate { b.set("audit_status", nil); return b }
-func (b *TenantUpdate) SetSubscriptionAt(v time.Time) *TenantUpdate {
-	b.set("subscription_at", v)
-	return b
-}
-func (b *TenantUpdate) SetNillableSubscriptionAt(v *time.Time) *TenantUpdate {
-	if v != nil {
-		b.set("subscription_at", *v)
-	}
-	return b
-}
-func (b *TenantUpdate) ClearSubscriptionAt() *TenantUpdate { b.set("subscription_at", nil); return b }
-func (b *TenantUpdate) SetUnsubscribeAt(v time.Time) *TenantUpdate {
-	b.set("unsubscribe_at", v)
-	return b
-}
-func (b *TenantUpdate) SetNillableUnsubscribeAt(v *time.Time) *TenantUpdate {
-	if v != nil {
-		b.set("unsubscribe_at", *v)
-	}
-	return b
-}
-func (b *TenantUpdate) ClearUnsubscribeAt() *TenantUpdate { b.set("unsubscribe_at", nil); return b }
-func (b *TenantUpdate) SetSubscriptionPlan(v string) *TenantUpdate {
-	b.set("subscription_plan", v)
-	return b
-}
-func (b *TenantUpdate) SetNillableSubscriptionPlan(v *string) *TenantUpdate {
-	if v != nil {
-		b.set("subscription_plan", *v)
-	}
-	return b
-}
-func (b *TenantUpdate) ClearSubscriptionPlan() *TenantUpdate {
-	b.set("subscription_plan", nil)
-	return b
-}
+func (b *TenantUpdate) ClearAuditStatus() *TenantUpdate        { b.set("audit_status", nil); return b }
 func (b *TenantUpdate) SetExpiredAt(v time.Time) *TenantUpdate { b.set("expired_at", v); return b }
 func (b *TenantUpdate) SetNillableExpiredAt(v *time.Time) *TenantUpdate {
 	if v != nil {
@@ -394,16 +320,7 @@ func (b *TenantUpdate) SetNillableExpiredAt(v *time.Time) *TenantUpdate {
 	}
 	return b
 }
-func (b *TenantUpdate) ClearExpiredAt() *TenantUpdate    { b.set("expired_at", nil); return b }
-func (b *TenantUpdate) SetPlanID(v uint32) *TenantUpdate { b.set("plan_id", v); return b }
-func (b *TenantUpdate) SetNillablePlanID(v *uint32) *TenantUpdate {
-	if v != nil {
-		b.set("plan_id", *v)
-	}
-	return b
-}
-func (b *TenantUpdate) ClearPlanID() *TenantUpdate       { b.set("plan_id", nil); return b }
-func (b *TenantUpdate) AddPlanID(v uint32) *TenantUpdate { b.add("plan_id", v); return b }
+func (b *TenantUpdate) ClearExpiredAt() *TenantUpdate { b.set("expired_at", nil); return b }
 
 type TenantUpdateOne struct{ *UpdateOne[Tenant] }
 
@@ -574,48 +491,6 @@ func (b *TenantUpdateOne) SetNillableAuditStatus(v *string) *TenantUpdateOne {
 	return b
 }
 func (b *TenantUpdateOne) ClearAuditStatus() *TenantUpdateOne { b.set("audit_status", nil); return b }
-func (b *TenantUpdateOne) SetSubscriptionAt(v time.Time) *TenantUpdateOne {
-	b.set("subscription_at", v)
-	return b
-}
-func (b *TenantUpdateOne) SetNillableSubscriptionAt(v *time.Time) *TenantUpdateOne {
-	if v != nil {
-		b.set("subscription_at", *v)
-	}
-	return b
-}
-func (b *TenantUpdateOne) ClearSubscriptionAt() *TenantUpdateOne {
-	b.set("subscription_at", nil)
-	return b
-}
-func (b *TenantUpdateOne) SetUnsubscribeAt(v time.Time) *TenantUpdateOne {
-	b.set("unsubscribe_at", v)
-	return b
-}
-func (b *TenantUpdateOne) SetNillableUnsubscribeAt(v *time.Time) *TenantUpdateOne {
-	if v != nil {
-		b.set("unsubscribe_at", *v)
-	}
-	return b
-}
-func (b *TenantUpdateOne) ClearUnsubscribeAt() *TenantUpdateOne {
-	b.set("unsubscribe_at", nil)
-	return b
-}
-func (b *TenantUpdateOne) SetSubscriptionPlan(v string) *TenantUpdateOne {
-	b.set("subscription_plan", v)
-	return b
-}
-func (b *TenantUpdateOne) SetNillableSubscriptionPlan(v *string) *TenantUpdateOne {
-	if v != nil {
-		b.set("subscription_plan", *v)
-	}
-	return b
-}
-func (b *TenantUpdateOne) ClearSubscriptionPlan() *TenantUpdateOne {
-	b.set("subscription_plan", nil)
-	return b
-}
 func (b *TenantUpdateOne) SetExpiredAt(v time.Time) *TenantUpdateOne {
 	b.set("expired_at", v)
 	return b
@@ -626,13 +501,4 @@ func (b *TenantUpdateOne) SetNillableExpiredAt(v *time.Time) *TenantUpdateOne {
 	}
 	return b
 }
-func (b *TenantUpdateOne) ClearExpiredAt() *TenantUpdateOne    { b.set("expired_at", nil); return b }
-func (b *TenantUpdateOne) SetPlanID(v uint32) *TenantUpdateOne { b.set("plan_id", v); return b }
-func (b *TenantUpdateOne) SetNillablePlanID(v *uint32) *TenantUpdateOne {
-	if v != nil {
-		b.set("plan_id", *v)
-	}
-	return b
-}
-func (b *TenantUpdateOne) ClearPlanID() *TenantUpdateOne       { b.set("plan_id", nil); return b }
-func (b *TenantUpdateOne) AddPlanID(v uint32) *TenantUpdateOne { b.add("plan_id", v); return b }
+func (b *TenantUpdateOne) ClearExpiredAt() *TenantUpdateOne { b.set("expired_at", nil); return b }

@@ -27,6 +27,7 @@ import (
 
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/constants"
+	"go-admin/platform/pkg/runtimeconfig"
 )
 
 const errorCredentialUserRequired = "user id is required"
@@ -42,6 +43,7 @@ type UserCredentialRepo struct {
 
 	passwordCrypto password.Crypto
 	configRepo     *ConfigRepo
+	credentialKey  []byte
 
 	repository *store.Repository[operatorV1.UserCredential, store.UserCredential]
 }
@@ -52,6 +54,7 @@ func NewUserCredentialRepo(ctx *bootstrap.Context, dbClient *store.DBClient, pas
 		dbClient:                dbClient,
 		passwordCrypto:          passwordCrypto,
 		configRepo:              configRepo,
+		credentialKey:           []byte(runtimeconfig.SettingsFromContext(ctx).CryptoKey),
 		mapper:                  mapper.NewCopierMapper[operatorV1.UserCredential, store.UserCredential](),
 		statusConverter:         mapper.NewEnumTypeConverter[operatorV1.UserCredential_Status, usercredential.Status](operatorV1.UserCredential_Status_name, operatorV1.UserCredential_Status_value),
 		identityTypeConverter:   mapper.NewEnumTypeConverter[operatorV1.UserCredential_IdentityType, usercredential.IdentityType](operatorV1.UserCredential_IdentityType_name, operatorV1.UserCredential_IdentityType_value),
@@ -382,6 +385,15 @@ func (r *UserCredentialRepo) GetByIdentifier(ctx context.Context, req *operatorV
 // 明文不可逆，仅作为恒定耗时的目标。
 const dummyPasswordHash = "$2a$10$1sbpKmhQDpXLHnDnEQ1nLe3oOnYyP2bUJyqHcX2T0Fq1qfyoXOrPm"
 
+// credentialAESKey uses the deployment key. Runtime configuration requires it;
+// direct repository test fixtures without a bootstrap context retain the default.
+func (r *UserCredentialRepo) credentialAESKey() []byte {
+	if len(r.credentialKey) > 0 {
+		return r.credentialKey
+	}
+	return crypto.DefaultAESKey
+}
+
 // performDummyVerify 执行一次假的密码校验，用于抹平计时差异。
 // 返回值始终为 false，且从不抛错。
 func (r *UserCredentialRepo) performDummyVerify(plainCredential string) {
@@ -400,7 +412,7 @@ func (r *UserCredentialRepo) FindUserCredential(ctx context.Context, tenantID ui
 			r.log.Errorf(ctx, "decode base64 credential failed: %s", err.Error())
 			return 0, operatorV1.ErrorAuthenticationBadRequest("invalid credential format")
 		}
-		decrypted, err := crypto.AesDecrypt(bytesPass, crypto.DefaultAESKey, nil)
+		decrypted, err := crypto.AesDecrypt(bytesPass, r.credentialAESKey(), nil)
 		if err != nil {
 			r.log.Errorf(ctx, "decrypt credential failed: %s", err.Error())
 			return 0, operatorV1.ErrorAuthenticationBadRequest("decrypt credential failed")
@@ -520,7 +532,7 @@ func (r *UserCredentialRepo) ChangeCredential(ctx context.Context, req *operator
 			r.log.Errorf(ctx, "decode base64 old credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("invalid old credential format")
 		}
-		oldPlain, err := crypto.AesDecrypt(oldBytes, crypto.DefaultAESKey, nil)
+		oldPlain, err := crypto.AesDecrypt(oldBytes, r.credentialAESKey(), nil)
 		if err != nil {
 			r.log.Errorf(ctx, "decrypt old credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("decrypt old credential failed")
@@ -534,7 +546,7 @@ func (r *UserCredentialRepo) ChangeCredential(ctx context.Context, req *operator
 			r.log.Errorf(ctx, "decode base64 new credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("invalid new credential format")
 		}
-		newPlain, err := crypto.AesDecrypt(newBytes, crypto.DefaultAESKey, nil)
+		newPlain, err := crypto.AesDecrypt(newBytes, r.credentialAESKey(), nil)
 		if err != nil {
 			r.log.Errorf(ctx, "decrypt new credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("decrypt new credential failed")
@@ -640,7 +652,7 @@ func (r *UserCredentialRepo) resetCredential(ctx context.Context, req *operatorV
 			r.log.Errorf(ctx, "decode base64 new credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("invalid new credential format")
 		}
-		plainPassword, err := crypto.AesDecrypt(bytesPass, crypto.DefaultAESKey, nil)
+		plainPassword, err := crypto.AesDecrypt(bytesPass, r.credentialAESKey(), nil)
 		if err != nil {
 			r.log.Errorf(ctx, "decrypt new credential failed: %s", err.Error())
 			return operatorV1.ErrorAuthenticationBadRequest("decrypt new credential failed")

@@ -8,7 +8,7 @@ Go Admin 是基于 React 19 的企业级后台管理脚手架，采用 Ant Desig
 
 `platform-admin/` 与 `merchant-admin/` 是独立应用，各有 entry、HTML、Vite/env、路由清单、页面清单、类型检查及 dist。`src/`、`build/`、`public/` 和 API 生成目录共享。`@app/` 在构建时指向所选应用，商户构建不导入平台专属页面。平台 dev 为 15888，商户 dev 为 15889。
 
-商户编号来自部署配置 `/app-config.json`，开发时由 `VITE_MERCHANT_CODE` 提供；缺失或非法必须停止启动。登录表单不接收商户编号。API、导出和 SSE 使用同一 `X-Tenant-Code`，代理必须覆盖浏览器传入值。商户登录后只使用后端按角色和套餐过滤的菜单。浏览器存储一律经 `applicationStorageKey` 按应用和商户隔离，刷新 Cookie 名经 `refreshExpiryCookieName` 获取。商户部署前先初始化配置，再动态导入共享 React 入口。
+商户编号来自部署配置 `/app-config.json`，开发时由 `VITE_MERCHANT_CODE` 提供；缺失或非法必须停止启动。登录表单不接收商户编号。API 与导出 使用同一 `X-Tenant-Code`，代理必须覆盖浏览器传入值。商户登录后只使用后端按角色授权的菜单。浏览器存储一律经 `applicationStorageKey` 按应用和商户隔离，刷新 Cookie 名经 `refreshExpiryCookieName` 获取。商户部署前先初始化配置，再动态导入共享 React 入口。
 
 ## 技术栈
 

@@ -42,7 +42,7 @@ func TestMenuRepoSqlite_EnumReadViewBackfill(t *testing.T) {
 			Path:   trans.Ptr("/sqlite/menu/enum/b"),
 			Status: operatorV1.Menu_OFF.Enum(),
 			Type:   operatorV1.Menu_LINK.Enum(),
-			Module: operatorV1.Module_TASK.Enum(),
+			Module: operatorV1.Module_SYSTEM.Enum(),
 		},
 	}), "行 B 创建应成功")
 	// 行 C：枚举字段全部缺省（status/type 走列默认，module 为 NULL）
@@ -62,7 +62,7 @@ func TestMenuRepoSqlite_EnumReadViewBackfill(t *testing.T) {
 		module operatorV1.Module_Module
 	}{
 		"/sqlite/menu/enum/a": {operatorV1.Menu_ON, operatorV1.Menu_CATALOG, operatorV1.Module_DASHBOARD},
-		"/sqlite/menu/enum/b": {operatorV1.Menu_OFF, operatorV1.Menu_LINK, operatorV1.Module_TASK},
+		"/sqlite/menu/enum/b": {operatorV1.Menu_OFF, operatorV1.Menu_LINK, operatorV1.Module_SYSTEM},
 		"/sqlite/menu/enum/c": {operatorV1.Menu_ON, operatorV1.Menu_MENU, operatorV1.Module_MODULE_UNSPECIFIED},
 	}
 	idByPath := map[string]uint32{}

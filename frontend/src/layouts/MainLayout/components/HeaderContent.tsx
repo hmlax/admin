@@ -1,26 +1,12 @@
 import type { LayoutMenuItem } from '@/core/router/utils/menu';
 import { applicationStorageKey } from '@/config/application';
-import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import React from 'react';
-import {
-  Avatar,
-  Dropdown,
-  Badge,
-  Tooltip,
-  Button,
-  Breadcrumb,
-  Input,
-  Popover,
-  Modal,
-  Empty,
-  Spin,
-  App as AntdApp,
-} from 'antd';
+import { Avatar, Dropdown, Tooltip, Button, Breadcrumb, Input, Modal } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   UserOutlined,
   LogoutOutlined,
-  InboxOutlined,
   LockOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -28,12 +14,8 @@ import {
   SearchOutlined,
   SunOutlined,
   MoonOutlined,
-  BellOutlined,
-  CheckOutlined,
   CloseOutlined,
 } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
 import { useMatches, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -45,15 +27,8 @@ import { SettingBoltIcon } from '@/components/common/settingBoltIcon';
 import { useI18n } from '@/core/i18n';
 import { usePreferencesStore } from '@/core/preferences/store';
 import type { SupportedLanguagesType } from '@/core/preferences/types/layout';
-import { fetchListUserInbox } from '@/api/hooks/internal-message';
-import { apiClient } from '@/api/client';
-import { useQuery } from '@tanstack/react-query';
-import { PaginationQuery, queryClient } from '@/core';
-import { globalSSEClient, SSE_EVENT } from '@/core/transport/sse';
 import { useLockStore } from '@/stores';
 import { LockScreenModal } from './LockScreenModal';
-
-dayjs.extend(relativeTime);
 
 /**
  * 全屏按钮的四角括号图标（vben 同款 lucide Maximize/Minimize 内联复刻）。
@@ -212,12 +187,6 @@ const SearchRow = ({
 );
 
 /** 通知列表的相对时间（如"5 分钟前"）；跟随界面语言 */
-const fromNow = (value?: string, locale?: string): string => {
-  if (!value) return '-';
-  const d = dayjs(value);
-  if (!d.isValid()) return '-';
-  return locale?.startsWith('zh') ? d.locale('zh-cn').fromNow() : d.fromNow();
-};
 
 interface HeaderContentProps {
   userInfo: BasicUserInfo | null;
@@ -235,7 +204,6 @@ interface HeaderContentProps {
     fullscreen: boolean;
     globalSearch: boolean;
     languageToggle: boolean;
-    notification: boolean;
     themeToggle: boolean;
     refresh: boolean;
     sidebarToggle: boolean;
@@ -412,14 +380,6 @@ export const HeaderContent = ({
         navigate('/opm/profile');
       },
     },
-    {
-      key: 'inbox',
-      icon: <InboxOutlined />,
-      label: labeledItem(t('header.inbox')),
-      onClick: () => {
-        navigate('/internal-message/inbox');
-      },
-    },
     { type: 'divider' },
   ];
 
@@ -451,235 +411,10 @@ export const HeaderContent = ({
     justifyContent: 'center',
   };
 
-  // 通知弹出框数据
-  const { t: tInbox } = useTranslation('inbox');
-  const { message } = AntdApp.useApp();
-  const [markAllReadLoading, setMarkAllReadLoading] = useState(false);
-  const appLocale = usePreferencesStore((state) => state.preferences.app.locale);
-
-  // 未读数（独立 COUNT）：badge 数字来源
-  const { data: inboxUnread } = useQuery({
-    queryKey: ['inboxPreview', userInfo?.id],
-    queryFn: async () => {
-      const query = new PaginationQuery({
-        paging: { page: 1, pageSize: 1 },
-        // recipient_user_id 必传：不传只靠租户过滤，会查到同租户其他用户的收件记录
-        formValues: { recipient_user_id: String(userInfo?.id), status: 'RECEIVED' },
-      });
-      return await fetchListUserInbox(query);
-    },
-    enabled: Boolean(userInfo?.id),
-    // 兜底轮询：实时更新靠下方 SSE notification 事件触发 invalidate，这里只在 SSE 失联时补拉
-    refetchInterval: 300_000,
-    refetchIntervalInBackground: false,
-  });
-  // 未读数用列表响应的服务端 total（独立 COUNT），不能用当前页条数——后者封顶在 pageSize。
-  // proto int64 经 protojson 运行时是字符串（TS 类型却标 number），须显式转数字。
-  const unreadCount = Number(inboxUnread?.total ?? 0);
-
-  // 弹层列表：最近 5 条（已读+未读混合），未读带圆点加粗
-  const { data: inboxRecent, isLoading: recentLoading } = useQuery({
-    queryKey: ['inboxPreviewList', userInfo?.id],
-    queryFn: async () => {
-      const query = new PaginationQuery({
-        paging: { page: 1, pageSize: 5 },
-        formValues: { recipient_user_id: String(userInfo?.id) },
-      });
-      return await fetchListUserInbox(query);
-    },
-    enabled: Boolean(userInfo?.id),
-    refetchInterval: 300_000,
-    refetchIntervalInBackground: false,
-  });
-  const recentItems = inboxRecent?.items ?? [];
-
-  // SSE 实时通知：收到新站内信即刷新预览。
-  // 后端一直在推 notification 事件，此前前端建了连接却无人订阅，实时推送全部落空。
-  useEffect(() => {
-    if (!userInfo?.id) return undefined;
-    const handler = () => {
-      queryClient.invalidateQueries({ queryKey: ['inboxPreview', userInfo?.id] });
-      queryClient.invalidateQueries({ queryKey: ['inboxPreviewList', userInfo?.id] });
-    };
-    globalSSEClient.on(SSE_EVENT.Notification, handler);
-    return () => {
-      globalSSEClient.off(SSE_EVENT.Notification, handler);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo?.id]);
-
-  const markAllRead = async () => {
-    if (!userInfo?.id) return;
-    setMarkAllReadLoading(true);
-    try {
-      // 后端约定：recipientIds 为空 = 该用户全部未读
-      await apiClient.internalMessageRecipientService.MarkNotificationAsRead({
-        userId: userInfo.id,
-        recipientIds: [],
-      });
-      message.success(tInbox('markAllReadSuccess'));
-      queryClient.invalidateQueries({ queryKey: ['inboxPreview', userInfo?.id] });
-      queryClient.invalidateQueries({ queryKey: ['inboxPreviewList', userInfo?.id] });
-      queryClient.invalidateQueries({ queryKey: ['listUserInbox'] });
-    } catch (error) {
-      console.error('Operation failed:', error);
-      message.error((error as Error)?.message || tInbox('markAllReadFailed'));
-    } finally {
-      setMarkAllReadLoading(false);
-    }
-  };
-
-  const inboxContent = (
-    <div className="notification-popover" style={{ width: 336 }}>
-      {/* 头部：标题 + 未读数 + 全部已读 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '2px 2px 10px',
-          borderBottom: '1px solid var(--ant-color-border)',
-          marginBottom: 4,
-        }}
-      >
-        <div
-          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}
-        >
-          {tInbox('pageTitle')}
-          {unreadCount > 0 && (
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 400,
-                lineHeight: '18px',
-                padding: '0 8px',
-                borderRadius: 10,
-                color: 'var(--go-admin-primary-text)',
-                background: 'rgba(0, 107, 230, 0.12)',
-              }}
-            >
-              {tInbox('unreadCount', { count: unreadCount })}
-            </span>
-          )}
-        </div>
-        <Button
-          type="text"
-          size="small"
-          icon={<CheckOutlined />}
-          loading={markAllReadLoading}
-          disabled={unreadCount <= 0}
-          onClick={markAllRead}
-        >
-          {tInbox('markAllRead')}
-        </Button>
-      </div>
-
-      <Spin spinning={recentLoading}>
-        {recentItems.length > 0 ? (
-          <div>
-            {recentItems.map((item, index) => {
-              const unread = item.status === 'RECEIVED';
-              const preview = (item.content || '')
-                .replace(/<[^>]*>/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .slice(0, 46);
-              return (
-                <div
-                  key={item.id ?? index}
-                  className="notification-item"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '9px 8px',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    gap: 10,
-                  }}
-                  onClick={() => navigate('/internal-message/inbox')}
-                >
-                  <span
-                    className="notification-item__dot"
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      flexShrink: 0,
-                      marginTop: 6,
-                      background: unread ? 'var(--ant-color-primary)' : 'transparent',
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: unread ? 600 : 400,
-                        color: unread ? 'var(--ant-color-text)' : 'var(--ant-color-text-secondary)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {item.title || '-'}
-                    </div>
-                    {preview && (
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: 'var(--ant-color-text-secondary)',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          marginTop: 2,
-                        }}
-                      >
-                        {preview}
-                      </div>
-                    )}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--ant-color-text-secondary)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {fromNow(item.createdAt, appLocale)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <Empty
-            description={tInbox('noMessages')}
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            style={{ padding: '16px 0' }}
-          />
-        )}
-      </Spin>
-
-      <div
-        style={{
-          borderTop: '1px solid var(--ant-color-border)',
-          textAlign: 'center',
-          padding: '8px 0 0',
-          marginTop: 4,
-        }}
-      >
-        <Button type="link" size="small" onClick={() => navigate('/internal-message/inbox')}>
-          {tInbox('goToInbox')}
-        </Button>
-      </div>
-    </div>
-  );
-
-  // ── 全局搜索（本地菜单匹配 + 语义搜索；视觉形态对齐 vben SearchPanel，
+  // ── 全局搜索（本地菜单匹配；视觉形态对齐 vben SearchPanel，
   // 规格见 docs/design-language.md「全局搜索面板」条）──
-  const [semanticSearchOpen, setSemanticSearchOpen] = useState(false);
-  const [semanticQuery, setSemanticQuery] = useState('');
-  const [semanticResults, setSemanticResults] = useState<{ title: string; route: string }[]>([]);
-  const [semanticLoading, setSemanticLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
   const [searchHistory, setSearchHistory] = useState<
     { title: string; path: string; icon?: string }[]
@@ -691,7 +426,6 @@ export const HeaderContent = ({
       return [];
     }
   });
-  const semanticTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const SEARCH_HISTORY_KEY = applicationStorageKey('menu-search');
   const SEARCH_HISTORY_MAX = 5;
@@ -728,17 +462,17 @@ export const HeaderContent = ({
 
   // 本地关键字匹配（contains，标题或路径）
   const localResults = useMemo(() => {
-    const kw = semanticQuery.trim().toLowerCase();
+    const kw = searchQuery.trim().toLowerCase();
     if (!kw) return [];
     return searchableMenus.filter(
       (item) => item.title.toLowerCase().includes(kw) || item.path.toLowerCase().includes(kw),
     );
-  }, [semanticQuery, searchableMenus]);
+  }, [searchQuery, searchableMenus]);
 
-  // 键盘导航作用于「与展示一致」的合并列表：有关键词=本地+语义，无关键词=历史
+  // 键盘导航作用于「与展示一致」的合并列表：有关键词=本地菜单，无关键词=历史
   const combinedResults = useMemo(
-    () => (semanticQuery.trim() ? [...localResults, ...semanticResults] : searchHistory),
-    [semanticQuery, localResults, semanticResults, searchHistory],
+    () => (searchQuery.trim() ? localResults : searchHistory),
+    [searchQuery, localResults, searchHistory],
   );
 
   const loadSearchHistory = useCallback(() => {
@@ -763,49 +497,20 @@ export const HeaderContent = ({
   };
 
   const closeSearch = () => {
-    setSemanticSearchOpen(false);
-    setSemanticResults([]);
-    setSemanticQuery('');
+    setSearchOpen(false);
+    setSearchQuery('');
     setActiveIndex(-1);
   };
 
-  const handleSemanticSearch = (query: string) => {
-    setSemanticQuery(query);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
     setActiveIndex(-1);
-    clearTimeout(semanticTimer.current);
-    if (!query.trim()) {
-      setSemanticResults([]);
-      return;
-    }
-    semanticTimer.current = setTimeout(async () => {
-      setSemanticLoading(true);
-      try {
-        const resp = await apiClient.aiContentService.SemanticSearch({
-          query: query.trim(),
-          limit: 8,
-        });
-        setSemanticResults(
-          (resp.items ?? [])
-            .filter((item) => item?.route)
-            .map((item) => ({
-              title: item.title ?? item.route ?? '',
-              route: item.route ?? '',
-            })),
-        );
-      } catch (error) {
-        // 不吞错：带出原始错误对象；语义搜索失败降级为仅本地结果
-        console.error('semantic search failed:', error);
-        setSemanticResults([]);
-      } finally {
-        setSemanticLoading(false);
-      }
-    }, 500);
   };
 
   const goSearchItem = (item: { path?: string; route?: string; title?: string; icon?: string }) => {
     const path = item.path || item.route;
     if (!path) return;
-    // 写入最近搜索（去重置顶，上限 5，语义命中按 route 收敛成菜单项形态）
+    // 写入最近搜索（去重置顶，上限 5）
     const matched = searchableMenus.find((m) => m.path === path);
     const entry = {
       title: item.title || matched?.title || path,
@@ -831,11 +536,10 @@ export const HeaderContent = ({
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setSemanticSearchOpen((open) => {
+        setSearchOpen((open) => {
           if (!open) {
             loadSearchHistory();
-            setSemanticResults([]);
-            setSemanticQuery('');
+            setSearchQuery('');
             setActiveIndex(-1);
           }
           return !open;
@@ -966,7 +670,7 @@ export const HeaderContent = ({
         {widgetConfig.globalSearch && (
           <>
             <Modal
-              open={semanticSearchOpen}
+              open={searchOpen}
               onCancel={closeSearch}
               footer={null}
               width={600}
@@ -992,8 +696,8 @@ export const HeaderContent = ({
                   variant="borderless"
                   className="global-search-input"
                   placeholder={t('header.searchPlaceholder')}
-                  value={semanticQuery}
-                  onChange={(e) => handleSemanticSearch(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.nativeEvent.isComposing) return;
                     const list = combinedResults;
@@ -1018,7 +722,7 @@ export const HeaderContent = ({
               {/* 结果区（限高内滚） */}
               <div style={{ maxHeight: 450, overflowY: 'auto', padding: '8px' }}>
                 {/* 无关键词：最近搜索 */}
-                {!semanticQuery.trim() && searchHistory.length === 0 && (
+                {!searchQuery.trim() && searchHistory.length === 0 && (
                   <div
                     style={{
                       textAlign: 'center',
@@ -1030,7 +734,7 @@ export const HeaderContent = ({
                     {t('header.noHistory')}
                   </div>
                 )}
-                {!semanticQuery.trim() && searchHistory.length > 0 && (
+                {!searchQuery.trim() && searchHistory.length > 0 && (
                   <>
                     <div
                       style={{
@@ -1056,7 +760,7 @@ export const HeaderContent = ({
                 )}
 
                 {/* 有关键词：本地菜单命中 */}
-                {semanticQuery.trim() && !semanticLoading && localResults.length > 0 && (
+                {searchQuery.trim() && localResults.length > 0 && (
                   <>
                     {localResults.map((item, i) => (
                       <SearchRow
@@ -1072,45 +776,9 @@ export const HeaderContent = ({
                 )}
 
                 {/* 有关键词：语义搜索小节（独立分区，失败降级不弹错） */}
-                {semanticQuery.trim() && (semanticLoading || semanticResults.length > 0) && (
-                  <>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--ant-color-text-secondary)',
-                        padding: '6px 10px 6px',
-                        marginTop: localResults.length > 0 ? 6 : 0,
-                      }}
-                    >
-                      {t('header.semanticTitle')}
-                    </div>
-                    {semanticLoading && (
-                      <div
-                        style={{
-                          textAlign: 'center',
-                          padding: '12px 0',
-                          color: 'var(--ant-color-text-secondary)',
-                          fontSize: 13,
-                        }}
-                      >
-                        {t('header.searching')}
-                      </div>
-                    )}
-                    {!semanticLoading &&
-                      semanticResults.map((item, i) => (
-                        <SearchRow
-                          key={`${item.route}-${i}`}
-                          title={item.title}
-                          active={activeIndex === localResults.length + i}
-                          onMouseEnter={() => setActiveIndex(localResults.length + i)}
-                          onClick={() => goSearchItem(item)}
-                        />
-                      ))}
-                  </>
-                )}
 
                 {/* 有关键词且无任何结果 */}
-                {semanticQuery.trim() && !semanticLoading && combinedResults.length === 0 && (
+                {searchQuery.trim() && combinedResults.length === 0 && (
                   <div
                     style={{
                       textAlign: 'center',
@@ -1157,7 +825,7 @@ export const HeaderContent = ({
               onClick={() => {
                 loadSearchHistory();
                 setActiveIndex(-1);
-                setSemanticSearchOpen(true);
+                setSearchOpen(true);
               }}
               style={{
                 display: 'flex',
@@ -1257,26 +925,6 @@ export const HeaderContent = ({
         )}
 
         {/* 通知 */}
-        {widgetConfig.notification && (
-          <Popover
-            content={inboxContent}
-            trigger="click"
-            placement="bottomRight"
-            styles={{ container: { padding: '10px 10px 6px' } }}
-          >
-            <Badge count={unreadCount} size="small" offset={[0, 4]}>
-              <Tooltip title={t('header.notification')}>
-                <Button
-                  type="text"
-                  icon={<BellOutlined />}
-                  size="small"
-                  style={btnStyle}
-                  className="header-bell-btn"
-                />
-              </Tooltip>
-            </Badge>
-          </Popover>
-        )}
 
         {/* 用户头像 + 下拉菜单 */}
         <Dropdown

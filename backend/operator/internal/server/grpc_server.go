@@ -24,7 +24,6 @@ func NewGRPCServer(
 	loginPolicyService *service.LoginPolicyService,
 
 	portalService *service.AdminPortalService,
-	taskService *service.TaskService,
 
 	fileService *service.FileService,
 	fileTransferService *service.FileTransferService,
@@ -34,9 +33,6 @@ func NewGRPCServer(
 	languageService *service.LanguageService,
 
 	tenantService *service.TenantService,
-	planService *service.PlanService,
-	planQuotaService *service.PlanQuotaService,
-	planModuleService *service.PlanModuleService,
 	userService *service.UserService,
 	userProfileService *service.UserProfileService,
 	roleService *service.RoleService,
@@ -54,43 +50,12 @@ func NewGRPCServer(
 	apiAuditLogService *service.ApiAuditLogService,
 	operationAuditLogService *service.OperationAuditLogService,
 	dataAccessAuditLogService *service.DataAccessAuditLogService,
-	redisCacheMonitorService *service.RedisCacheMonitorService,
-	serverMonitorService *service.ServerMonitorService,
-	notificationChannelService *service.NotificationChannelService,
-	notificationService *service.NotificationService,
 	onlineSessionService *service.OnlineSessionService,
-	dashboardService *service.DashboardService,
-
-	internalMessageService *service.InternalMessageService,
-	internalMessageCategoryService *service.InternalMessageCategoryService,
-	internalMessageRecipientService *service.InternalMessageRecipientService,
-
-	scriptService *service.ScriptService,
-	scriptLogService *service.ScriptLogService,
 
 	// register:param ── 新模块服务形参在此行后注册(make register 工具锚点,勿删)
-	biDashboardService *service.BiDashboardService,
-	printTemplateService *service.PrintTemplateService,
-	notificationRuleService *service.NotificationRuleService,
-	notificationPreferenceService *service.NotificationPreferenceService,
-	notificationTemplateService *service.NotificationTemplateService,
-	monitorAlertService *service.MonitorAlertService,
-	myTenantUsageService *service.MyTenantUsageService,
 	auditExportService *service.AuditExportService,
-	dataExportService *service.DataExportService,
-	taskMonitorService *service.TaskMonitorService,
 	accessKeyService *service.AccessKeyService,
-	configService *service.ConfigService,
-	aiProviderService *service.AiProviderService,
-	aiConversationService *service.AiConversationService,
-	aiMessageService *service.AiMessageService,
-	aiUsageLogService *service.AiUsageLogService,
-	aiKnowledgeService *service.AiKnowledgeService,
-	aiChatService *service.AiChatService,
-	aiQueryService *service.AiQueryService,
-	aiContentService *service.AiContentService,
-	aiAgentService *service.AiAgentService,
-	gateway *GatewayService) (*grpc.Server, error) {
+	configService *service.ConfigService, gateway *GatewayService) (*grpc.Server, error) {
 	cfg := ctx.GetConfig().GetServer().GetGrpc()
 	if cfg == nil {
 		return nil, fmt.Errorf("operator gRPC config is required")
@@ -113,7 +78,6 @@ func NewGRPCServer(
 	operatorV1.RegisterMfaServiceServer(srv, &MfaServiceAdapter{inner: mfaService})
 	operatorV1.RegisterUserProfileServiceServer(srv, &UserProfileServiceAdapter{inner: userProfileService})
 	operatorV1.RegisterAdminPortalServiceServer(srv, &AdminPortalServiceAdapter{inner: portalService})
-	operatorV1.RegisterTaskServiceServer(srv, &TaskServiceAdapter{inner: taskService})
 	operatorV1.RegisterLoginPolicyServiceServer(srv, &LoginPolicyServiceAdapter{inner: loginPolicyService})
 	operatorV1.RegisterDictTypeServiceServer(srv, &DictTypeServiceAdapter{inner: dictTypeService})
 	operatorV1.RegisterDictEntryServiceServer(srv, &DictEntryServiceAdapter{inner: dictEntryService})
@@ -128,49 +92,18 @@ func NewGRPCServer(
 	operatorV1.RegisterRoleServiceServer(srv, &RoleServiceAdapter{inner: roleService})
 	operatorV1.RegisterPositionServiceServer(srv, &PositionServiceAdapter{inner: positionService})
 	operatorV1.RegisterTenantServiceServer(srv, &TenantServiceAdapter{inner: tenantService})
-	operatorV1.RegisterPlanServiceServer(srv, &PlanServiceAdapter{inner: planService})
-	operatorV1.RegisterPlanQuotaServiceServer(srv, &PlanQuotaServiceAdapter{inner: planQuotaService})
-	operatorV1.RegisterPlanModuleServiceServer(srv, &PlanModuleServiceAdapter{inner: planModuleService})
 	operatorV1.RegisterLoginAuditLogServiceServer(srv, &LoginAuditLogServiceAdapter{inner: loginAuditLogService})
 	operatorV1.RegisterApiAuditLogServiceServer(srv, &ApiAuditLogServiceAdapter{inner: apiAuditLogService})
 	operatorV1.RegisterOperationAuditLogServiceServer(srv, &OperationAuditLogServiceAdapter{inner: operationAuditLogService})
 	operatorV1.RegisterDataAccessAuditLogServiceServer(srv, &DataAccessAuditLogServiceAdapter{inner: dataAccessAuditLogService})
-	operatorV1.RegisterRedisCacheMonitorServiceServer(srv, &RedisCacheMonitorServiceAdapter{inner: redisCacheMonitorService})
-	operatorV1.RegisterServerMonitorServiceServer(srv, &ServerMonitorServiceAdapter{inner: serverMonitorService})
-	operatorV1.RegisterNotificationChannelServiceServer(srv, &NotificationChannelServiceAdapter{inner: notificationChannelService})
-	operatorV1.RegisterNotificationServiceServer(srv, &NotificationServiceAdapter{inner: notificationService})
 	operatorV1.RegisterOnlineSessionServiceServer(srv, &OnlineSessionServiceAdapter{inner: onlineSessionService})
-	operatorV1.RegisterDashboardServiceServer(srv, &DashboardServiceAdapter{inner: dashboardService})
 	operatorV1.RegisterFileServiceServer(srv, &FileServiceAdapter{inner: fileService})
-	operatorV1.RegisterInternalMessageServiceServer(srv, &InternalMessageServiceAdapter{inner: internalMessageService})
-	operatorV1.RegisterInternalMessageCategoryServiceServer(srv, &InternalMessageCategoryServiceAdapter{inner: internalMessageCategoryService})
-	operatorV1.RegisterInternalMessageRecipientServiceServer(srv, &InternalMessageRecipientServiceAdapter{inner: internalMessageRecipientService})
-	operatorV1.RegisterScriptServiceServer(srv, &ScriptServiceAdapter{inner: scriptService})
-	operatorV1.RegisterScriptLogServiceServer(srv, &ScriptLogServiceAdapter{inner: scriptLogService})
-	operatorV1.RegisterBiDashboardServiceServer(srv, &BiDashboardServiceAdapter{inner: biDashboardService})
-	operatorV1.RegisterPrintTemplateServiceServer(srv, &PrintTemplateServiceAdapter{inner: printTemplateService})
-	operatorV1.RegisterNotificationRuleServiceServer(srv, &NotificationRuleServiceAdapter{inner: notificationRuleService})
-	operatorV1.RegisterNotificationPreferenceServiceServer(srv, &NotificationPreferenceServiceAdapter{inner: notificationPreferenceService})
-	operatorV1.RegisterNotificationTemplateServiceServer(srv, &NotificationTemplateServiceAdapter{inner: notificationTemplateService})
-	operatorV1.RegisterMonitorAlertServiceServer(srv, &MonitorAlertServiceAdapter{inner: monitorAlertService})
-	operatorV1.RegisterMyTenantUsageServiceServer(srv, &MyTenantUsageServiceAdapter{inner: myTenantUsageService})
-	operatorV1.RegisterTaskMonitorServiceServer(srv, &TaskMonitorServiceAdapter{inner: taskMonitorService})
 	operatorV1.RegisterAccessKeyServiceServer(srv, &AccessKeyServiceAdapter{inner: accessKeyService})
 	operatorV1.RegisterConfigServiceServer(srv, &ConfigServiceAdapter{inner: configService})
-	operatorV1.RegisterAiProviderServiceServer(srv, &AiProviderServiceAdapter{inner: aiProviderService})
-	operatorV1.RegisterAiConversationServiceServer(srv, &AiConversationServiceAdapter{inner: aiConversationService})
-	operatorV1.RegisterAiMessageServiceServer(srv, &AiMessageServiceAdapter{inner: aiMessageService})
-	operatorV1.RegisterAiUsageLogServiceServer(srv, &AiUsageLogServiceAdapter{inner: aiUsageLogService})
-	operatorV1.RegisterAiKnowledgeBaseServiceServer(srv, &AiKnowledgeBaseServiceAdapter{inner: aiKnowledgeService})
-	operatorV1.RegisterAiQueryServiceServer(srv, &AiQueryServiceAdapter{inner: aiQueryService})
-	operatorV1.RegisterAiContentServiceServer(srv, &AiContentServiceAdapter{inner: aiContentService})
-	operatorV1.RegisterAiChatServiceServer(srv, &AiChatServiceAdapter{inner: aiChatService})
-	operatorV1.RegisterAiAgentServiceServer(srv, &AiAgentServiceAdapter{inner: aiAgentService})
 	operatorV1.RegisterUserServiceServer(srv, &UserServiceAdapter{inner: userService})
 	operatorV1.RegisterFileTransferServiceServer(srv, &FileTransferServiceAdapter{inner: fileTransferService})
 	operatorV1.RegisterGatewayServiceServer(srv, gateway)
 	operatorV1.RegisterExportServiceServer(srv, &ExportRPCService{gateway: gateway})
 	operatorV1.RegisterMediaServiceServer(srv, &MediaRPCService{gateway: gateway})
-	operatorV1.RegisterEventServiceServer(srv, &EventRPCService{gateway: gateway})
 	return srv, nil
 }

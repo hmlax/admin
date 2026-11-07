@@ -9,8 +9,8 @@ import traceback
 from tenant_lifecycle import Client, Infrastructure, Report, ROOT, menu_nodes, password, require
 
 
-def run(report, credentials):
-    infra = Infrastructure(report)
+def run(report, credentials, infra=None):
+    infra = infra or Infrastructure(report)
     base = os.environ.get("E2E_BASE_URL", "http://localhost:15888").rstrip("/")
     admin = Client(base, report, infra)
     owner = Client(base, report, infra)
@@ -57,10 +57,22 @@ def run(report, credentials):
         report.resources["permission_groups"] = [group["id"]]
         report.resources["permissions"] = [permission["id"]]
 
-    with step("创建租户只读角色、字段权限与普通成员"):
+    with step("配置租户管理员可分配权限，并验证不能授予平台权限"):
+        owner_user = admin.request("GET", "/admin/v1/users/" + str(owner.request("GET", "/admin/v1/me")["id"]))
+        require(bool(owner_user.get("roleIds")), "tenant administrator has no assigned role")
+        owner_role = admin.request("GET", "/admin/v1/roles/" + str(owner_user["roleIds"][0]))
+        owner_permissions = list(dict.fromkeys(owner_role.get("permissions", []) + [permission["id"]]))
+        admin.update("roles", owner_role["id"], {"permissions": owner_permissions})
+        platform_permission = admin.find("permissions", "code", "sys:platform_admin")
+        owner.request("POST", "/admin/v1/roles", {"data": {
+            "name": "禁止的提权角色_" + suffix, "code": "tenant:forbidden:" + suffix,
+            "permissions": [platform_permission["id"]],
+        }}, expected=403)
+
+    with step("租户管理员创建只读角色、字段权限与普通成员"):
         role_code = "tenant:qa_reader:" + suffix
         hidden = [{"resource": "User", "hiddenFields": ["email", "mobile"]}]
-        admin.request("POST", "/admin/v1/roles", {"data": {
+        owner.request("POST", "/admin/v1/roles", {"data": {
             "name": "流程验收只读角色_" + suffix, "code": role_code, "type": "TENANT",
             "tenantId": tenant_id, "status": "ON", "dataScope": "ALL",
             "permissions": granted, "fieldPermissions": hidden,
@@ -196,14 +208,11 @@ def run(report, credentials):
         reader.request("POST", "/admin/v1/logout", {})
         owner.request("POST", "/admin/v1/logout", {})
 
-    with step("整理保留的验收套餐与租户，确认最终可用状态"):
-        plan_name = "Go Admin 标准验收套餐 " + report.run_id[-6:]
+    with step("确认保留的验收租户可用状态"):
         tenant_name = "Go Admin 验收租户 " + report.run_id[-6:]
-        admin.update("plans", credentials["plan_id"], {"name": plan_name})
         admin.update("tenants", tenant_id, {"name": tenant_name})
         require(admin.request("GET", "/admin/v1/tenants/" + str(tenant_id)).get("status") == "ON",
                 "retained tenant must remain enabled")
-        credentials["plan_name"] = plan_name
         credentials["tenant_name"] = tenant_name
         report.ready = True
         credentials["ready"] = True
@@ -218,7 +227,6 @@ def main():
     report = Report(ROOT / "platform/artifacts/tenant-permissions")
     report.secrets.append(credentials["password"])
     report.resources["tenants"] = [{"id": credentials["tenant_id"], "retained": True}]
-    report.resources["plans"] = [{"id": credentials["plan_id"], "retained": True}]
     failure = None
     try:
         run(report, credentials)

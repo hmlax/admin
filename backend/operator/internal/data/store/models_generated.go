@@ -14,78 +14,6 @@ type AccessKeySelect = Select[AccessKey]
 type AccessKeyCreateBulk = CreateBulk[AccessKey]
 type AccessKeyDelete = Delete[AccessKey]
 
-const TypeAiAgentApp = "AiAgentApp"
-
-type AiAgentApp = operator.SysAiAgentApps
-type AiAgentAppQuery = Query[AiAgentApp]
-type AiAgentAppSelect = Select[AiAgentApp]
-type AiAgentAppCreateBulk = CreateBulk[AiAgentApp]
-type AiAgentAppDelete = Delete[AiAgentApp]
-
-const TypeAiAgentRun = "AiAgentRun"
-
-type AiAgentRun = operator.SysAiAgentRuns
-type AiAgentRunQuery = Query[AiAgentRun]
-type AiAgentRunSelect = Select[AiAgentRun]
-type AiAgentRunCreateBulk = CreateBulk[AiAgentRun]
-type AiAgentRunDelete = Delete[AiAgentRun]
-
-const TypeAiChunk = "AiChunk"
-
-type AiChunk = operator.SysAiChunks
-type AiChunkQuery = Query[AiChunk]
-type AiChunkSelect = Select[AiChunk]
-type AiChunkCreateBulk = CreateBulk[AiChunk]
-type AiChunkDelete = Delete[AiChunk]
-
-const TypeAiConversation = "AiConversation"
-
-type AiConversation = operator.SysAiConversations
-type AiConversationQuery = Query[AiConversation]
-type AiConversationSelect = Select[AiConversation]
-type AiConversationCreateBulk = CreateBulk[AiConversation]
-type AiConversationDelete = Delete[AiConversation]
-
-const TypeAiDoc = "AiDoc"
-
-type AiDoc = operator.SysAiDocs
-type AiDocQuery = Query[AiDoc]
-type AiDocSelect = Select[AiDoc]
-type AiDocCreateBulk = CreateBulk[AiDoc]
-type AiDocDelete = Delete[AiDoc]
-
-const TypeAiKnowledgeBase = "AiKnowledgeBase"
-
-type AiKnowledgeBase = operator.SysAiKnowledgeBases
-type AiKnowledgeBaseQuery = Query[AiKnowledgeBase]
-type AiKnowledgeBaseSelect = Select[AiKnowledgeBase]
-type AiKnowledgeBaseCreateBulk = CreateBulk[AiKnowledgeBase]
-type AiKnowledgeBaseDelete = Delete[AiKnowledgeBase]
-
-const TypeAiMessage = "AiMessage"
-
-type AiMessage = operator.SysAiMessages
-type AiMessageQuery = Query[AiMessage]
-type AiMessageSelect = Select[AiMessage]
-type AiMessageCreateBulk = CreateBulk[AiMessage]
-type AiMessageDelete = Delete[AiMessage]
-
-const TypeAiProvider = "AiProvider"
-
-type AiProvider = operator.SysAiProviders
-type AiProviderQuery = Query[AiProvider]
-type AiProviderSelect = Select[AiProvider]
-type AiProviderCreateBulk = CreateBulk[AiProvider]
-type AiProviderDelete = Delete[AiProvider]
-
-const TypeAiUsageLog = "AiUsageLog"
-
-type AiUsageLog = operator.SysAiUsageLogs
-type AiUsageLogQuery = Query[AiUsageLog]
-type AiUsageLogSelect = Select[AiUsageLog]
-type AiUsageLogCreateBulk = CreateBulk[AiUsageLog]
-type AiUsageLogDelete = Delete[AiUsageLog]
-
 const TypeApi = "Api"
 
 type Api = operator.SysApis
@@ -101,14 +29,6 @@ type ApiAuditLogQuery = Query[ApiAuditLog]
 type ApiAuditLogSelect = Select[ApiAuditLog]
 type ApiAuditLogCreateBulk = CreateBulk[ApiAuditLog]
 type ApiAuditLogDelete = Delete[ApiAuditLog]
-
-const TypeBiDashboard = "BiDashboard"
-
-type BiDashboard = operator.BiDashboards
-type BiDashboardQuery = Query[BiDashboard]
-type BiDashboardSelect = Select[BiDashboard]
-type BiDashboardCreateBulk = CreateBulk[BiDashboard]
-type BiDashboardDelete = Delete[BiDashboard]
 
 const TypeDataAccessAuditLog = "DataAccessAuditLog"
 
@@ -149,30 +69,6 @@ type FileQuery = Query[File]
 type FileSelect = Select[File]
 type FileCreateBulk = CreateBulk[File]
 type FileDelete = Delete[File]
-
-const TypeInternalMessage = "InternalMessage"
-
-type InternalMessage = operator.InternalMessages
-type InternalMessageQuery = Query[InternalMessage]
-type InternalMessageSelect = Select[InternalMessage]
-type InternalMessageCreateBulk = CreateBulk[InternalMessage]
-type InternalMessageDelete = Delete[InternalMessage]
-
-const TypeInternalMessageCategory = "InternalMessageCategory"
-
-type InternalMessageCategory = operator.InternalMessageCategories
-type InternalMessageCategoryQuery = Query[InternalMessageCategory]
-type InternalMessageCategorySelect = Select[InternalMessageCategory]
-type InternalMessageCategoryCreateBulk = CreateBulk[InternalMessageCategory]
-type InternalMessageCategoryDelete = Delete[InternalMessageCategory]
-
-const TypeInternalMessageRecipient = "InternalMessageRecipient"
-
-type InternalMessageRecipient = operator.InternalMessageRecipients
-type InternalMessageRecipientQuery = Query[InternalMessageRecipient]
-type InternalMessageRecipientSelect = Select[InternalMessageRecipient]
-type InternalMessageRecipientCreateBulk = CreateBulk[InternalMessageRecipient]
-type InternalMessageRecipientDelete = Delete[InternalMessageRecipient]
 
 const TypeLanguage = "Language"
 
@@ -238,54 +134,6 @@ type MenuSelect = Select[Menu]
 type MenuCreateBulk = CreateBulk[Menu]
 type MenuDelete = Delete[Menu]
 
-const TypeMonitorAlertRule = "MonitorAlertRule"
-
-type MonitorAlertRule = operator.MonitorAlertRules
-type MonitorAlertRuleQuery = Query[MonitorAlertRule]
-type MonitorAlertRuleSelect = Select[MonitorAlertRule]
-type MonitorAlertRuleCreateBulk = CreateBulk[MonitorAlertRule]
-type MonitorAlertRuleDelete = Delete[MonitorAlertRule]
-
-const TypeNotificationChannel = "NotificationChannel"
-
-type NotificationChannel = operator.SysNotificationChannels
-type NotificationChannelQuery = Query[NotificationChannel]
-type NotificationChannelSelect = Select[NotificationChannel]
-type NotificationChannelCreateBulk = CreateBulk[NotificationChannel]
-type NotificationChannelDelete = Delete[NotificationChannel]
-
-const TypeNotificationDelivery = "NotificationDelivery"
-
-type NotificationDelivery = operator.SysNotificationDeliveries
-type NotificationDeliveryQuery = Query[NotificationDelivery]
-type NotificationDeliverySelect = Select[NotificationDelivery]
-type NotificationDeliveryCreateBulk = CreateBulk[NotificationDelivery]
-type NotificationDeliveryDelete = Delete[NotificationDelivery]
-
-const TypeNotificationPreference = "NotificationPreference"
-
-type NotificationPreference = operator.NotificationPreferences
-type NotificationPreferenceQuery = Query[NotificationPreference]
-type NotificationPreferenceSelect = Select[NotificationPreference]
-type NotificationPreferenceCreateBulk = CreateBulk[NotificationPreference]
-type NotificationPreferenceDelete = Delete[NotificationPreference]
-
-const TypeNotificationRule = "NotificationRule"
-
-type NotificationRule = operator.SysNotificationRules
-type NotificationRuleQuery = Query[NotificationRule]
-type NotificationRuleSelect = Select[NotificationRule]
-type NotificationRuleCreateBulk = CreateBulk[NotificationRule]
-type NotificationRuleDelete = Delete[NotificationRule]
-
-const TypeNotificationTemplate = "NotificationTemplate"
-
-type NotificationTemplate = operator.NotificationTemplates
-type NotificationTemplateQuery = Query[NotificationTemplate]
-type NotificationTemplateSelect = Select[NotificationTemplate]
-type NotificationTemplateCreateBulk = CreateBulk[NotificationTemplate]
-type NotificationTemplateDelete = Delete[NotificationTemplate]
-
 const TypeOperationAuditLog = "OperationAuditLog"
 
 type OperationAuditLog = operator.SysOperationAuditLogs
@@ -350,30 +198,6 @@ type PermissionPolicySelect = Select[PermissionPolicy]
 type PermissionPolicyCreateBulk = CreateBulk[PermissionPolicy]
 type PermissionPolicyDelete = Delete[PermissionPolicy]
 
-const TypePlan = "Plan"
-
-type Plan = operator.SysPlans
-type PlanQuery = Query[Plan]
-type PlanSelect = Select[Plan]
-type PlanCreateBulk = CreateBulk[Plan]
-type PlanDelete = Delete[Plan]
-
-const TypePlanModule = "PlanModule"
-
-type PlanModule = operator.SysPlanModules
-type PlanModuleQuery = Query[PlanModule]
-type PlanModuleSelect = Select[PlanModule]
-type PlanModuleCreateBulk = CreateBulk[PlanModule]
-type PlanModuleDelete = Delete[PlanModule]
-
-const TypePlanQuota = "PlanQuota"
-
-type PlanQuota = operator.SysPlanQuotas
-type PlanQuotaQuery = Query[PlanQuota]
-type PlanQuotaSelect = Select[PlanQuota]
-type PlanQuotaCreateBulk = CreateBulk[PlanQuota]
-type PlanQuotaDelete = Delete[PlanQuota]
-
 const TypePolicyEvaluationLog = "PolicyEvaluationLog"
 
 type PolicyEvaluationLog = operator.SysPolicyEvaluationLogs
@@ -389,14 +213,6 @@ type PositionQuery = Query[Position]
 type PositionSelect = Select[Position]
 type PositionCreateBulk = CreateBulk[Position]
 type PositionDelete = Delete[Position]
-
-const TypePrintTemplate = "PrintTemplate"
-
-type PrintTemplate = operator.PrintTemplates
-type PrintTemplateQuery = Query[PrintTemplate]
-type PrintTemplateSelect = Select[PrintTemplate]
-type PrintTemplateCreateBulk = CreateBulk[PrintTemplate]
-type PrintTemplateDelete = Delete[PrintTemplate]
 
 const TypeRole = "Role"
 
@@ -438,22 +254,6 @@ type RolePermissionSelect = Select[RolePermission]
 type RolePermissionCreateBulk = CreateBulk[RolePermission]
 type RolePermissionDelete = Delete[RolePermission]
 
-const TypeScript = "Script"
-
-type Script = operator.SysScripts
-type ScriptQuery = Query[Script]
-type ScriptSelect = Select[Script]
-type ScriptCreateBulk = CreateBulk[Script]
-type ScriptDelete = Delete[Script]
-
-const TypeScriptLog = "ScriptLog"
-
-type ScriptLog = operator.SysScriptLogs
-type ScriptLogQuery = Query[ScriptLog]
-type ScriptLogSelect = Select[ScriptLog]
-type ScriptLogCreateBulk = CreateBulk[ScriptLog]
-type ScriptLogDelete = Delete[ScriptLog]
-
 const TypeSysConfig = "SysConfig"
 
 type SysConfig = operator.SysConfigs
@@ -461,14 +261,6 @@ type SysConfigQuery = Query[SysConfig]
 type SysConfigSelect = Select[SysConfig]
 type SysConfigCreateBulk = CreateBulk[SysConfig]
 type SysConfigDelete = Delete[SysConfig]
-
-const TypeTask = "Task"
-
-type Task = operator.SysTasks
-type TaskQuery = Query[Task]
-type TaskSelect = Select[Task]
-type TaskCreateBulk = CreateBulk[Task]
-type TaskDelete = Delete[Task]
 
 const TypeTenant = "Tenant"
 
@@ -526,100 +318,61 @@ type UserRoleSelect = Select[UserRole]
 type UserRoleCreateBulk = CreateBulk[UserRole]
 type UserRoleDelete = Delete[UserRole]
 type Client struct {
-	db                       *gorm.DB
-	hooks                    []Hook
-	Schema                   *Schema
-	AccessKey                *AccessKeyClient
-	AiAgentApp               *AiAgentAppClient
-	AiAgentRun               *AiAgentRunClient
-	AiChunk                  *AiChunkClient
-	AiConversation           *AiConversationClient
-	AiDoc                    *AiDocClient
-	AiKnowledgeBase          *AiKnowledgeBaseClient
-	AiMessage                *AiMessageClient
-	AiProvider               *AiProviderClient
-	AiUsageLog               *AiUsageLogClient
-	Api                      *ApiClient
-	ApiAuditLog              *ApiAuditLogClient
-	BiDashboard              *BiDashboardClient
-	DataAccessAuditLog       *DataAccessAuditLogClient
-	DictEntry                *DictEntryClient
-	DictEntryI18n            *DictEntryI18nClient
-	DictType                 *DictTypeClient
-	File                     *FileClient
-	InternalMessage          *InternalMessageClient
-	InternalMessageCategory  *InternalMessageCategoryClient
-	InternalMessageRecipient *InternalMessageRecipientClient
-	Language                 *LanguageClient
-	LoginAuditLog            *LoginAuditLogClient
-	LoginPolicy              *LoginPolicyClient
-	Membership               *MembershipClient
-	MembershipOrgUnit        *MembershipOrgUnitClient
-	MembershipPosition       *MembershipPositionClient
-	MembershipRole           *MembershipRoleClient
-	Menu                     *MenuClient
-	MonitorAlertRule         *MonitorAlertRuleClient
-	NotificationChannel      *NotificationChannelClient
-	NotificationDelivery     *NotificationDeliveryClient
-	NotificationPreference   *NotificationPreferenceClient
-	NotificationRule         *NotificationRuleClient
-	NotificationTemplate     *NotificationTemplateClient
-	OperationAuditLog        *OperationAuditLogClient
-	OrgUnit                  *OrgUnitClient
-	Permission               *PermissionClient
-	PermissionApi            *PermissionApiClient
-	PermissionAuditLog       *PermissionAuditLogClient
-	PermissionGroup          *PermissionGroupClient
-	PermissionMenu           *PermissionMenuClient
-	PermissionPolicy         *PermissionPolicyClient
-	Plan                     *PlanClient
-	PlanModule               *PlanModuleClient
-	PlanQuota                *PlanQuotaClient
-	PolicyEvaluationLog      *PolicyEvaluationLogClient
-	Position                 *PositionClient
-	PrintTemplate            *PrintTemplateClient
-	Role                     *RoleClient
-	RoleFieldPermission      *RoleFieldPermissionClient
-	RoleMetadata             *RoleMetadataClient
-	RoleOrgUnit              *RoleOrgUnitClient
-	RolePermission           *RolePermissionClient
-	Script                   *ScriptClient
-	ScriptLog                *ScriptLogClient
-	SysConfig                *SysConfigClient
-	Task                     *TaskClient
-	Tenant                   *TenantClient
-	User                     *UserClient
-	UserCredential           *UserCredentialClient
-	UserMfaFactor            *UserMfaFactorClient
-	UserOrgUnit              *UserOrgUnitClient
-	UserPosition             *UserPositionClient
-	UserRole                 *UserRoleClient
+	db                  *gorm.DB
+	hooks               []Hook
+	Schema              *Schema
+	AccessKey           *AccessKeyClient
+	Api                 *ApiClient
+	ApiAuditLog         *ApiAuditLogClient
+	DataAccessAuditLog  *DataAccessAuditLogClient
+	DictEntry           *DictEntryClient
+	DictEntryI18n       *DictEntryI18nClient
+	DictType            *DictTypeClient
+	File                *FileClient
+	Language            *LanguageClient
+	LoginAuditLog       *LoginAuditLogClient
+	LoginPolicy         *LoginPolicyClient
+	Membership          *MembershipClient
+	MembershipOrgUnit   *MembershipOrgUnitClient
+	MembershipPosition  *MembershipPositionClient
+	MembershipRole      *MembershipRoleClient
+	Menu                *MenuClient
+	OperationAuditLog   *OperationAuditLogClient
+	OrgUnit             *OrgUnitClient
+	Permission          *PermissionClient
+	PermissionApi       *PermissionApiClient
+	PermissionAuditLog  *PermissionAuditLogClient
+	PermissionGroup     *PermissionGroupClient
+	PermissionMenu      *PermissionMenuClient
+	PermissionPolicy    *PermissionPolicyClient
+	PolicyEvaluationLog *PolicyEvaluationLogClient
+	Position            *PositionClient
+	Role                *RoleClient
+	RoleFieldPermission *RoleFieldPermissionClient
+	RoleMetadata        *RoleMetadataClient
+	RoleOrgUnit         *RoleOrgUnitClient
+	RolePermission      *RolePermissionClient
+	SysConfig           *SysConfigClient
+	Tenant              *TenantClient
+	User                *UserClient
+	UserCredential      *UserCredentialClient
+	UserMfaFactor       *UserMfaFactorClient
+	UserOrgUnit         *UserOrgUnitClient
+	UserPosition        *UserPositionClient
+	UserRole            *UserRoleClient
 }
 
 func NewClient(db *gorm.DB) *Client {
 	c := &Client{db: db}
 	c.Schema = &Schema{client: c}
 	c.AccessKey = &AccessKeyClient{EntityClient: &EntityClient[AccessKey]{client: c, entity: "AccessKey", dataScope: false}}
-	c.AiAgentApp = &AiAgentAppClient{EntityClient: &EntityClient[AiAgentApp]{client: c, entity: "AiAgentApp", dataScope: false}}
-	c.AiAgentRun = &AiAgentRunClient{EntityClient: &EntityClient[AiAgentRun]{client: c, entity: "AiAgentRun", dataScope: false}}
-	c.AiChunk = &AiChunkClient{EntityClient: &EntityClient[AiChunk]{client: c, entity: "AiChunk", dataScope: false}}
-	c.AiConversation = &AiConversationClient{EntityClient: &EntityClient[AiConversation]{client: c, entity: "AiConversation", dataScope: false}}
-	c.AiDoc = &AiDocClient{EntityClient: &EntityClient[AiDoc]{client: c, entity: "AiDoc", dataScope: false}}
-	c.AiKnowledgeBase = &AiKnowledgeBaseClient{EntityClient: &EntityClient[AiKnowledgeBase]{client: c, entity: "AiKnowledgeBase", dataScope: false}}
-	c.AiMessage = &AiMessageClient{EntityClient: &EntityClient[AiMessage]{client: c, entity: "AiMessage", dataScope: false}}
-	c.AiProvider = &AiProviderClient{EntityClient: &EntityClient[AiProvider]{client: c, entity: "AiProvider", dataScope: false}}
-	c.AiUsageLog = &AiUsageLogClient{EntityClient: &EntityClient[AiUsageLog]{client: c, entity: "AiUsageLog", dataScope: false}}
 	c.Api = &ApiClient{EntityClient: &EntityClient[Api]{client: c, entity: "Api", dataScope: false}}
 	c.ApiAuditLog = &ApiAuditLogClient{EntityClient: &EntityClient[ApiAuditLog]{client: c, entity: "ApiAuditLog", dataScope: false}}
-	c.BiDashboard = &BiDashboardClient{EntityClient: &EntityClient[BiDashboard]{client: c, entity: "BiDashboard", dataScope: false}}
 	c.DataAccessAuditLog = &DataAccessAuditLogClient{EntityClient: &EntityClient[DataAccessAuditLog]{client: c, entity: "DataAccessAuditLog", dataScope: false}}
 	c.DictEntry = &DictEntryClient{EntityClient: &EntityClient[DictEntry]{client: c, entity: "DictEntry", dataScope: false}}
 	c.DictEntryI18n = &DictEntryI18nClient{EntityClient: &EntityClient[DictEntryI18n]{client: c, entity: "DictEntryI18n", dataScope: false}}
 	c.DictType = &DictTypeClient{EntityClient: &EntityClient[DictType]{client: c, entity: "DictType", dataScope: false}}
 	c.File = &FileClient{EntityClient: &EntityClient[File]{client: c, entity: "File", dataScope: false}}
-	c.InternalMessage = &InternalMessageClient{EntityClient: &EntityClient[InternalMessage]{client: c, entity: "InternalMessage", dataScope: false}}
-	c.InternalMessageCategory = &InternalMessageCategoryClient{EntityClient: &EntityClient[InternalMessageCategory]{client: c, entity: "InternalMessageCategory", dataScope: false}}
-	c.InternalMessageRecipient = &InternalMessageRecipientClient{EntityClient: &EntityClient[InternalMessageRecipient]{client: c, entity: "InternalMessageRecipient", dataScope: false}}
 	c.Language = &LanguageClient{EntityClient: &EntityClient[Language]{client: c, entity: "Language", dataScope: false}}
 	c.LoginAuditLog = &LoginAuditLogClient{EntityClient: &EntityClient[LoginAuditLog]{client: c, entity: "LoginAuditLog", dataScope: false}}
 	c.LoginPolicy = &LoginPolicyClient{EntityClient: &EntityClient[LoginPolicy]{client: c, entity: "LoginPolicy", dataScope: false}}
@@ -628,12 +381,6 @@ func NewClient(db *gorm.DB) *Client {
 	c.MembershipPosition = &MembershipPositionClient{EntityClient: &EntityClient[MembershipPosition]{client: c, entity: "MembershipPosition", dataScope: false}}
 	c.MembershipRole = &MembershipRoleClient{EntityClient: &EntityClient[MembershipRole]{client: c, entity: "MembershipRole", dataScope: false}}
 	c.Menu = &MenuClient{EntityClient: &EntityClient[Menu]{client: c, entity: "Menu", dataScope: false}}
-	c.MonitorAlertRule = &MonitorAlertRuleClient{EntityClient: &EntityClient[MonitorAlertRule]{client: c, entity: "MonitorAlertRule", dataScope: false}}
-	c.NotificationChannel = &NotificationChannelClient{EntityClient: &EntityClient[NotificationChannel]{client: c, entity: "NotificationChannel", dataScope: false}}
-	c.NotificationDelivery = &NotificationDeliveryClient{EntityClient: &EntityClient[NotificationDelivery]{client: c, entity: "NotificationDelivery", dataScope: false}}
-	c.NotificationPreference = &NotificationPreferenceClient{EntityClient: &EntityClient[NotificationPreference]{client: c, entity: "NotificationPreference", dataScope: false}}
-	c.NotificationRule = &NotificationRuleClient{EntityClient: &EntityClient[NotificationRule]{client: c, entity: "NotificationRule", dataScope: false}}
-	c.NotificationTemplate = &NotificationTemplateClient{EntityClient: &EntityClient[NotificationTemplate]{client: c, entity: "NotificationTemplate", dataScope: false}}
 	c.OperationAuditLog = &OperationAuditLogClient{EntityClient: &EntityClient[OperationAuditLog]{client: c, entity: "OperationAuditLog", dataScope: false}}
 	c.OrgUnit = &OrgUnitClient{EntityClient: &EntityClient[OrgUnit]{client: c, entity: "OrgUnit", dataScope: false}}
 	c.Permission = &PermissionClient{EntityClient: &EntityClient[Permission]{client: c, entity: "Permission", dataScope: false}}
@@ -642,21 +389,14 @@ func NewClient(db *gorm.DB) *Client {
 	c.PermissionGroup = &PermissionGroupClient{EntityClient: &EntityClient[PermissionGroup]{client: c, entity: "PermissionGroup", dataScope: false}}
 	c.PermissionMenu = &PermissionMenuClient{EntityClient: &EntityClient[PermissionMenu]{client: c, entity: "PermissionMenu", dataScope: false}}
 	c.PermissionPolicy = &PermissionPolicyClient{EntityClient: &EntityClient[PermissionPolicy]{client: c, entity: "PermissionPolicy", dataScope: false}}
-	c.Plan = &PlanClient{EntityClient: &EntityClient[Plan]{client: c, entity: "Plan", dataScope: false}}
-	c.PlanModule = &PlanModuleClient{EntityClient: &EntityClient[PlanModule]{client: c, entity: "PlanModule", dataScope: false}}
-	c.PlanQuota = &PlanQuotaClient{EntityClient: &EntityClient[PlanQuota]{client: c, entity: "PlanQuota", dataScope: false}}
 	c.PolicyEvaluationLog = &PolicyEvaluationLogClient{EntityClient: &EntityClient[PolicyEvaluationLog]{client: c, entity: "PolicyEvaluationLog", dataScope: false}}
 	c.Position = &PositionClient{EntityClient: &EntityClient[Position]{client: c, entity: "Position", dataScope: true}}
-	c.PrintTemplate = &PrintTemplateClient{EntityClient: &EntityClient[PrintTemplate]{client: c, entity: "PrintTemplate", dataScope: false}}
 	c.Role = &RoleClient{EntityClient: &EntityClient[Role]{client: c, entity: "Role", dataScope: false}}
 	c.RoleFieldPermission = &RoleFieldPermissionClient{EntityClient: &EntityClient[RoleFieldPermission]{client: c, entity: "RoleFieldPermission", dataScope: false}}
 	c.RoleMetadata = &RoleMetadataClient{EntityClient: &EntityClient[RoleMetadata]{client: c, entity: "RoleMetadata", dataScope: false}}
 	c.RoleOrgUnit = &RoleOrgUnitClient{EntityClient: &EntityClient[RoleOrgUnit]{client: c, entity: "RoleOrgUnit", dataScope: false}}
 	c.RolePermission = &RolePermissionClient{EntityClient: &EntityClient[RolePermission]{client: c, entity: "RolePermission", dataScope: false}}
-	c.Script = &ScriptClient{EntityClient: &EntityClient[Script]{client: c, entity: "Script", dataScope: false}}
-	c.ScriptLog = &ScriptLogClient{EntityClient: &EntityClient[ScriptLog]{client: c, entity: "ScriptLog", dataScope: false}}
 	c.SysConfig = &SysConfigClient{EntityClient: &EntityClient[SysConfig]{client: c, entity: "SysConfig", dataScope: false}}
-	c.Task = &TaskClient{EntityClient: &EntityClient[Task]{client: c, entity: "Task", dataScope: false}}
 	c.Tenant = &TenantClient{EntityClient: &EntityClient[Tenant]{client: c, entity: "Tenant", dataScope: false}}
 	c.User = &UserClient{EntityClient: &EntityClient[User]{client: c, entity: "User", dataScope: false}}
 	c.UserCredential = &UserCredentialClient{EntityClient: &EntityClient[UserCredential]{client: c, entity: "UserCredential", dataScope: false}}
@@ -669,26 +409,13 @@ func NewClient(db *gorm.DB) *Client {
 func AllModels() []any {
 	return []any{
 		&operator.SysAccessKeys{},
-		&operator.SysAiAgentApps{},
-		&operator.SysAiAgentRuns{},
-		&operator.SysAiChunks{},
-		&operator.SysAiConversations{},
-		&operator.SysAiDocs{},
-		&operator.SysAiKnowledgeBases{},
-		&operator.SysAiMessages{},
-		&operator.SysAiProviders{},
-		&operator.SysAiUsageLogs{},
 		&operator.SysApis{},
 		&operator.SysApiAuditLogs{},
-		&operator.BiDashboards{},
 		&operator.SysDataAccessAuditLogs{},
 		&operator.SysDictEntries{},
 		&operator.SysDictEntryI18n{},
 		&operator.SysDictTypes{},
 		&operator.Files{},
-		&operator.InternalMessages{},
-		&operator.InternalMessageCategories{},
-		&operator.InternalMessageRecipients{},
 		&operator.SysLanguages{},
 		&operator.SysLoginAuditLogs{},
 		&operator.SysLoginPolicies{},
@@ -697,12 +424,6 @@ func AllModels() []any {
 		&operator.SysMembershipPositions{},
 		&operator.SysMembershipRoles{},
 		&operator.SysMenus{},
-		&operator.MonitorAlertRules{},
-		&operator.SysNotificationChannels{},
-		&operator.SysNotificationDeliveries{},
-		&operator.NotificationPreferences{},
-		&operator.SysNotificationRules{},
-		&operator.NotificationTemplates{},
 		&operator.SysOperationAuditLogs{},
 		&operator.SysOrgUnits{},
 		&operator.SysPermissions{},
@@ -711,21 +432,14 @@ func AllModels() []any {
 		&operator.SysPermissionGroups{},
 		&operator.SysPermissionMenus{},
 		&operator.SysPermissionPolicies{},
-		&operator.SysPlans{},
-		&operator.SysPlanModules{},
-		&operator.SysPlanQuotas{},
 		&operator.SysPolicyEvaluationLogs{},
 		&operator.SysPositions{},
-		&operator.PrintTemplates{},
 		&operator.SysRoles{},
 		&operator.SysRoleFieldPermissions{},
 		&operator.SysRoleMetadata{},
 		&operator.SysRoleOrgUnits{},
 		&operator.SysRolePermissions{},
-		&operator.SysScripts{},
-		&operator.SysScriptLogs{},
 		&operator.SysConfigs{},
-		&operator.SysTasks{},
 		&operator.SysTenants{},
 		&operator.SysUsers{},
 		&operator.SysUserCredentials{},
@@ -734,48 +448,6 @@ func AllModels() []any {
 		&operator.SysUserPositions{},
 		&operator.SysUserRoles{},
 	}
-}
-func (q *Query[T]) WithAiDoc(options ...func(*Query[AiDoc])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["AiDoc"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[AiDoc]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
-}
-func (q *Query[T]) WithAiKnowledgeBase(options ...func(*Query[AiKnowledgeBase])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["AiKnowledgeBase"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[AiKnowledgeBase]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
-}
-func (q *Query[T]) WithAiConversation(options ...func(*Query[AiConversation])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["AiConversation"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[AiConversation]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
 }
 func (q *Query[T]) WithDictType(options ...func(*Query[DictType])) *Query[T] {
 	if q.preloads == nil {
@@ -826,48 +498,6 @@ func (q *Query[T]) WithParent(options ...func(*Query[T])) *Query[T] {
 	q.preloads["Parent"] = func(db *gorm.DB) *gorm.DB {
 		client := NewClient(db)
 		child := (&EntityClient[T]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
-}
-func (q *Query[T]) WithModules(options ...func(*Query[PlanModule])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["Modules"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[PlanModule]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
-}
-func (q *Query[T]) WithQuotas(options ...func(*Query[PlanQuota])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["Quotas"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[PlanQuota]{client: client}).Query()
-		for _, option := range options {
-			option(child)
-		}
-		return child.db(db.Statement.Context)
-	}
-	return q
-}
-func (q *Query[T]) WithPlan(options ...func(*Query[Plan])) *Query[T] {
-	if q.preloads == nil {
-		q.preloads = make(map[string]func(*gorm.DB) *gorm.DB)
-	}
-	q.preloads["Plan"] = func(db *gorm.DB) *gorm.DB {
-		client := NewClient(db)
-		child := (&EntityClient[Plan]{client: client}).Query()
 		for _, option := range options {
 			option(child)
 		}

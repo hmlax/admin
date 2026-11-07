@@ -30,3 +30,20 @@ authn:
     refresh_token_expires: 43200s
 runtime:
   crypto_key: 'REPLACE_CRYPTO_KEY'
+  # Optional authentication email and SMS delivery. Configure the channel you use.
+  smtp:
+    host: ''
+    port: 587
+    username: ''
+    password: ''
+    from: ''
+    from_name: Go Admin
+    tls_mode: START_TLS
+  sms:
+    provider: ''
+    access_key_id: ''
+    access_secret: ''
+    sign_name: ''
+    template_code: ''
+    app_id: ''
+    region: cn-hangzhou

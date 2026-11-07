@@ -65,20 +65,23 @@ func changeRoute(t *testing.T, method *descriptorpb.MethodDescriptorProto, path 
 
 func TestStreamBindingFollowsAdminIDLRouteAndTypes(t *testing.T) {
 	files := sourceIDL(t)
-	method := methodIn(t, files, "admin.v1", "EventService", "Subscribe")
-	changeRoute(t, method, "/v2/events")
+	method := methodIn(t, files, "admin.v1", "UserService", "Get")
+	method.ServerStreaming = proto.Bool(true)
+	methodIn(t, files, "admin.v1", "UserService", "GetByUsername").ServerStreaming = proto.Bool(true)
+	methodIn(t, files, "operator.v1", "UserService", "Get").ServerStreaming = proto.Bool(true)
+	changeRoute(t, method, "/v2/users/:id")
 	_, bindings, err := resolveHTTP(files)
 	require.NoError(t, err)
 	schema, err := newSchema(files)
 	require.NoError(t, err)
 	contracts, err := generateContracts(schema, bindings)
 	require.NoError(t, err)
-	schemaForBindings, err := newSchema(sourceIDL(t))
+	schemaForBindings, err := newSchema(files)
 	require.NoError(t, err)
 	result, err := generateBindings(schemaForBindings, bindings)
 	require.NoError(t, err)
-	for _, expected := range []string{`EventServiceSubscribeHTTPPath = "/v2/events"`, `*EventSubscriptionRequest`, `func(*EventFrame) error`} {
-		require.Contains(t, string(result)+string(contracts["event_service_http.pb.go"]), expected)
+	for _, expected := range []string{`UserServiceGetHTTPPath = "/v2/users/{id}"`, `*GetUserRequest`, `func(*User) error`} {
+		require.Contains(t, string(result)+string(contracts["user_service_http.pb.go"]), expected)
 	}
 }
 
@@ -92,8 +95,6 @@ func TestAdminIDLProjectionPreservesAliasesAndBodyShape(t *testing.T) {
 	method = methodIn(t, projection, "admin.v1", "UserService", "Create")
 	rule = proto.GetExtension(method.Options, annotations.E_Http).(*annotations.HttpRule)
 	require.Equal(t, "*", rule.GetBody())
-	event := methodIn(t, projection, "admin.v1", "EventService", "Subscribe")
-	require.Contains(t, event.GetOptions().String(), "text/event-stream")
 	login := methodIn(t, projection, "admin.v1", "AuthenticationService", "Login")
 	require.Contains(t, login.GetOptions().String(), "security")
 	schemaForBindings, err := newSchema(sourceIDL(t))
