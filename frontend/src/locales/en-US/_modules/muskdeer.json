@@ -86,7 +86,7 @@
   "confirmCancel": "Cancel all managed orders for this stopped instance?",
   "cancelPending": "Cancel pending",
   "parameterNotice": "Save complete parameters in the database. Restart core services after creating or changing parameters before starting. Stop the instance before editing.",
-  "syntheticNotice": "Development market data only; no financial fills. Zero event/notional limits mean unlimited.",
+  "syntheticNotice": "Development publications stream directly from market data, without financial fills or database records.",
   "market_maker": "Market making",
   "grid": "Grid",
   "wash_trade": "Development WashTrade",
@@ -145,5 +145,6 @@
   "selectInstrument": "Select instrument",
   "staleSnapshot": "Snapshot expired. Refresh to observe current state.",
   "emptyScope": "Empty scope",
-  "washMaximumNotional": "Maximum notional"
+  "washMaximumNotional": "Maximum notional",
+  "syntheticHistoryNotice": "Historical development records only. Current WashTrade publications are sent directly and do not add database records here."
 }

@@ -24,5 +24,5 @@ export default function Page() {
 { title: t('tradeId'), dataIndex: 'tradeId', hideInSearch: true, width: 160 },
 { title: t('sourceTradeId'), dataIndex: 'sourceTradeId', hideInSearch: true, width: 160 },
 ];
- return <ResourceTable<MuskdeerSyntheticRecord> resource="synthetic" columns={columns} fetch={muskdeerReaders.synthetic} notice={t('syntheticNotice')} />;
+ return <ResourceTable<MuskdeerSyntheticRecord> resource="synthetic" columns={columns} fetch={muskdeerReaders.synthetic} notice={t('syntheticHistoryNotice')} />;
 }

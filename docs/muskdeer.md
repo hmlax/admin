@@ -32,3 +32,6 @@ frontend 执行 `npm run typecheck`、`npm run build`、`npm run test:tenant-rou
 独立部署使用 `docker-compose.muskdeer.yaml`，项目名 muskdeer-admin。四个管理容器使用独立 Nacos 命名空间、管理数据库、Redis 逻辑库和 JWT 密钥，保留同机其他 admin 项目。应用环境变量只提供 Nacos 连接；镜像标签、只读证书挂载和商户前端编号属于 Compose 基础设施设置。`MUSKDEER_ADMIN_IMAGE_TAG` 必须指定已验收的镜像标签。
 
 本机默认平台入口端口 15888，商户入口端口 15889，管理 HTTP 调试端口 17788，均只绑定 loopback。新商户默认没有做市账户绑定，平台授权绑定后才能访问相应业务数据。账号和密码不写入文档或仓库。
+
+
+2026-11-09 当前 WashTrade 改为行情订阅后直发 SDK，每笔无数据库读写。商户参数表单移除运行编号、累计次数和累计名义量输入，旧字段保留在原实例参数中作历史兼容；保留来源、模式、频率、数量、比例与 development_only。开发成交页明确仅显示旧历史，当前发布不再新增记录。核心配置仍通过 gRPC 管理，后台不直连业务数据库。

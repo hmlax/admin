@@ -79,10 +79,9 @@ export default function InstanceForm({ current, onClose, onSaved }: Props) {
         {integer('grid', 'gridCount', 2)}{integer('grid', 'maxMarketAgeMs', 1)}
       </> : <>
         <Alert type="info" title={t('syntheticNotice')} />
-        <ProFormText name={['parameters', 'washTrade', 'runId']} label={t('runId')} rules={[...required, { pattern: /^[a-z0-9-]{1,20}$/ }]} />
         <ProFormSelect name={['parameters', 'washTrade', 'mode']} label={t('mode')} rules={required} options={[{ label: t('book'), value: 'book' }, { label: t('agg_trade'), value: 'agg_trade' }]} />
-        {integer('washTrade', 'intervalMs', 100)}{integer('washTrade', 'maximumEvents')}
-        {decimal('washTrade', 'quantity')}{decimal('washTrade', 'maximumNotional', 'washMaximumNotional')}{decimal('washTrade', 'quantityFraction')}
+        {integer('washTrade', 'intervalMs', 100)}
+        {decimal('washTrade', 'quantity')}{decimal('washTrade', 'quantityFraction')}
       </>}</ProFormDependency>
     </DrawerForm>
   );

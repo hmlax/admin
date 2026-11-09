@@ -86,7 +86,7 @@
   "confirmCancel": "撤销该停止实例管理的全部挂单？",
   "cancelPending": "撤单请求已处理，请在撮合原生快照中确认结果",
   "parameterNotice": "参数由数据库保存。新建和参数修改后需显式重启核心服务加载，全部所需版本就绪后才能启动。修改参数前请先停止实例。",
-  "syntheticNotice": "开发行情发布记录，不产生账户真实成交。次数和累计名义量为 0 时不限。",
+  "syntheticNotice": "订阅行情后直接发布开发合成成交，不产生账户真实成交，当前成交不落库。",
   "market_maker": "做市铺单",
   "grid": "网格",
   "wash_trade": "开发 WashTrade",
@@ -145,5 +145,6 @@
   "selectInstrument": "按品种搜索",
   "staleSnapshot": "快照已过期，请刷新",
   "emptyScope": "尚未绑定做市账户，请由平台配置绑定",
-  "washMaximumNotional": "累计名义量上限（0 不限）"
+  "washMaximumNotional": "累计名义量上限（0 不限）",
+  "syntheticHistoryNotice": "这里只显示旧开发成交历史。当前 WashTrade 直接发布，不落库，此页不会新增当前成交记录。"
 }
