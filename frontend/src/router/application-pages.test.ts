@@ -6,7 +6,9 @@ import { businessRoutes as merchantRoutes } from '../../merchant-admin/routes';
 describe('application page boundaries', () => {
   it.each([
     'tenant/tenant/index.tsx',
-    'muskdeer/account-bindings/index.tsx',
+    'muskdeer/templates/index.tsx',
+    'muskdeer/instruments/index.tsx',
+    'muskdeer/gateways/index.tsx',
     'permission/menu/index.tsx',
     'permission/api/index.tsx',
     'permission/permission/index.tsx',
@@ -26,6 +28,13 @@ describe('application page boundaries', () => {
   ])('retains %s for authorized merchant menus', (page) => {
     expect(Object.keys(merchantPages)).toContain(`../src/pages/app/${page}`);
   });
+
+  it.each(['overview', 'instances', 'accounts', 'orders', 'cancellations', 'synthetic', 'snapshot'])(
+    'keeps Muskdeer %s only in the merchant bundle', (page) => {
+      const key = `../src/pages/app/muskdeer/${page}/index.tsx`;
+      expect(Object.keys(merchantPages)).toContain(key);
+      expect(Object.keys(platformPages)).not.toContain(key);
+    });
 
   it('does not install static merchant business menus before server authorization', () => {
     expect(merchantRoutes).toEqual([]);

@@ -5,7 +5,7 @@ import "admin/http.proto";
 import "hertz/api.proto";
 import "admin/v1/muskdeer_types.proto";
 
-// 做市管理：平台全部账户；商户只操作平台绑定的账户。
+// 平台提供公共配置；商户独立配置和操作其账户及策略实例。
 service MuskdeerService {
  rpc ListAccountBindings(MuskdeerBindingListRequest) returns (MuskdeerBindingPage) {
   option (api.get) = "/admin/v1/muskdeer/account-bindings";
@@ -23,6 +23,9 @@ service MuskdeerService {
  }
  rpc ListTemplates(MuskdeerListRequest) returns (MuskdeerTemplatePage) {
   option (api.get) = "/admin/v1/muskdeer/templates";
+ }
+ rpc ListGateways(MuskdeerOverviewRequest) returns (MuskdeerGatewayPage) {
+  option (api.get) = "/admin/v1/muskdeer/gateways";
  }
  rpc ListInstances(MuskdeerInstanceListRequest) returns (MuskdeerInstancePage) {
   option (api.get) = "/admin/v1/muskdeer/instances";

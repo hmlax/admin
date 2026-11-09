@@ -2544,6 +2544,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/MuskdeerCancellationPage'
+    /admin/v1/muskdeer/gateways:
+        get:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_ListGateways
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerGatewayPage'
     /admin/v1/muskdeer/instances:
         get:
             tags:
@@ -6895,6 +6907,28 @@ components:
                 leverage:
                     type: integer
                     format: uint32
+        MuskdeerGateway:
+            type: object
+            properties:
+                key:
+                    type: string
+                executionVenue:
+                    type: string
+                protocol:
+                    type: string
+                target:
+                    type: string
+                configured:
+                    type: boolean
+        MuskdeerGatewayPage:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MuskdeerGateway'
+                total:
+                    type: string
         MuskdeerGridParameters:
             type: object
             properties:
@@ -8908,7 +8942,7 @@ tags:
          DisableMFA/RevokeMFADevice）需登录态，走正常 auth+authz 中间件，不加 security:{}。
          登录挑战侧 RPC（VerifyMFAChallenge）免鉴权，加 security:{} 并加入 rest_server 白名单。
     - name: MuskdeerService
-      description: 做市管理：平台全部账户；商户只操作平台绑定的账户。
+      description: 平台提供公共配置；商户独立配置和操作其账户及策略实例。
     - name: OnlineSessionService
       description: 在线会话管理服务（在线用户列表 + 强制下线）
     - name: OperationAuditLogService

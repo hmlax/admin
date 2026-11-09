@@ -6,6 +6,31 @@ import (
 	pb "go-admin/platform/pb/operator"
 )
 
+func fromCoreGateway(in *core.Gateway) *pb.MuskdeerGateway {
+	if in == nil {
+		return nil
+	}
+	out := &pb.MuskdeerGateway{
+		Key:            in.Key,
+		ExecutionVenue: in.ExecutionVenue,
+		Protocol:       in.Protocol,
+		Target:         in.Target,
+		Configured:     in.Configured,
+	}
+	return out
+}
+func fromCoreGatewayPage(in *core.GatewayPage) *pb.MuskdeerGatewayPage {
+	if in == nil {
+		return nil
+	}
+	out := &pb.MuskdeerGatewayPage{
+		Total: in.Total,
+	}
+	for _, v := range in.Items {
+		out.Items = append(out.Items, fromCoreGateway(v))
+	}
+	return out
+}
 func fromCoreOverview(in *core.Overview) *pb.MuskdeerOverview {
 	if in == nil {
 		return nil
@@ -390,6 +415,31 @@ func fromCoreCancelReply(in *core.CancelReply) *pb.MuskdeerCancelReply {
 	out := &pb.MuskdeerCancelReply{
 		Acknowledged:        in.Acknowledged,
 		ConfirmationPending: in.ConfirmationPending,
+	}
+	return out
+}
+func toCoreGateway(in *pb.MuskdeerGateway) *core.Gateway {
+	if in == nil {
+		return nil
+	}
+	out := &core.Gateway{
+		Key:            in.Key,
+		ExecutionVenue: in.ExecutionVenue,
+		Protocol:       in.Protocol,
+		Target:         in.Target,
+		Configured:     in.Configured,
+	}
+	return out
+}
+func toCoreGatewayPage(in *pb.MuskdeerGatewayPage) *core.GatewayPage {
+	if in == nil {
+		return nil
+	}
+	out := &core.GatewayPage{
+		Total: in.Total,
+	}
+	for _, v := range in.Items {
+		out.Items = append(out.Items, toCoreGateway(v))
 	}
 	return out
 }

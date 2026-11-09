@@ -111,6 +111,17 @@ func (s *MuskdeerServiceProxy) ListCancellations(ctx context.Context, in *v1.Mus
 	}
 	return toAPIMuskdeerCancellationPage(reply), nil
 }
+func (s *MuskdeerServiceProxy) ListGateways(ctx context.Context, in *v1.MuskdeerOverviewRequest) (*v1.MuskdeerGatewayPage, error) {
+	request := toRPCMuskdeerOverviewRequest(in)
+	if err := transport.ValidateRequest(request); err != nil {
+		return nil, err
+	}
+	reply, err := s.client.ListGateways(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return toAPIMuskdeerGatewayPage(reply), nil
+}
 func (s *MuskdeerServiceProxy) ListInstances(ctx context.Context, in *v1.MuskdeerInstanceListRequest) (*v1.MuskdeerInstancePage, error) {
 	request := toRPCMuskdeerInstanceListRequest(in)
 	if err := transport.ValidateRequest(request); err != nil {

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,6 +9,7 @@ import (
 	"go-admin/operator/internal/data/store/permission"
 	"go-admin/operator/internal/data/store/permissionapi"
 	"go-admin/operator/internal/data/store/permissionmenu"
+	"go-admin/operator/internal/data/store/rolepermission"
 	"go-admin/operator/internal/data/storetest"
 	pb "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/constants"
@@ -61,7 +63,11 @@ func TestMuskdeerModuleMergePreservesIDsCustomPermissionsAndTenantBoundary(t *te
 		require.NoError(t, err)
 		menuLinks, err := db.Client().PermissionMenu.Query().Where(permissionmenu.PermissionIDEQ(perm.ID)).Count(ctx)
 		require.NoError(t, err)
-		require.Equal(t, 2, menuLinks)
+		if capability.Page == "" {
+			require.Equal(t, 1, menuLinks)
+		} else {
+			require.Equal(t, 2, menuLinks)
+		}
 		for _, method := range capability.Methods {
 			covered[method]++
 		}
@@ -69,6 +75,70 @@ func TestMuskdeerModuleMergePreservesIDsCustomPermissionsAndTenantBoundary(t *te
 	methods := pb.File_operator_v1_muskdeer_proto.Services().ByName("MuskdeerService").Methods()
 	require.Len(t, covered, methods.Len())
 	for index := 0; index < methods.Len(); index++ {
-		require.Equal(t, 1, covered[string(methods.Get(index).Name())], "each new method needs one capability")
+		require.GreaterOrEqual(t, covered[string(methods.Get(index).Name())], 1, "each new method needs one capability")
+	}
+}
+
+func TestMuskdeerRealmUpgradeRevokesOldBuiltInBusinessGrantsWithoutChangingIDs(t *testing.T) {
+	db := storetest.NewClientForTest(t)
+	ctx := storetest.NewSystemContext(t.Context())
+	roles := make(map[bool]uint32)
+	for platform, code := range map[bool]string{
+		true:  constants.SystemPlatformAdminPermissionCode,
+		false: constants.SystemTenantManagerPermissionCode,
+	} {
+		perm, err := db.Client().Permission.Create().SetCode(code).SetName(code).Save(ctx)
+		require.NoError(t, err)
+		tenantID := uint32(7)
+		if platform {
+			tenantID = 0
+		}
+		role, err := db.Client().Role.Create().SetTenantID(tenantID).SetCode(code).SetName(code).Save(ctx)
+		require.NoError(t, err)
+		roles[platform] = role.ID
+		_, err = db.Client().RolePermission.Create().SetTenantID(tenantID).SetRoleID(role.ID).SetPermissionID(perm.ID).SetEffect(pb.RolePermission_ALLOW.String()).SetStatus(pb.RolePermission_ON.String()).Save(ctx)
+		require.NoError(t, err)
+	}
+	repo := newApiRepoSqlite(t, db)
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	ids := make(map[string]uint32)
+	// Simulate the previous release: both built-in roles held every module grant.
+	for _, capability := range muskdeer.Capabilities() {
+		id, err := db.Client().Permission.Query().Where(permission.CodeEQ(capability.Code)).OnlyID(ctx)
+		require.NoError(t, err)
+		ids[capability.Code] = id
+		for platform, roleID := range roles {
+			tenantID := uint32(7)
+			if platform {
+				tenantID = 0
+			}
+			err := db.Client().RolePermission.Create().SetTenantID(tenantID).SetRoleID(roleID).SetPermissionID(id).SetEffect(pb.RolePermission_ALLOW.String()).SetStatus(pb.RolePermission_ON.String()).OnConflictColumns(rolepermission.FieldTenantID, rolepermission.FieldPermissionID, rolepermission.FieldRoleID).Ignore().Exec(ctx)
+			require.NoError(t, err)
+		}
+	}
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	for _, capability := range muskdeer.Capabilities() {
+		id, err := db.Client().Permission.Query().Where(permission.CodeEQ(capability.Code)).OnlyID(ctx)
+		require.NoError(t, err)
+		require.Equal(t, ids[capability.Code], id)
+		for platform, roleID := range roles {
+			count, err := db.Client().RolePermission.Query().Where(rolepermission.RoleIDEQ(roleID), rolepermission.PermissionIDEQ(id)).Count(ctx)
+			require.NoError(t, err)
+			require.Equal(t, capability.Allows(platform), count == 1, capability.Code)
+		}
+	}
+	require.NoError(t, repo.EnsureBuiltInAdminAPIs(ctx))
+	for platform, code := range map[bool]string{true: constants.SystemPlatformAdminPermissionCode, false: constants.SystemTenantManagerPermissionCode} {
+		id, err := db.Client().Permission.Query().Where(permission.CodeEQ(code)).OnlyID(ctx)
+		require.NoError(t, err)
+		links, err := db.Client().PermissionApi.Query().Where(permissionapi.PermissionIDEQ(id)).All(ctx)
+		require.NoError(t, err)
+		for _, link := range links {
+			endpoint, err := db.Client().Api.Get(ctx, *link.APIID)
+			require.NoError(t, err)
+			method := strings.TrimPrefix(endpoint.GetOperation(), muskdeer.ServiceTag+"_")
+			require.True(t, muskdeer.MethodAllowed(method, platform), endpoint.GetOperation())
+		}
 	}
 }

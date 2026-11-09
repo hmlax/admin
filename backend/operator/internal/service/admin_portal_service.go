@@ -19,6 +19,7 @@ import (
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/constants"
 	"go-admin/platform/pkg/middleware/auth"
+	"go-admin/platform/pkg/muskdeer"
 )
 
 type AdminPortalService struct {
@@ -188,6 +189,9 @@ func (s *AdminPortalService) fillRouteItem(menus []*operatorV1.Menu, platform bo
 	var routers []*operatorV1.MenuRouteItem
 
 	for _, v := range menus {
+		if !muskdeer.MenuAllowed(v.GetName(), platform) {
+			continue
+		}
 		authority := v.GetMeta().GetAuthority()
 		if !platform && len(authority) == 1 && authority[0] == constants.SystemPlatformAdminPermissionCode {
 			continue
@@ -263,5 +267,5 @@ func (s *AdminPortalService) GetNavigation(ctx context.Context, _ *emptypb.Empty
 	}
 	menuList.Items = filterRoleMenuTree(menuList.Items, granted)
 
-	return &operatorV1.ListRouteResponse{Items: s.fillRouteItem(menuList.Items, operator.GetIsPlatformAdmin())}, nil
+	return &operatorV1.ListRouteResponse{Items: s.fillRouteItem(menuList.Items, operator.GetTenantId() == 0)}, nil
 }

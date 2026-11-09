@@ -17,7 +17,7 @@ export default function Instances() {
   const start = useMuskdeerWrite(startMuskdeerInstance);
   const stop = useMuskdeerWrite(stopMuskdeerInstance);
   const cancel = useMuskdeerWrite(cancelMuskdeerOrders);
-  const allowed = (action: string) => hasAccessByCodes([`muskdeer:instance:${action}`, "sys:platform_admin", "sys:tenant_manager"]);
+  const allowed = (action: string) => hasAccessByCodes([`muskdeer:instance:${action}`, "sys:tenant_manager"]);
   const act = (row: MuskdeerInstance, kind: 'start' | 'stop' | 'cancel') => {
     modal.confirm({
       title: t(kind === 'start' ? 'confirmStart' : kind === 'stop' ? 'confirmStop' : 'confirmCancel'),

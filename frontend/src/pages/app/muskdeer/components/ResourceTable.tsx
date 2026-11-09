@@ -11,20 +11,21 @@ import { useMuskdeerScope } from '@/api/hooks/muskdeer';
 export type ListQuery = { page?: number; pageSize?: number; search?: string; symbol?: string; accountId?: string; state?: string; runId?: string; strategyType?: string; instanceId?: number; tenantId?: number };
 type Props<T extends object> = {
  resource: string;
+ rowKey?: string;
  columns: ProColumns<T>[];
  fetch: (query: ListQuery) => Promise<{ items?: T[]; total?: number }>;
  toolbar?: ReactNode[];
  actionRef?: React.RefObject<ActionType | null>;
  notice?: string;
 };
-export default function ResourceTable<T extends object>({ resource, columns, fetch, toolbar, actionRef, notice }: Props<T>) {
+export default function ResourceTable<T extends object>({ resource, rowKey = 'id', columns, fetch, toolbar, actionRef, notice }: Props<T>) {
  const localRef = useRef<ActionType>(null);
  const client = useQueryClient();
  const scope = useMuskdeerScope();
  const { t } = useTranslation('muskdeer');
  return <ContentContainer heightMode="fixed" padding="16px" bottomMargin={0}>
   {notice && <Alert type="info" title={notice} style={{ marginBottom: 12 }} />}
-  <ListTable<T> rowKey="id" actionRef={actionRef ?? localRef} headerTitle={t(resource)} columns={columns}
+  <ListTable<T> rowKey={rowKey} actionRef={actionRef ?? localRef} headerTitle={t(resource)} columns={columns}
    scroll={{ x: 'max-content' }} pagination={{ defaultPageSize: 20, pageSizeOptions: [20, 50, 100, 200], showSizeChanger: true }}
    toolBarRender={() => toolbar ?? []}
    request={async (params) => {

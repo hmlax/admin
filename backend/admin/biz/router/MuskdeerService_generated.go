@@ -13,6 +13,7 @@ func RegisterMuskdeerServiceHertzServer(router *transport.Router, service apiV1.
 	router.RegisterHZ("POST", "/admin/v1/muskdeer/account-bindings/:id/set-enabled", handler.BindMuskdeerServiceSetAccountBindingEnabled(service))
 	router.RegisterHZ("GET", "/admin/v1/muskdeer/overview", handler.BindMuskdeerServiceGetOverview(service))
 	router.RegisterHZ("GET", "/admin/v1/muskdeer/templates", handler.BindMuskdeerServiceListTemplates(service))
+	router.RegisterHZ("GET", "/admin/v1/muskdeer/gateways", handler.BindMuskdeerServiceListGateways(service))
 	router.RegisterHZ("GET", "/admin/v1/muskdeer/instances", handler.BindMuskdeerServiceListInstances(service))
 	router.RegisterHZ("GET", "/admin/v1/muskdeer/instances/:id", handler.BindMuskdeerServiceGetInstance(service))
 	router.RegisterHZ("POST", "/admin/v1/muskdeer/instances", handler.BindMuskdeerServiceCreateInstance(service))

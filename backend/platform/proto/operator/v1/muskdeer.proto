@@ -8,6 +8,7 @@ service MuskdeerService {
  rpc SetAccountBindingEnabled(MuskdeerSetBindingEnabledRequest) returns (MuskdeerAccountBinding);
  rpc GetOverview(MuskdeerOverviewRequest) returns (MuskdeerOverview);
  rpc ListTemplates(MuskdeerListRequest) returns (MuskdeerTemplatePage);
+ rpc ListGateways(MuskdeerOverviewRequest) returns (MuskdeerGatewayPage);
  rpc ListInstances(MuskdeerInstanceListRequest) returns (MuskdeerInstancePage);
  rpc GetInstance(MuskdeerInstanceRequest) returns (MuskdeerInstance);
  rpc CreateInstance(MuskdeerCreateInstanceRequest) returns (MuskdeerInstance);
@@ -70,6 +71,11 @@ message MuskdeerTemplate {
  repeated string parameter_fields = 12;
 }
 message MuskdeerTemplatePage { repeated MuskdeerTemplate items = 1; uint64 total = 2; }
+message MuskdeerGateway {
+ string key = 1; string execution_venue = 2; string protocol = 3;
+ string target = 4; bool configured = 5;
+}
+message MuskdeerGatewayPage { repeated MuskdeerGateway items = 1; uint64 total = 2; }
 message MuskdeerInstance {
  int64 id = 1; string instance_key = 2; string strategy_type = 3;
  string implementation = 4; int64 template_id = 5; int64 template_revision = 6;

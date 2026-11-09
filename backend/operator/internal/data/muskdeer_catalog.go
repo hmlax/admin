@@ -23,8 +23,8 @@ import (
 	"go-admin/platform/pkg/muskdeer"
 )
 
-// EnsureMuskdeerModule merges only this module's catalog and additive links.
-// Existing role assignments, disabled resources and unrelated modules survive.
+// EnsureMuskdeerModule reconciles this module's realm ownership in place.
+// Wrong-realm built-in grants are revoked; unrelated and explicit deny grants survive.
 func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 	ctx = viewer.WithSystemContext(ctx)
 	document, err := openapi3.NewLoader().LoadFromData(assets.OpenApiData)
@@ -65,6 +65,9 @@ func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 		row, findErr := tx.Menu.Query().Where(menu.NameEQ(page.Name)).Only(ctx)
 		if store.IsNotFound(findErr) {
 			authority := []string{"muskdeer:" + page.Resource + ":view", constants.SystemPlatformAdminPermissionCode}
+			if page.MerchantOnly {
+				authority = []string{"muskdeer:" + page.Resource + ":view"}
+			}
 			if !page.PlatformOnly {
 				authority = append(authority, constants.SystemTenantManagerPermissionCode)
 			}
@@ -77,6 +80,11 @@ func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 		}
 		if findErr != nil {
 			return findErr
+		}
+		if page.Hidden {
+			if _, err := tx.Menu.UpdateOneID(row.ID).SetStatus(pb.Menu_OFF.String()).Save(ctx); err != nil {
+				return err
+			}
 		}
 		pages[page.Path] = row
 	}
@@ -95,10 +103,14 @@ func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 		if findErr != nil {
 			return findErr
 		}
-		if err := grantMuskdeerAdministrators(ctx, tx, perm.ID, capability.PlatformOnly); err != nil {
+		if err := grantMuskdeerAdministrators(ctx, tx, perm.ID, capability); err != nil {
 			return err
 		}
-		for _, id := range []uint32{root.ID, pages[capability.Page].ID} {
+		menuIDs := []uint32{root.ID}
+		if capability.Page != "" {
+			menuIDs = append(menuIDs, pages[capability.Page].ID)
+		}
+		for _, id := range menuIDs {
 			if err := ensureMuskdeerMenu(ctx, tx, perm.ID, id); err != nil {
 				return err
 			}
@@ -133,7 +145,10 @@ func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 			return err
 		}
 		for _, page := range muskdeer.Pages() {
-			if code == constants.SystemTenantManagerPermissionCode && page.PlatformOnly {
+			if !page.Allows(code == constants.SystemPlatformAdminPermissionCode) {
+				if _, err := tx.PermissionMenu.Delete().Where(permissionmenu.PermissionIDEQ(perm.ID), permissionmenu.MenuIDEQ(pages[page.Path].ID)).Exec(ctx); err != nil {
+					return err
+				}
 				continue
 			}
 			if err := ensureMuskdeerMenu(ctx, tx, perm.ID, pages[page.Path].ID); err != nil {
@@ -157,11 +172,8 @@ func IsMuskdeerMenu(name, path string) bool {
 
 // Only roles already holding an active built-in administrator capability gain
 // module permissions. Custom roles and explicit module denies remain unchanged.
-func grantMuskdeerAdministrators(ctx context.Context, tx *store.Tx, permissionID uint32, platformOnly bool) error {
-	codes := []string{constants.SystemPlatformAdminPermissionCode}
-	if !platformOnly {
-		codes = append(codes, constants.SystemTenantManagerPermissionCode)
-	}
+func grantMuskdeerAdministrators(ctx context.Context, tx *store.Tx, permissionID uint32, capability muskdeer.Capability) error {
+	codes := []string{constants.SystemPlatformAdminPermissionCode, constants.SystemTenantManagerPermissionCode}
 	ids, err := tx.Permission.Query().Where(permission.CodeIn(codes...)).IDs(ctx)
 	if err != nil {
 		return err
@@ -174,7 +186,15 @@ func grantMuskdeerAdministrators(ctx context.Context, tx *store.Tx, permissionID
 		return err
 	}
 	for _, role := range roles {
-		if platformOnly && role.GetTenantId() != 0 {
+		platformPermission, err := tx.Permission.Query().Where(permission.IDEQ(role.GetPermissionId())).Only(ctx)
+		if err != nil {
+			return err
+		}
+		platform := platformPermission.GetCode() == constants.SystemPlatformAdminPermissionCode
+		if !capability.Allows(platform) || platform && role.GetTenantId() != 0 {
+			if _, err := tx.RolePermission.Delete().Where(rolepermission.PermissionIDEQ(permissionID), rolepermission.RoleIDEQ(role.GetRoleId()), rolepermission.TenantIDEQ(role.GetTenantId()), rolepermission.EffectEQ(pb.RolePermission_ALLOW.String())).Exec(ctx); err != nil {
+				return err
+			}
 			continue
 		}
 		if err := tx.RolePermission.Create().SetTenantID(role.GetTenantId()).SetRoleID(role.GetRoleId()).SetPermissionID(permissionID).SetStatus(pb.RolePermission_ON.String()).SetEffect(pb.RolePermission_ALLOW.String()).SetCreatedAt(time.Now().UTC()).SetUpdatedAt(time.Now().UTC()).OnConflictColumns(rolepermission.FieldTenantID, rolepermission.FieldPermissionID, rolepermission.FieldRoleID).Ignore().Exec(ctx); err != nil {

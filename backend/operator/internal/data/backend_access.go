@@ -12,6 +12,7 @@ import (
 
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/constants"
+	"go-admin/platform/pkg/muskdeer"
 )
 
 // EnsureBackendAccessAPIs maintains the system backend-access capability using
@@ -50,6 +51,16 @@ func (r *ApiRepo) EnsureBuiltInAdminAPIs(ctx context.Context) error {
 	platformIDs := make([]uint32, 0, len(rows))
 	tenantIDs := make([]uint32, 0, len(rows))
 	for _, row := range rows {
+		if strings.HasPrefix(row.GetOperation(), muskdeer.ServiceTag+"_") {
+			method := strings.TrimPrefix(row.GetOperation(), muskdeer.ServiceTag+"_")
+			if muskdeer.MethodAllowed(method, true) {
+				platformIDs = append(platformIDs, row.ID)
+			}
+			if muskdeer.MethodAllowed(method, false) {
+				tenantIDs = append(tenantIDs, row.ID)
+			}
+			continue
+		}
 		platformIDs = append(platformIDs, row.ID)
 		if _, excluded := tenantManagerExcludedOperations[row.GetOperation()]; excluded {
 			continue

@@ -3300,6 +3300,19 @@ export type MuskdeerTemplatePage = {
   total?: number;
 };
 
+export type MuskdeerGateway = {
+  configured?: boolean;
+  executionVenue?: string;
+  key?: string;
+  protocol?: string;
+  target?: string;
+};
+
+export type MuskdeerGatewayPage = {
+  items?: MuskdeerGateway[];
+  total?: number;
+};
+
 export type MuskdeerInstance = {
   accountId?: string;
   archived?: boolean;
@@ -3495,7 +3508,7 @@ export type MuskdeerSetBindingEnabledRequest = {
   id?: number;
 };
 
-// 做市管理：平台全部账户；商户只操作平台绑定的账户。
+// 平台提供公共配置；商户独立配置和操作其账户及策略实例。
 export interface MuskdeerService {
   ListAccountBindings(
     request: MuskdeerBindingListRequest,
@@ -3512,6 +3525,9 @@ export interface MuskdeerService {
   ListTemplates(
     request: MuskdeerListRequest,
   ): Promise<MuskdeerTemplatePage>;
+  ListGateways(
+    request: MuskdeerOverviewRequest,
+  ): Promise<MuskdeerGatewayPage>;
   ListInstances(
     request: MuskdeerInstanceListRequest,
   ): Promise<MuskdeerInstancePage>;
@@ -3619,6 +3635,14 @@ export function createMuskdeerServiceClient(
         service: 'MuskdeerService',
         method: 'ListTemplates',
       }) as Promise<MuskdeerTemplatePage>;
+    },
+    ListGateways() {
+      const path = `admin/v1/muskdeer/gateways`;
+      const body = null;
+      return transport.unary(path, 'GET', body, {
+        service: 'MuskdeerService',
+        method: 'ListGateways',
+      }) as Promise<MuskdeerGatewayPage>;
     },
     ListInstances(request) {
       const path = `admin/v1/muskdeer/instances`;

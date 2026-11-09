@@ -107,6 +107,7 @@ const OperationMuskdeerServiceCreateAccountBinding = "/operator.v1.MuskdeerServi
 const OperationMuskdeerServiceSetAccountBindingEnabled = "/operator.v1.MuskdeerService/SetAccountBindingEnabled"
 const OperationMuskdeerServiceGetOverview = "/operator.v1.MuskdeerService/GetOverview"
 const OperationMuskdeerServiceListTemplates = "/operator.v1.MuskdeerService/ListTemplates"
+const OperationMuskdeerServiceListGateways = "/operator.v1.MuskdeerService/ListGateways"
 const OperationMuskdeerServiceListInstances = "/operator.v1.MuskdeerService/ListInstances"
 const OperationMuskdeerServiceGetInstance = "/operator.v1.MuskdeerService/GetInstance"
 const OperationMuskdeerServiceCreateInstance = "/operator.v1.MuskdeerService/CreateInstance"

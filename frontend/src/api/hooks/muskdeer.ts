@@ -4,6 +4,7 @@ import type { MuskdeerInstanceDraft, MuskdeerInstance, MuskdeerRunningRequest, M
 import { useUserStore } from '@/stores/user';
 
 export const muskdeerReaders = {
+ gateways: () => apiClient.muskdeerService.ListGateways({}),
  templates: apiClient.muskdeerService.ListTemplates,
  instances: apiClient.muskdeerService.ListInstances,
  instruments: apiClient.muskdeerService.ListInstruments,

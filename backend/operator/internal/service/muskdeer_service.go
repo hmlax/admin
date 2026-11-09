@@ -20,6 +20,7 @@ import (
 )
 
 const muskdeerErrorReason = "MUSKDEER_MANAGEMENT_ERROR"
+const muskdeerMerchantRequired = "merchant context required for trading operations"
 
 type MuskdeerService struct {
 	pb.UnimplementedMuskdeerServiceServer
@@ -55,6 +56,9 @@ func (s *MuskdeerService) actor(ctx context.Context, scope bool) (*core.Actor, e
 	identity, err := data.MuskdeerIdentity(ctx, false)
 	if err != nil {
 		return nil, s.failure(ctx, err)
+	}
+	if scope && identity.GetTenantId() == 0 {
+		return nil, s.failure(ctx, status.Error(codes.PermissionDenied, muskdeerMerchantRequired))
 	}
 	actor := &core.Actor{
 		Subject:   fmt.Sprintf("user:%d", identity.UserId),
@@ -142,8 +146,27 @@ func (s *MuskdeerService) ListTemplates(ctx context.Context, in *pb.MuskdeerList
 	}
 	return fromCoreTemplatePage(result), nil
 }
+func (s *MuskdeerService) ListGateways(ctx context.Context, in *pb.MuskdeerOverviewRequest) (*pb.MuskdeerGatewayPage, error) {
+	if _, err := data.MuskdeerIdentity(ctx, true); err != nil {
+		return nil, s.failure(ctx, err)
+	}
+	actor, err := s.actor(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.client.ListGateways(ctx, &core.ActorRequest{Actor: actor})
+	if err != nil {
+		return nil, s.failure(ctx, err)
+	}
+	return fromCoreGatewayPage(result), nil
+}
 func (s *MuskdeerService) ListInstruments(ctx context.Context, in *pb.MuskdeerListRequest) (*pb.MuskdeerInstrumentPage, error) {
-	actor, err := s.actor(ctx, true)
+	identity, err := data.MuskdeerIdentity(ctx, false)
+	if err != nil {
+		return nil, s.failure(ctx, err)
+	}
+	// Platform owns the catalog; merchant forms select within their bound accounts.
+	actor, err := s.actor(ctx, identity.GetTenantId() != 0)
 	if err != nil {
 		return nil, err
 	}

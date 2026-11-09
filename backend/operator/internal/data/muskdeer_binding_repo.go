@@ -2,7 +2,7 @@ package data
 
 import (
 	"context"
- "errors"
+	"errors"
 	"math"
 	"time"
 
@@ -39,7 +39,7 @@ func (r *MuskdeerBindingRepo) Scope(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	if actor.GetTenantId() == 0 {
-		return nil, nil
+		return nil, status.Error(codes.PermissionDenied, muskdeerScopeDenied)
 	}
 	rows, err := r.db.Client().MuskdeerAccountBinding.Query().Where(binding.TenantIDEQ(actor.GetTenantId()), binding.IsEnabledEQ(true), binding.DeletedAtIsNil()).All(ctx)
 	if err != nil {
@@ -156,11 +156,15 @@ func (r *MuskdeerBindingRepo) SetEnabled(ctx context.Context, in *pb.MuskdeerSet
 }
 
 // CheckSchema rejects enablement before the separate administration migration.
-func(r *MuskdeerBindingRepo) CheckSchema(ctx context.Context)error{
- migrator:=r.db.Client().GormDB().WithContext(ctx).Migrator()
- for _,column:=range []string{"id","created_at","updated_at","deleted_at","tenant_id","account_id","is_enabled","version"}{
-  if !migrator.HasColumn(&store.MuskdeerAccountBinding{},column){return errors.New("Muskdeer administration schema v1 required; run muskdeer-migrate before enabling")}
- }
- if !migrator.HasIndex(&store.MuskdeerAccountBinding{},"uk_muskdeer_binding_account"){return errors.New("Muskdeer account ownership unique index required")}
- return nil
+func (r *MuskdeerBindingRepo) CheckSchema(ctx context.Context) error {
+	migrator := r.db.Client().GormDB().WithContext(ctx).Migrator()
+	for _, column := range []string{"id", "created_at", "updated_at", "deleted_at", "tenant_id", "account_id", "is_enabled", "version"} {
+		if !migrator.HasColumn(&store.MuskdeerAccountBinding{}, column) {
+			return errors.New("Muskdeer administration schema v1 required; run muskdeer-migrate before enabling")
+		}
+	}
+	if !migrator.HasIndex(&store.MuskdeerAccountBinding{}, "uk_muskdeer_binding_account") {
+		return errors.New("Muskdeer account ownership unique index required")
+	}
+	return nil
 }

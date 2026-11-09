@@ -33,7 +33,9 @@ func TestMuskdeerBindingScopesRevocationAndPermanentOwnership(t *testing.T) {
 	platform := bindingContext(t.Context(), 1, 0)
 	merchant := bindingContext(t.Context(), 2, 7)
 	other := bindingContext(t.Context(), 3, 8)
-	_, err := repo.Scope(merchant)
+	_, err := repo.Scope(platform)
+	require.Equal(t, codes.PermissionDenied, status.Code(err), "platform can never become an unrestricted trading scope")
+	_, err = repo.Scope(merchant)
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
 	row, err := repo.Create(platform, &pb.MuskdeerBindingDraft{
 		TenantId:  7,

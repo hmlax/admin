@@ -27,6 +27,9 @@ func (s *MuskdeerServiceAdapter) GetOverview(ctx context.Context, in *operator.M
 func (s *MuskdeerServiceAdapter) ListTemplates(ctx context.Context, in *operator.MuskdeerListRequest) (*operator.MuskdeerTemplatePage, error) {
 	return s.inner.ListTemplates(ctx, in)
 }
+func (s *MuskdeerServiceAdapter) ListGateways(ctx context.Context, in *operator.MuskdeerOverviewRequest) (*operator.MuskdeerGatewayPage, error) {
+	return s.inner.ListGateways(ctx, in)
+}
 func (s *MuskdeerServiceAdapter) ListInstances(ctx context.Context, in *operator.MuskdeerInstanceListRequest) (*operator.MuskdeerInstancePage, error) {
 	return s.inner.ListInstances(ctx, in)
 }

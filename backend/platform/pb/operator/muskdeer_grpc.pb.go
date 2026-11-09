@@ -24,6 +24,7 @@ const (
 	MuskdeerService_SetAccountBindingEnabled_FullMethodName = "/operator.v1.MuskdeerService/SetAccountBindingEnabled"
 	MuskdeerService_GetOverview_FullMethodName              = "/operator.v1.MuskdeerService/GetOverview"
 	MuskdeerService_ListTemplates_FullMethodName            = "/operator.v1.MuskdeerService/ListTemplates"
+	MuskdeerService_ListGateways_FullMethodName             = "/operator.v1.MuskdeerService/ListGateways"
 	MuskdeerService_ListInstances_FullMethodName            = "/operator.v1.MuskdeerService/ListInstances"
 	MuskdeerService_GetInstance_FullMethodName              = "/operator.v1.MuskdeerService/GetInstance"
 	MuskdeerService_CreateInstance_FullMethodName           = "/operator.v1.MuskdeerService/CreateInstance"
@@ -48,6 +49,7 @@ type MuskdeerServiceClient interface {
 	SetAccountBindingEnabled(ctx context.Context, in *MuskdeerSetBindingEnabledRequest, opts ...grpc.CallOption) (*MuskdeerAccountBinding, error)
 	GetOverview(ctx context.Context, in *MuskdeerOverviewRequest, opts ...grpc.CallOption) (*MuskdeerOverview, error)
 	ListTemplates(ctx context.Context, in *MuskdeerListRequest, opts ...grpc.CallOption) (*MuskdeerTemplatePage, error)
+	ListGateways(ctx context.Context, in *MuskdeerOverviewRequest, opts ...grpc.CallOption) (*MuskdeerGatewayPage, error)
 	ListInstances(ctx context.Context, in *MuskdeerInstanceListRequest, opts ...grpc.CallOption) (*MuskdeerInstancePage, error)
 	GetInstance(ctx context.Context, in *MuskdeerInstanceRequest, opts ...grpc.CallOption) (*MuskdeerInstance, error)
 	CreateInstance(ctx context.Context, in *MuskdeerCreateInstanceRequest, opts ...grpc.CallOption) (*MuskdeerInstance, error)
@@ -115,6 +117,16 @@ func (c *muskdeerServiceClient) ListTemplates(ctx context.Context, in *MuskdeerL
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MuskdeerTemplatePage)
 	err := c.cc.Invoke(ctx, MuskdeerService_ListTemplates_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *muskdeerServiceClient) ListGateways(ctx context.Context, in *MuskdeerOverviewRequest, opts ...grpc.CallOption) (*MuskdeerGatewayPage, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MuskdeerGatewayPage)
+	err := c.cc.Invoke(ctx, MuskdeerService_ListGateways_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -260,6 +272,7 @@ type MuskdeerServiceServer interface {
 	SetAccountBindingEnabled(context.Context, *MuskdeerSetBindingEnabledRequest) (*MuskdeerAccountBinding, error)
 	GetOverview(context.Context, *MuskdeerOverviewRequest) (*MuskdeerOverview, error)
 	ListTemplates(context.Context, *MuskdeerListRequest) (*MuskdeerTemplatePage, error)
+	ListGateways(context.Context, *MuskdeerOverviewRequest) (*MuskdeerGatewayPage, error)
 	ListInstances(context.Context, *MuskdeerInstanceListRequest) (*MuskdeerInstancePage, error)
 	GetInstance(context.Context, *MuskdeerInstanceRequest) (*MuskdeerInstance, error)
 	CreateInstance(context.Context, *MuskdeerCreateInstanceRequest) (*MuskdeerInstance, error)
@@ -297,6 +310,9 @@ func (UnimplementedMuskdeerServiceServer) GetOverview(context.Context, *Muskdeer
 }
 func (UnimplementedMuskdeerServiceServer) ListTemplates(context.Context, *MuskdeerListRequest) (*MuskdeerTemplatePage, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTemplates not implemented")
+}
+func (UnimplementedMuskdeerServiceServer) ListGateways(context.Context, *MuskdeerOverviewRequest) (*MuskdeerGatewayPage, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListGateways not implemented")
 }
 func (UnimplementedMuskdeerServiceServer) ListInstances(context.Context, *MuskdeerInstanceListRequest) (*MuskdeerInstancePage, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListInstances not implemented")
@@ -444,6 +460,24 @@ func _MuskdeerService_ListTemplates_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MuskdeerServiceServer).ListTemplates(ctx, req.(*MuskdeerListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MuskdeerService_ListGateways_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MuskdeerOverviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MuskdeerServiceServer).ListGateways(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MuskdeerService_ListGateways_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MuskdeerServiceServer).ListGateways(ctx, req.(*MuskdeerOverviewRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -708,6 +742,10 @@ var MuskdeerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplates",
 			Handler:    _MuskdeerService_ListTemplates_Handler,
+		},
+		{
+			MethodName: "ListGateways",
+			Handler:    _MuskdeerService_ListGateways_Handler,
 		},
 		{
 			MethodName: "ListInstances",

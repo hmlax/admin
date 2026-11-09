@@ -2564,6 +2564,20 @@ func toAPIMuskdeerCancellationPage(in *operator.MuskdeerCancellationPage) *v1.Mu
 	out.Total = in.Total
 	return out
 }
+func toAPIMuskdeerGatewayPage(in *operator.MuskdeerGatewayPage) *v1.MuskdeerGatewayPage {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerGatewayPage)
+	if in.Items != nil {
+		out.Items = make([]*v1.MuskdeerGateway, len(in.Items))
+		for index, value := range in.Items {
+			out.Items[index] = toAPIMuskdeerGateway(value)
+		}
+	}
+	out.Total = in.Total
+	return out
+}
 func toRPCMuskdeerInstanceListRequest(in *v1.MuskdeerInstanceListRequest) *operator.MuskdeerInstanceListRequest {
 	if in == nil {
 		return nil
@@ -5991,6 +6005,18 @@ func toAPIMuskdeerCancellation(in *operator.MuskdeerCancellation) *v1.MuskdeerCa
 	out.Symbol = in.Symbol
 	out.OrderId = in.OrderId
 	out.State = in.State
+	return out
+}
+func toAPIMuskdeerGateway(in *operator.MuskdeerGateway) *v1.MuskdeerGateway {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerGateway)
+	out.Key = in.Key
+	out.ExecutionVenue = in.ExecutionVenue
+	out.Protocol = in.Protocol
+	out.Target = in.Target
+	out.Configured = in.Configured
 	return out
 }
 func toAPIMuskdeerInstrument(in *operator.MuskdeerInstrument) *v1.MuskdeerInstrument {

@@ -1,4 +1,10 @@
 {
+  "gateways": "Gateways",
+  "gatewayKey": "Gateway key",
+  "protocol": "Protocol",
+  "target": "Target",
+  "configured": "Configured",
+  "gatewayNotice": "Loaded gateway connection. Maintain infrastructure in Nacos and restart explicitly after changes. Authentication credentials are not displayed.",
   "module": "Market making",
   "overview": "Overview",
   "templates": "Strategy templates",

@@ -14,6 +14,7 @@ const OperationMuskdeerServiceGetOverview = "/operator.v1.MuskdeerService/GetOve
 const OperationMuskdeerServiceListAccountBindings = "/operator.v1.MuskdeerService/ListAccountBindings"
 const OperationMuskdeerServiceListAccounts = "/operator.v1.MuskdeerService/ListAccounts"
 const OperationMuskdeerServiceListCancellations = "/operator.v1.MuskdeerService/ListCancellations"
+const OperationMuskdeerServiceListGateways = "/operator.v1.MuskdeerService/ListGateways"
 const OperationMuskdeerServiceListInstances = "/operator.v1.MuskdeerService/ListInstances"
 const OperationMuskdeerServiceListInstruments = "/operator.v1.MuskdeerService/ListInstruments"
 const OperationMuskdeerServiceListOrderRecords = "/operator.v1.MuskdeerService/ListOrderRecords"
@@ -34,6 +35,7 @@ type MuskdeerServiceHTTPServer interface {
 	ListAccountBindings(context.Context, *MuskdeerBindingListRequest) (*MuskdeerBindingPage, error)
 	ListAccounts(context.Context, *MuskdeerListRequest) (*MuskdeerAccountPage, error)
 	ListCancellations(context.Context, *MuskdeerRecordListRequest) (*MuskdeerCancellationPage, error)
+	ListGateways(context.Context, *MuskdeerOverviewRequest) (*MuskdeerGatewayPage, error)
 	ListInstances(context.Context, *MuskdeerInstanceListRequest) (*MuskdeerInstancePage, error)
 	ListInstruments(context.Context, *MuskdeerListRequest) (*MuskdeerInstrumentPage, error)
 	ListOrderRecords(context.Context, *MuskdeerRecordListRequest) (*MuskdeerOrderPage, error)
