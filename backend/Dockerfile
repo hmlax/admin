@@ -9,13 +9,20 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     service_package="./${SERVICE_NAME}/cmd/server"; \
     if [ "${SERVICE_NAME}" = "admin" ]; then service_package="./admin"; fi; \
+    mkdir -p /out/maintenance; \
     CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION}" \
-    -o /out/server "${service_package}"
+    -o /out/server "${service_package}" && \
+    if [ "${SERVICE_NAME}" = "operator" ]; then \
+      for command in muskdeer-migrate muskdeer-bootstrap; do \
+        CGO_ENABLED=0 go build -trimpath -o "/out/maintenance/${command}" "./operator/cmd/${command}" || exit 1; \
+      done; \
+    fi
 
 FROM alpine:3.22
 RUN apk --no-cache add ca-certificates tzdata && adduser -D appuser
 WORKDIR /app
 COPY --from=builder /out/server /app/bin/server
+COPY --from=builder /out/maintenance /app/bin/
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
 USER appuser:appuser
 ENTRYPOINT ["/app/bin/server"]

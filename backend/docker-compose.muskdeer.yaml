@@ -1,0 +1,56 @@
+# Standalone deployment. Only Nacos connection details enter the applications.
+name: muskdeer-admin
+x-nacos: &nacos
+  NACOS_ADDR: ${NACOS_ADDR:?set the existing Nacos address}
+  NACOS_GROUP: ${NACOS_GROUP:-MUSKDEER_ADMIN}
+  NACOS_NAMESPACE_ID: ${NACOS_NAMESPACE_ID:?set the independent namespace}
+  NACOS_USERNAME: ${NACOS_USERNAME:?set Nacos username}
+  NACOS_PASSWORD: ${NACOS_PASSWORD:?set Nacos password}
+  NACOS_CLUSTER: ${NACOS_CLUSTER:-DEFAULT}
+services:
+  operator:
+    image: go-admin/operator:${MUSKDEER_ADMIN_IMAGE_TAG:?set the reviewed release tag}
+    restart: unless-stopped
+    environment: *nacos
+    expose: ['7790']
+    volumes:
+      - operator-data:/app/data
+      - '${MUSKDEER_CERTS_DIR:?set read-only client certificates}:/app/muskdeer-certs:ro'
+    networks: [infra]
+  admin:
+    image: go-admin/admin:${MUSKDEER_ADMIN_IMAGE_TAG:?set the reviewed release tag}
+    restart: unless-stopped
+    environment: *nacos
+    ports: ['127.0.0.1:17788:7788']
+    depends_on: [operator]
+    networks: [infra]
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:7788/admin/v1/sso/login-info']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+  platform-ui:
+    image: go-admin/platform:${MUSKDEER_ADMIN_IMAGE_TAG:?set the reviewed release tag}
+    restart: unless-stopped
+    ports: ['127.0.0.1:15888:8080']
+    environment:
+      ADMIN_API_UPSTREAM: http://muskdeer-admin-admin-1:7788
+      MERCHANT_CODE: ''
+    networks: [infra]
+    depends_on: [admin]
+  merchant-ui:
+    image: go-admin/merchant:${MUSKDEER_ADMIN_IMAGE_TAG:?set the reviewed release tag}
+    restart: unless-stopped
+    ports: ['127.0.0.1:15889:8080']
+    environment:
+      ADMIN_API_UPSTREAM: http://muskdeer-admin-admin-1:7788
+      MERCHANT_CODE: '${MUSKDEER_MERCHANT_CODE:?set the merchant code}'
+    networks: [infra]
+    depends_on: [admin]
+networks:
+  infra:
+    external: true
+    name: infra-network
+volumes:
+  operator-data:
