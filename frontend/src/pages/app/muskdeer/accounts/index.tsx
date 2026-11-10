@@ -1,3 +1,4 @@
+import { formatTimestampMs } from '../components/timestamp';
 import { useTranslation } from 'react-i18next';
 import type { ProColumns } from '@ant-design/pro-components';
 import { Tag } from 'antd';
@@ -19,7 +20,7 @@ export default function Page() {
 { title: t('observedNotional'), dataIndex: 'observedNotional', hideInSearch: true, width: 160 },
 { title: t('reservedNotional'), dataIndex: 'reservedNotional', hideInSearch: true, width: 160 },
 { title: t('availableQuote'), dataIndex: 'availableQuote', hideInSearch: true, width: 160 },
-{ title: t('snapshotExpiresAtMs'), dataIndex: 'snapshotExpiresAtMs', hideInSearch: true, width: 160, render: (_, row) => row.snapshotExpiresAtMs ? new Date(row.snapshotExpiresAtMs).toLocaleString() : '—' },
+{ title: t('snapshotExpiresAtMs'), dataIndex: 'snapshotExpiresAtMs', hideInSearch: true, width: 160, render: (_, row) => formatTimestampMs(row.snapshotExpiresAtMs) },
 ];
  return <ResourceTable<MuskdeerAccount> resource="accounts" columns={columns} fetch={muskdeerReaders.accounts} />;
 }

@@ -2,10 +2,11 @@
 package muskdeer
 
 const (
-	Module     = "muskdeer"
-	ServiceTag = "MuskdeerService"
-	RootName   = "Muskdeer"
-	RootPath   = "/muskdeer"
+	Module                   = "muskdeer"
+	ServiceTag               = "MuskdeerService"
+	RootName                 = "Muskdeer"
+	RootPath                 = "/muskdeer"
+	RetiredSyntheticMenuName = "MuskdeerSynthetic"
 )
 
 type Page struct {
@@ -80,8 +81,9 @@ func Pages() []Page {
 			Path:         "synthetic",
 			Resource:     "synthetic",
 			Title:        "开发成交",
-			Name:         "MuskdeerSynthetic",
+			Name:         RetiredSyntheticMenuName,
 			MerchantOnly: true,
+			Hidden:       true,
 		},
 		{
 			Path:         "snapshot",

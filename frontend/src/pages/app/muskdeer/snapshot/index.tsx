@@ -1,3 +1,4 @@
+import { formatTimestampMs, timestampMillis } from '../components/timestamp';
 import { useState } from 'react';
 import { Alert, Button, Card, Descriptions, Input, Space, Table } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,8 @@ export default function Snapshot() {
   const [accountId, setAccountId] = useState(params.get('accountId') ?? '');
   const query = useMuskdeerSnapshot(accountId);
   const snapshot = query.data;
-  const expired = !!snapshot && (!snapshot.validUntilMs || snapshot.validUntilMs <= Date.now());
+  const expiry = timestampMillis(snapshot?.validUntilMs);
+  const expired = !!snapshot && (expiry === undefined || expiry <= Date.now());
   return <ContentContainer padding="16px">
     <Alert type="info" title={t('snapshotNotice')} />
     <Space style={{ margin: '16px 0' }}>
@@ -27,8 +29,8 @@ export default function Snapshot() {
           { key: 'symbol', label: t('symbol'), children: snapshot.symbol },
           { key: 'available', label: t('available'), children: snapshot.available },
           { key: 'mark', label: t('markPrice'), children: snapshot.markPrice },
-          { key: 'observed', label: t('observedAtMs'), children: snapshot.observedAtMs ? new Date(snapshot.observedAtMs).toLocaleString() : '—' },
-          { key: 'valid', label: t('validUntilMs'), children: snapshot.validUntilMs ? new Date(snapshot.validUntilMs).toLocaleString() : '—' },
+          { key: 'observed', label: t('observedAtMs'), children: formatTimestampMs(snapshot.observedAtMs) },
+          { key: 'valid', label: t('validUntilMs'), children: formatTimestampMs(snapshot.validUntilMs) },
         ]} />
       </Card>
       <Card title={t('activeOrders')} style={{ marginBottom: 16 }}>

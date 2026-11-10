@@ -11,7 +11,6 @@ export const muskdeerReaders = {
  accounts: apiClient.muskdeerService.ListAccounts,
  orders: apiClient.muskdeerService.ListOrderRecords,
  cancellations: apiClient.muskdeerService.ListCancellations,
- synthetic: apiClient.muskdeerService.ListSyntheticRecords,
  bindings: apiClient.muskdeerService.ListAccountBindings,
 };
 export function useMuskdeerScope() {

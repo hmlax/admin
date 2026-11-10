@@ -1,3 +1,4 @@
+import { formatTimestampMs } from '../components/timestamp';
 import { useTranslation } from 'react-i18next';
 import type { ProColumns } from '@ant-design/pro-components';
 import type { MuskdeerOrderRecord } from '@/api/generated/admin/v1';
@@ -10,7 +11,7 @@ export default function Page() {
 { title: t('state'), dataIndex: 'state', hideInTable: true },
 { title: t('accountId'), dataIndex: 'accountId', hideInTable: true },
 { title: t('id'), dataIndex: 'id', hideInSearch: true, width: 160 },
-{ title: t('createdAtMs'), dataIndex: 'createdAtMs', hideInSearch: true, width: 160, render: (_, row) => row.createdAtMs ? new Date(row.createdAtMs).toLocaleString() : '—' },
+{ title: t('createdAtMs'), dataIndex: 'createdAtMs', hideInSearch: true, width: 160, render: (_, row) => formatTimestampMs(row.createdAtMs) },
 { title: t('accountId'), dataIndex: 'accountId', hideInSearch: true, width: 160 },
 { title: t('symbol'), dataIndex: 'symbol', hideInSearch: true, width: 160 },
 { title: t('instanceId'), dataIndex: 'instanceId', hideInSearch: true, width: 160 },

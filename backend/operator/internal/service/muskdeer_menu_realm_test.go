@@ -33,3 +33,9 @@ func TestMuskdeerNavigationRejectsWrongRealmEvenWithStaleMenuGrants(t *testing.T
 		}
 	}
 }
+
+func TestMuskdeerRetiredPublicationMenuIgnoresStaleGrants(t *testing.T) {
+	for _, platform := range []bool{true, false} {
+		require.False(t, muskdeer.MenuAllowed(muskdeer.RetiredSyntheticMenuName, platform))
+	}
+}
