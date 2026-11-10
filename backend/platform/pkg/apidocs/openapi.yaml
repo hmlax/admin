@@ -7032,6 +7032,8 @@ components:
                     $ref: '#/components/schemas/MuskdeerGridParameters'
                 washTrade:
                     $ref: '#/components/schemas/MuskdeerWashParameters'
+                longGrid:
+                    $ref: '#/components/schemas/MuskdeerLongGridParameters'
         MuskdeerInstrument:
             type: object
             properties:
@@ -7062,6 +7064,21 @@ components:
                         $ref: '#/components/schemas/MuskdeerInstrument'
                 total:
                     type: string
+        MuskdeerLongGridParameters:
+            type: object
+            properties:
+                spacingFraction:
+                    type: string
+                stopLossFraction:
+                    type: string
+                orderNotional:
+                    type: string
+                maximumPositionNotional:
+                    type: string
+                openOnStart:
+                    type: boolean
+                haltAfterStopLoss:
+                    type: boolean
         MuskdeerOrderPage:
             type: object
             properties:

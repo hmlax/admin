@@ -3185,6 +3185,7 @@ export type MuskdeerInstanceDraft = {
 export type MuskdeerInstanceParameters = {
   execution?: MuskdeerExecutionParameters;
   grid?: MuskdeerGridParameters;
+  longGrid?: MuskdeerLongGridParameters;
   marketMaker?: MuskdeerDepthParameters;
   washTrade?: MuskdeerWashParameters;
 };
@@ -3223,6 +3224,15 @@ export type MuskdeerWashParameters = {
   quantity?: string;
   quantityFraction?: string;
   runId?: string;
+};
+
+export type MuskdeerLongGridParameters = {
+  haltAfterStopLoss?: boolean;
+  maximumPositionNotional?: string;
+  openOnStart?: boolean;
+  orderNotional?: string;
+  spacingFraction?: string;
+  stopLossFraction?: string;
 };
 
 export type MuskdeerUpdateInstanceRequest = {

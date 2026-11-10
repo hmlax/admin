@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"google.golang.org/protobuf/proto"
 	"testing"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/tx7do/go-crud/viewer"
 	bLogger "github.com/tx7do/kratos-bootstrap/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 
 	"go-admin/operator/internal/data"
 	"go-admin/operator/internal/data/storetest"
@@ -28,13 +28,19 @@ type capturingConsole struct {
 func (c *capturingConsole) ListAccounts(_ context.Context, in *core.ListRequest, _ ...grpc.CallOption) (*core.AccountPage, error) {
 	c.actor = in.Actor
 	c.calls++
-	return &core.AccountPage{Items: []*core.Account{{AccountId: "venue/7/7", MaximumNotional: "9007199254740993.123456789012345678"}}}, nil
+	return &core.AccountPage{Items: []*core.Account{{
+		AccountId:       "venue/7/7",
+		MaximumNotional: "9007199254740993.123456789012345678",
+	}}}, nil
 }
 func (c *capturingConsole) SetInstanceRunning(_ context.Context, in *core.RunningRequest, _ ...grpc.CallOption) (*core.Instance, error) {
 	c.actor = in.Actor
 	c.running = in.Running
 	c.calls++
-	return &core.Instance{Id: in.Id, DesiredRunning: in.Running}, nil
+	return &core.Instance{
+		Id:             in.Id,
+		DesiredRunning: in.Running,
+	}, nil
 }
 
 func TestMuskdeerFacadeDerivesScopeAndFixesStartStopIntent(t *testing.T) {
@@ -67,7 +73,10 @@ func TestMuskdeerFacadeDerivesScopeAndFixesStartStopIntent(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, client.running)
 	calls := client.calls
-	_, err = service.CreateAccountBinding(ctx, &pb.MuskdeerCreateBindingRequest{Data: &pb.MuskdeerBindingDraft{TenantId: 9, AccountId: "foreign"}})
+	_, err = service.CreateAccountBinding(ctx, &pb.MuskdeerCreateBindingRequest{Data: &pb.MuskdeerBindingDraft{
+		TenantId:  9,
+		AccountId: "foreign",
+	}})
 	require.Error(t, err)
 	require.Equal(t, calls, client.calls, "merchant cannot reach core platform binding verification")
 	_, err = service.ListAccounts(t.Context(), &pb.MuskdeerListRequest{})
@@ -79,4 +88,22 @@ func TestMuskdeerFacadeDerivesScopeAndFixesStartStopIntent(t *testing.T) {
 		require.Nil(t, fields.ByName("actor"))
 		require.Nil(t, fields.ByName("allowed_account_ids"))
 	}
+}
+
+func TestLongGridParametersSurviveCoreAndOperatorMapping(t *testing.T) {
+	input := &core.InstanceParameters{
+		Execution: &core.ExecutionParameters{Leverage: 10},
+		Algorithm: &core.InstanceParameters_LongGrid{LongGrid: &core.LongGridParameters{
+			SpacingFraction:         "0.01",
+			StopLossFraction:        "0.005",
+			OrderNotional:           "100",
+			MaximumPositionNotional: "100",
+			OpenOnStart:             true,
+			HaltAfterStopLoss:       true,
+		}},
+	}
+	mapped := fromCoreInstanceParameters(input)
+	require.NotNil(t, mapped.GetLongGrid())
+	require.Equal(t, "0.005", mapped.GetLongGrid().StopLossFraction)
+	require.True(t, proto.Equal(input, toCoreInstanceParameters(mapped)))
 }

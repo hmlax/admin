@@ -67,7 +67,7 @@ message MuskdeerRuntimeVersion { string service = 1; int64 revision = 2; bool av
 message MuskdeerInstancePage { repeated MuskdeerInstance items = 1; uint64 total = 2; }
 message MuskdeerInstanceParameters {
  MuskdeerExecutionParameters execution = 1;
- oneof algorithm { MuskdeerDepthParameters market_maker = 2; MuskdeerGridParameters grid = 3; MuskdeerWashParameters wash_trade = 4; }
+ oneof algorithm { MuskdeerDepthParameters market_maker = 2; MuskdeerGridParameters grid = 3; MuskdeerWashParameters wash_trade = 4; MuskdeerLongGridParameters long_grid = 5; }
 }
 message MuskdeerExecutionParameters {
  int64 poll_interval_ms = 1; int64 operation_timeout_ms = 2;
@@ -147,3 +147,9 @@ message MuskdeerBindingPage { repeated MuskdeerAccountBinding items = 1; uint64 
 message MuskdeerBindingDraft { uint32 tenant_id = 1; string account_id = 2; bool enabled = 3; }
 message MuskdeerCreateBindingRequest { MuskdeerBindingDraft data = 1; }
 message MuskdeerSetBindingEnabledRequest { uint32 id = 1; uint64 expected_version = 2; bool enabled = 3; }
+
+message MuskdeerLongGridParameters {
+ string spacing_fraction = 1; string stop_loss_fraction = 2;
+ string order_notional = 3; string maximum_position_notional = 4;
+ bool open_on_start = 5; bool halt_after_stop_loss = 6;
+}

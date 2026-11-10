@@ -3,7 +3,7 @@ import re
 w=Path(__file__).resolve().parents[2]
 s=(w/'platform/proto/muskdeer/strategy/console/v1/console.proto').read_text()
 # Data DTOs (requests mapped explicitly by the service); generated code is explicit field assignments.
-names=['Gateway','GatewayPage','Overview','Template','TemplatePage','Instance','RuntimeVersion','InstancePage','InstanceParameters','ExecutionParameters','DepthParameters','GridParameters','WashParameters','Instrument','InstrumentPage','Account','AccountPage','OrderRecord','OrderPage','Cancellation','CancellationPage','SyntheticRecord','SyntheticPage','AccountSnapshot','ActiveOrder','Position','CancelReply']
+names=['Gateway','GatewayPage','Overview','Template','TemplatePage','Instance','RuntimeVersion','InstancePage','InstanceParameters','ExecutionParameters','DepthParameters','GridParameters','LongGridParameters','WashParameters','Instrument','InstrumentPage','Account','AccountPage','OrderRecord','OrderPage','Cancellation','CancellationPage','SyntheticRecord','SyntheticPage','AccountSnapshot','ActiveOrder','Position','CancelReply']
 def camel(x):return ''.join(p.title() for p in x.split('_'))
 scalars={'int64','uint64','uint32','int32','bool','string'}
 def block(name):
@@ -30,7 +30,7 @@ for direction,src,dest,prefixsrc,prefixdst in [('fromCore','core','pb','','Muskd
    else:lines+=[' for _,v:=range in.'+f+'{out.'+f+'=append(out.'+f+','+direction+typ+'(v))}']
   if oneof:
    lines+=[' switch v:=in.Algorithm.(type){']
-   for field,typ in [('market_maker','DepthParameters'),('grid','GridParameters'),('wash_trade','WashParameters')]:
+   for field,typ in [('market_maker','DepthParameters'),('grid','GridParameters'),('long_grid','LongGridParameters'),('wash_trade','WashParameters')]:
     f=camel(field)
     lines+=[' case *'+src+'.'+prefixsrc+name+'_'+f+':',' out.Algorithm=&'+dest+'.'+prefixdst+name+'_'+f+'{'+f+':'+direction+typ+'(v.'+f+')}']
    lines+=[' }']

@@ -144,6 +144,8 @@ func fromCoreInstanceParameters(in *core.InstanceParameters) *pb.MuskdeerInstanc
 		out.Algorithm = &pb.MuskdeerInstanceParameters_MarketMaker{MarketMaker: fromCoreDepthParameters(v.MarketMaker)}
 	case *core.InstanceParameters_Grid:
 		out.Algorithm = &pb.MuskdeerInstanceParameters_Grid{Grid: fromCoreGridParameters(v.Grid)}
+	case *core.InstanceParameters_LongGrid:
+		out.Algorithm = &pb.MuskdeerInstanceParameters_LongGrid{LongGrid: fromCoreLongGridParameters(v.LongGrid)}
 	case *core.InstanceParameters_WashTrade:
 		out.Algorithm = &pb.MuskdeerInstanceParameters_WashTrade{WashTrade: fromCoreWashParameters(v.WashTrade)}
 	}
@@ -185,6 +187,20 @@ func fromCoreGridParameters(in *core.GridParameters) *pb.MuskdeerGridParameters 
 		PerOrderNotional: in.PerOrderNotional,
 		InventoryLimit:   in.InventoryLimit,
 		MaxMarketAgeMs:   in.MaxMarketAgeMs,
+	}
+	return out
+}
+func fromCoreLongGridParameters(in *core.LongGridParameters) *pb.MuskdeerLongGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := &pb.MuskdeerLongGridParameters{
+		SpacingFraction:         in.SpacingFraction,
+		StopLossFraction:        in.StopLossFraction,
+		OrderNotional:           in.OrderNotional,
+		MaximumPositionNotional: in.MaximumPositionNotional,
+		OpenOnStart:             in.OpenOnStart,
+		HaltAfterStopLoss:       in.HaltAfterStopLoss,
 	}
 	return out
 }
@@ -556,6 +572,8 @@ func toCoreInstanceParameters(in *pb.MuskdeerInstanceParameters) *core.InstanceP
 		out.Algorithm = &core.InstanceParameters_MarketMaker{MarketMaker: toCoreDepthParameters(v.MarketMaker)}
 	case *pb.MuskdeerInstanceParameters_Grid:
 		out.Algorithm = &core.InstanceParameters_Grid{Grid: toCoreGridParameters(v.Grid)}
+	case *pb.MuskdeerInstanceParameters_LongGrid:
+		out.Algorithm = &core.InstanceParameters_LongGrid{LongGrid: toCoreLongGridParameters(v.LongGrid)}
 	case *pb.MuskdeerInstanceParameters_WashTrade:
 		out.Algorithm = &core.InstanceParameters_WashTrade{WashTrade: toCoreWashParameters(v.WashTrade)}
 	}
@@ -597,6 +615,20 @@ func toCoreGridParameters(in *pb.MuskdeerGridParameters) *core.GridParameters {
 		PerOrderNotional: in.PerOrderNotional,
 		InventoryLimit:   in.InventoryLimit,
 		MaxMarketAgeMs:   in.MaxMarketAgeMs,
+	}
+	return out
+}
+func toCoreLongGridParameters(in *pb.MuskdeerLongGridParameters) *core.LongGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := &core.LongGridParameters{
+		SpacingFraction:         in.SpacingFraction,
+		StopLossFraction:        in.StopLossFraction,
+		OrderNotional:           in.OrderNotional,
+		MaximumPositionNotional: in.MaximumPositionNotional,
+		OpenOnStart:             in.OpenOnStart,
+		HaltAfterStopLoss:       in.HaltAfterStopLoss,
 	}
 	return out
 }

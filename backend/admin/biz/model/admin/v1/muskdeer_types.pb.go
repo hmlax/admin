@@ -1530,6 +1530,7 @@ type MuskdeerInstanceParameters struct {
 	//	*MuskdeerInstanceParameters_MarketMaker
 	//	*MuskdeerInstanceParameters_Grid
 	//	*MuskdeerInstanceParameters_WashTrade
+	//	*MuskdeerInstanceParameters_LongGrid
 	Algorithm     isMuskdeerInstanceParameters_Algorithm `protobuf_oneof:"algorithm"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1606,6 +1607,15 @@ func (x *MuskdeerInstanceParameters) GetWashTrade() *MuskdeerWashParameters {
 	return nil
 }
 
+func (x *MuskdeerInstanceParameters) GetLongGrid() *MuskdeerLongGridParameters {
+	if x != nil {
+		if x, ok := x.Algorithm.(*MuskdeerInstanceParameters_LongGrid); ok {
+			return x.LongGrid
+		}
+	}
+	return nil
+}
+
 type isMuskdeerInstanceParameters_Algorithm interface {
 	isMuskdeerInstanceParameters_Algorithm()
 }
@@ -1622,11 +1632,17 @@ type MuskdeerInstanceParameters_WashTrade struct {
 	WashTrade *MuskdeerWashParameters `protobuf:"bytes,4,opt,name=wash_trade,json=washTrade,proto3,oneof"`
 }
 
+type MuskdeerInstanceParameters_LongGrid struct {
+	LongGrid *MuskdeerLongGridParameters `protobuf:"bytes,5,opt,name=long_grid,json=longGrid,proto3,oneof"`
+}
+
 func (*MuskdeerInstanceParameters_MarketMaker) isMuskdeerInstanceParameters_Algorithm() {}
 
 func (*MuskdeerInstanceParameters_Grid) isMuskdeerInstanceParameters_Algorithm() {}
 
 func (*MuskdeerInstanceParameters_WashTrade) isMuskdeerInstanceParameters_Algorithm() {}
+
+func (*MuskdeerInstanceParameters_LongGrid) isMuskdeerInstanceParameters_Algorithm() {}
 
 type MuskdeerExecutionParameters struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
@@ -3474,6 +3490,90 @@ func (x *MuskdeerSetBindingEnabledRequest) GetEnabled() bool {
 	return false
 }
 
+type MuskdeerLongGridParameters struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	SpacingFraction         string                 `protobuf:"bytes,1,opt,name=spacing_fraction,json=spacingFraction,proto3" json:"spacing_fraction,omitempty"`
+	StopLossFraction        string                 `protobuf:"bytes,2,opt,name=stop_loss_fraction,json=stopLossFraction,proto3" json:"stop_loss_fraction,omitempty"`
+	OrderNotional           string                 `protobuf:"bytes,3,opt,name=order_notional,json=orderNotional,proto3" json:"order_notional,omitempty"`
+	MaximumPositionNotional string                 `protobuf:"bytes,4,opt,name=maximum_position_notional,json=maximumPositionNotional,proto3" json:"maximum_position_notional,omitempty"`
+	OpenOnStart             bool                   `protobuf:"varint,5,opt,name=open_on_start,json=openOnStart,proto3" json:"open_on_start,omitempty"`
+	HaltAfterStopLoss       bool                   `protobuf:"varint,6,opt,name=halt_after_stop_loss,json=haltAfterStopLoss,proto3" json:"halt_after_stop_loss,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *MuskdeerLongGridParameters) Reset() {
+	*x = MuskdeerLongGridParameters{}
+	mi := &file_admin_v1_muskdeer_types_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MuskdeerLongGridParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MuskdeerLongGridParameters) ProtoMessage() {}
+
+func (x *MuskdeerLongGridParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_admin_v1_muskdeer_types_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MuskdeerLongGridParameters.ProtoReflect.Descriptor instead.
+func (*MuskdeerLongGridParameters) Descriptor() ([]byte, []int) {
+	return file_admin_v1_muskdeer_types_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *MuskdeerLongGridParameters) GetSpacingFraction() string {
+	if x != nil {
+		return x.SpacingFraction
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetStopLossFraction() string {
+	if x != nil {
+		return x.StopLossFraction
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetOrderNotional() string {
+	if x != nil {
+		return x.OrderNotional
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetMaximumPositionNotional() string {
+	if x != nil {
+		return x.MaximumPositionNotional
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetOpenOnStart() bool {
+	if x != nil {
+		return x.OpenOnStart
+	}
+	return false
+}
+
+func (x *MuskdeerLongGridParameters) GetHaltAfterStopLoss() bool {
+	if x != nil {
+		return x.HaltAfterStopLoss
+	}
+	return false
+}
+
 var File_admin_v1_muskdeer_types_proto protoreflect.FileDescriptor
 
 const file_admin_v1_muskdeer_types_proto_rawDesc = "" +
@@ -3614,13 +3714,14 @@ const file_admin_v1_muskdeer_types_proto_rawDesc = "" +
 	"\tavailable\x18\x03 \x01(\bR\tavailable\"^\n" +
 	"\x14MuskdeerInstancePage\x120\n" +
 	"\x05items\x18\x01 \x03(\v2\x1a.admin.v1.MuskdeerInstanceR\x05items\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"\xb1\x02\n" +
+	"\x05total\x18\x02 \x01(\x04R\x05total\"\xf6\x02\n" +
 	"\x1aMuskdeerInstanceParameters\x12C\n" +
 	"\texecution\x18\x01 \x01(\v2%.admin.v1.MuskdeerExecutionParametersR\texecution\x12F\n" +
 	"\fmarket_maker\x18\x02 \x01(\v2!.admin.v1.MuskdeerDepthParametersH\x00R\vmarketMaker\x126\n" +
 	"\x04grid\x18\x03 \x01(\v2 .admin.v1.MuskdeerGridParametersH\x00R\x04grid\x12A\n" +
 	"\n" +
-	"wash_trade\x18\x04 \x01(\v2 .admin.v1.MuskdeerWashParametersH\x00R\twashTradeB\v\n" +
+	"wash_trade\x18\x04 \x01(\v2 .admin.v1.MuskdeerWashParametersH\x00R\twashTrade\x12C\n" +
+	"\tlong_grid\x18\x05 \x01(\v2$.admin.v1.MuskdeerLongGridParametersH\x00R\blongGridB\v\n" +
 	"\talgorithm\"\xb7\x01\n" +
 	"\x1bMuskdeerExecutionParameters\x12(\n" +
 	"\x10poll_interval_ms\x18\x01 \x01(\x03R\x0epollIntervalMs\x120\n" +
@@ -3793,7 +3894,14 @@ const file_admin_v1_muskdeer_types_proto_rawDesc = "" +
 	" MuskdeerSetBindingEnabledRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12)\n" +
 	"\x10expected_version\x18\x02 \x01(\x04R\x0fexpectedVersion\x12\x18\n" +
-	"\aenabled\x18\x03 \x01(\bR\aenabledB+Z)go-admin/admin/biz/model/admin/v1;adminpbb\x06proto3"
+	"\aenabled\x18\x03 \x01(\bR\aenabled\"\xad\x02\n" +
+	"\x1aMuskdeerLongGridParameters\x12)\n" +
+	"\x10spacing_fraction\x18\x01 \x01(\tR\x0fspacingFraction\x12,\n" +
+	"\x12stop_loss_fraction\x18\x02 \x01(\tR\x10stopLossFraction\x12%\n" +
+	"\x0eorder_notional\x18\x03 \x01(\tR\rorderNotional\x12:\n" +
+	"\x19maximum_position_notional\x18\x04 \x01(\tR\x17maximumPositionNotional\x12\"\n" +
+	"\ropen_on_start\x18\x05 \x01(\bR\vopenOnStart\x12/\n" +
+	"\x14halt_after_stop_loss\x18\x06 \x01(\bR\x11haltAfterStopLossB+Z)go-admin/admin/biz/model/admin/v1;adminpbb\x06proto3"
 
 var (
 	file_admin_v1_muskdeer_types_proto_rawDescOnce sync.Once
@@ -3807,7 +3915,7 @@ func file_admin_v1_muskdeer_types_proto_rawDescGZIP() []byte {
 	return file_admin_v1_muskdeer_types_proto_rawDescData
 }
 
-var file_admin_v1_muskdeer_types_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_admin_v1_muskdeer_types_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_admin_v1_muskdeer_types_proto_goTypes = []any{
 	(*MuskdeerOverviewRequest)(nil),          // 0: admin.v1.MuskdeerOverviewRequest
 	(*MuskdeerListRequest)(nil),              // 1: admin.v1.MuskdeerListRequest
@@ -3854,6 +3962,7 @@ var file_admin_v1_muskdeer_types_proto_goTypes = []any{
 	(*MuskdeerBindingDraft)(nil),             // 42: admin.v1.MuskdeerBindingDraft
 	(*MuskdeerCreateBindingRequest)(nil),     // 43: admin.v1.MuskdeerCreateBindingRequest
 	(*MuskdeerSetBindingEnabledRequest)(nil), // 44: admin.v1.MuskdeerSetBindingEnabledRequest
+	(*MuskdeerLongGridParameters)(nil),       // 45: admin.v1.MuskdeerLongGridParameters
 }
 var file_admin_v1_muskdeer_types_proto_depIdxs = []int32{
 	5,  // 0: admin.v1.MuskdeerCreateInstanceRequest.data:type_name -> admin.v1.MuskdeerInstanceDraft
@@ -3869,20 +3978,21 @@ var file_admin_v1_muskdeer_types_proto_depIdxs = []int32{
 	23, // 10: admin.v1.MuskdeerInstanceParameters.market_maker:type_name -> admin.v1.MuskdeerDepthParameters
 	24, // 11: admin.v1.MuskdeerInstanceParameters.grid:type_name -> admin.v1.MuskdeerGridParameters
 	25, // 12: admin.v1.MuskdeerInstanceParameters.wash_trade:type_name -> admin.v1.MuskdeerWashParameters
-	26, // 13: admin.v1.MuskdeerInstrumentPage.items:type_name -> admin.v1.MuskdeerInstrument
-	28, // 14: admin.v1.MuskdeerAccountPage.items:type_name -> admin.v1.MuskdeerAccount
-	30, // 15: admin.v1.MuskdeerOrderPage.items:type_name -> admin.v1.MuskdeerOrderRecord
-	32, // 16: admin.v1.MuskdeerCancellationPage.items:type_name -> admin.v1.MuskdeerCancellation
-	34, // 17: admin.v1.MuskdeerSyntheticPage.items:type_name -> admin.v1.MuskdeerSyntheticRecord
-	37, // 18: admin.v1.MuskdeerAccountSnapshot.orders:type_name -> admin.v1.MuskdeerActiveOrder
-	38, // 19: admin.v1.MuskdeerAccountSnapshot.positions:type_name -> admin.v1.MuskdeerPosition
-	39, // 20: admin.v1.MuskdeerBindingPage.items:type_name -> admin.v1.MuskdeerAccountBinding
-	42, // 21: admin.v1.MuskdeerCreateBindingRequest.data:type_name -> admin.v1.MuskdeerBindingDraft
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	45, // 13: admin.v1.MuskdeerInstanceParameters.long_grid:type_name -> admin.v1.MuskdeerLongGridParameters
+	26, // 14: admin.v1.MuskdeerInstrumentPage.items:type_name -> admin.v1.MuskdeerInstrument
+	28, // 15: admin.v1.MuskdeerAccountPage.items:type_name -> admin.v1.MuskdeerAccount
+	30, // 16: admin.v1.MuskdeerOrderPage.items:type_name -> admin.v1.MuskdeerOrderRecord
+	32, // 17: admin.v1.MuskdeerCancellationPage.items:type_name -> admin.v1.MuskdeerCancellation
+	34, // 18: admin.v1.MuskdeerSyntheticPage.items:type_name -> admin.v1.MuskdeerSyntheticRecord
+	37, // 19: admin.v1.MuskdeerAccountSnapshot.orders:type_name -> admin.v1.MuskdeerActiveOrder
+	38, // 20: admin.v1.MuskdeerAccountSnapshot.positions:type_name -> admin.v1.MuskdeerPosition
+	39, // 21: admin.v1.MuskdeerBindingPage.items:type_name -> admin.v1.MuskdeerAccountBinding
+	42, // 22: admin.v1.MuskdeerCreateBindingRequest.data:type_name -> admin.v1.MuskdeerBindingDraft
+	23, // [23:23] is the sub-list for method output_type
+	23, // [23:23] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_admin_v1_muskdeer_types_proto_init() }
@@ -3894,6 +4004,7 @@ func file_admin_v1_muskdeer_types_proto_init() {
 		(*MuskdeerInstanceParameters_MarketMaker)(nil),
 		(*MuskdeerInstanceParameters_Grid)(nil),
 		(*MuskdeerInstanceParameters_WashTrade)(nil),
+		(*MuskdeerInstanceParameters_LongGrid)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3901,7 +4012,7 @@ func file_admin_v1_muskdeer_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admin_v1_muskdeer_types_proto_rawDesc), len(file_admin_v1_muskdeer_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   45,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

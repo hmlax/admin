@@ -1530,6 +1530,7 @@ type MuskdeerInstanceParameters struct {
 	//	*MuskdeerInstanceParameters_MarketMaker
 	//	*MuskdeerInstanceParameters_Grid
 	//	*MuskdeerInstanceParameters_WashTrade
+	//	*MuskdeerInstanceParameters_LongGrid
 	Algorithm     isMuskdeerInstanceParameters_Algorithm `protobuf_oneof:"algorithm"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1606,6 +1607,15 @@ func (x *MuskdeerInstanceParameters) GetWashTrade() *MuskdeerWashParameters {
 	return nil
 }
 
+func (x *MuskdeerInstanceParameters) GetLongGrid() *MuskdeerLongGridParameters {
+	if x != nil {
+		if x, ok := x.Algorithm.(*MuskdeerInstanceParameters_LongGrid); ok {
+			return x.LongGrid
+		}
+	}
+	return nil
+}
+
 type isMuskdeerInstanceParameters_Algorithm interface {
 	isMuskdeerInstanceParameters_Algorithm()
 }
@@ -1622,11 +1632,17 @@ type MuskdeerInstanceParameters_WashTrade struct {
 	WashTrade *MuskdeerWashParameters `protobuf:"bytes,4,opt,name=wash_trade,json=washTrade,proto3,oneof"`
 }
 
+type MuskdeerInstanceParameters_LongGrid struct {
+	LongGrid *MuskdeerLongGridParameters `protobuf:"bytes,5,opt,name=long_grid,json=longGrid,proto3,oneof"`
+}
+
 func (*MuskdeerInstanceParameters_MarketMaker) isMuskdeerInstanceParameters_Algorithm() {}
 
 func (*MuskdeerInstanceParameters_Grid) isMuskdeerInstanceParameters_Algorithm() {}
 
 func (*MuskdeerInstanceParameters_WashTrade) isMuskdeerInstanceParameters_Algorithm() {}
+
+func (*MuskdeerInstanceParameters_LongGrid) isMuskdeerInstanceParameters_Algorithm() {}
 
 type MuskdeerExecutionParameters struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
@@ -3474,6 +3490,90 @@ func (x *MuskdeerSetBindingEnabledRequest) GetEnabled() bool {
 	return false
 }
 
+type MuskdeerLongGridParameters struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	SpacingFraction         string                 `protobuf:"bytes,1,opt,name=spacing_fraction,json=spacingFraction,proto3" json:"spacing_fraction,omitempty"`
+	StopLossFraction        string                 `protobuf:"bytes,2,opt,name=stop_loss_fraction,json=stopLossFraction,proto3" json:"stop_loss_fraction,omitempty"`
+	OrderNotional           string                 `protobuf:"bytes,3,opt,name=order_notional,json=orderNotional,proto3" json:"order_notional,omitempty"`
+	MaximumPositionNotional string                 `protobuf:"bytes,4,opt,name=maximum_position_notional,json=maximumPositionNotional,proto3" json:"maximum_position_notional,omitempty"`
+	OpenOnStart             bool                   `protobuf:"varint,5,opt,name=open_on_start,json=openOnStart,proto3" json:"open_on_start,omitempty"`
+	HaltAfterStopLoss       bool                   `protobuf:"varint,6,opt,name=halt_after_stop_loss,json=haltAfterStopLoss,proto3" json:"halt_after_stop_loss,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *MuskdeerLongGridParameters) Reset() {
+	*x = MuskdeerLongGridParameters{}
+	mi := &file_operator_v1_muskdeer_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MuskdeerLongGridParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MuskdeerLongGridParameters) ProtoMessage() {}
+
+func (x *MuskdeerLongGridParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_operator_v1_muskdeer_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MuskdeerLongGridParameters.ProtoReflect.Descriptor instead.
+func (*MuskdeerLongGridParameters) Descriptor() ([]byte, []int) {
+	return file_operator_v1_muskdeer_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *MuskdeerLongGridParameters) GetSpacingFraction() string {
+	if x != nil {
+		return x.SpacingFraction
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetStopLossFraction() string {
+	if x != nil {
+		return x.StopLossFraction
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetOrderNotional() string {
+	if x != nil {
+		return x.OrderNotional
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetMaximumPositionNotional() string {
+	if x != nil {
+		return x.MaximumPositionNotional
+	}
+	return ""
+}
+
+func (x *MuskdeerLongGridParameters) GetOpenOnStart() bool {
+	if x != nil {
+		return x.OpenOnStart
+	}
+	return false
+}
+
+func (x *MuskdeerLongGridParameters) GetHaltAfterStopLoss() bool {
+	if x != nil {
+		return x.HaltAfterStopLoss
+	}
+	return false
+}
+
 var File_operator_v1_muskdeer_proto protoreflect.FileDescriptor
 
 const file_operator_v1_muskdeer_proto_rawDesc = "" +
@@ -3614,13 +3714,14 @@ const file_operator_v1_muskdeer_proto_rawDesc = "" +
 	"\tavailable\x18\x03 \x01(\bR\tavailable\"a\n" +
 	"\x14MuskdeerInstancePage\x123\n" +
 	"\x05items\x18\x01 \x03(\v2\x1d.operator.v1.MuskdeerInstanceR\x05items\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"\xbd\x02\n" +
+	"\x05total\x18\x02 \x01(\x04R\x05total\"\x85\x03\n" +
 	"\x1aMuskdeerInstanceParameters\x12F\n" +
 	"\texecution\x18\x01 \x01(\v2(.operator.v1.MuskdeerExecutionParametersR\texecution\x12I\n" +
 	"\fmarket_maker\x18\x02 \x01(\v2$.operator.v1.MuskdeerDepthParametersH\x00R\vmarketMaker\x129\n" +
 	"\x04grid\x18\x03 \x01(\v2#.operator.v1.MuskdeerGridParametersH\x00R\x04grid\x12D\n" +
 	"\n" +
-	"wash_trade\x18\x04 \x01(\v2#.operator.v1.MuskdeerWashParametersH\x00R\twashTradeB\v\n" +
+	"wash_trade\x18\x04 \x01(\v2#.operator.v1.MuskdeerWashParametersH\x00R\twashTrade\x12F\n" +
+	"\tlong_grid\x18\x05 \x01(\v2'.operator.v1.MuskdeerLongGridParametersH\x00R\blongGridB\v\n" +
 	"\talgorithm\"\xb7\x01\n" +
 	"\x1bMuskdeerExecutionParameters\x12(\n" +
 	"\x10poll_interval_ms\x18\x01 \x01(\x03R\x0epollIntervalMs\x120\n" +
@@ -3793,7 +3894,14 @@ const file_operator_v1_muskdeer_proto_rawDesc = "" +
 	" MuskdeerSetBindingEnabledRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12)\n" +
 	"\x10expected_version\x18\x02 \x01(\x04R\x0fexpectedVersion\x12\x18\n" +
-	"\aenabled\x18\x03 \x01(\bR\aenabled2\xf3\r\n" +
+	"\aenabled\x18\x03 \x01(\bR\aenabled\"\xad\x02\n" +
+	"\x1aMuskdeerLongGridParameters\x12)\n" +
+	"\x10spacing_fraction\x18\x01 \x01(\tR\x0fspacingFraction\x12,\n" +
+	"\x12stop_loss_fraction\x18\x02 \x01(\tR\x10stopLossFraction\x12%\n" +
+	"\x0eorder_notional\x18\x03 \x01(\tR\rorderNotional\x12:\n" +
+	"\x19maximum_position_notional\x18\x04 \x01(\tR\x17maximumPositionNotional\x12\"\n" +
+	"\ropen_on_start\x18\x05 \x01(\bR\vopenOnStart\x12/\n" +
+	"\x14halt_after_stop_loss\x18\x06 \x01(\bR\x11haltAfterStopLoss2\xf3\r\n" +
 	"\x0fMuskdeerService\x12`\n" +
 	"\x13ListAccountBindings\x12'.operator.v1.MuskdeerBindingListRequest\x1a .operator.v1.MuskdeerBindingPage\x12f\n" +
 	"\x14CreateAccountBinding\x12).operator.v1.MuskdeerCreateBindingRequest\x1a#.operator.v1.MuskdeerAccountBinding\x12n\n" +
@@ -3827,7 +3935,7 @@ func file_operator_v1_muskdeer_proto_rawDescGZIP() []byte {
 	return file_operator_v1_muskdeer_proto_rawDescData
 }
 
-var file_operator_v1_muskdeer_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_operator_v1_muskdeer_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_operator_v1_muskdeer_proto_goTypes = []any{
 	(*MuskdeerOverviewRequest)(nil),          // 0: operator.v1.MuskdeerOverviewRequest
 	(*MuskdeerListRequest)(nil),              // 1: operator.v1.MuskdeerListRequest
@@ -3874,6 +3982,7 @@ var file_operator_v1_muskdeer_proto_goTypes = []any{
 	(*MuskdeerBindingDraft)(nil),             // 42: operator.v1.MuskdeerBindingDraft
 	(*MuskdeerCreateBindingRequest)(nil),     // 43: operator.v1.MuskdeerCreateBindingRequest
 	(*MuskdeerSetBindingEnabledRequest)(nil), // 44: operator.v1.MuskdeerSetBindingEnabledRequest
+	(*MuskdeerLongGridParameters)(nil),       // 45: operator.v1.MuskdeerLongGridParameters
 }
 var file_operator_v1_muskdeer_proto_depIdxs = []int32{
 	5,  // 0: operator.v1.MuskdeerCreateInstanceRequest.data:type_name -> operator.v1.MuskdeerInstanceDraft
@@ -3889,58 +3998,59 @@ var file_operator_v1_muskdeer_proto_depIdxs = []int32{
 	23, // 10: operator.v1.MuskdeerInstanceParameters.market_maker:type_name -> operator.v1.MuskdeerDepthParameters
 	24, // 11: operator.v1.MuskdeerInstanceParameters.grid:type_name -> operator.v1.MuskdeerGridParameters
 	25, // 12: operator.v1.MuskdeerInstanceParameters.wash_trade:type_name -> operator.v1.MuskdeerWashParameters
-	26, // 13: operator.v1.MuskdeerInstrumentPage.items:type_name -> operator.v1.MuskdeerInstrument
-	28, // 14: operator.v1.MuskdeerAccountPage.items:type_name -> operator.v1.MuskdeerAccount
-	30, // 15: operator.v1.MuskdeerOrderPage.items:type_name -> operator.v1.MuskdeerOrderRecord
-	32, // 16: operator.v1.MuskdeerCancellationPage.items:type_name -> operator.v1.MuskdeerCancellation
-	34, // 17: operator.v1.MuskdeerSyntheticPage.items:type_name -> operator.v1.MuskdeerSyntheticRecord
-	37, // 18: operator.v1.MuskdeerAccountSnapshot.orders:type_name -> operator.v1.MuskdeerActiveOrder
-	38, // 19: operator.v1.MuskdeerAccountSnapshot.positions:type_name -> operator.v1.MuskdeerPosition
-	39, // 20: operator.v1.MuskdeerBindingPage.items:type_name -> operator.v1.MuskdeerAccountBinding
-	42, // 21: operator.v1.MuskdeerCreateBindingRequest.data:type_name -> operator.v1.MuskdeerBindingDraft
-	40, // 22: operator.v1.MuskdeerService.ListAccountBindings:input_type -> operator.v1.MuskdeerBindingListRequest
-	43, // 23: operator.v1.MuskdeerService.CreateAccountBinding:input_type -> operator.v1.MuskdeerCreateBindingRequest
-	44, // 24: operator.v1.MuskdeerService.SetAccountBindingEnabled:input_type -> operator.v1.MuskdeerSetBindingEnabledRequest
-	0,  // 25: operator.v1.MuskdeerService.GetOverview:input_type -> operator.v1.MuskdeerOverviewRequest
-	1,  // 26: operator.v1.MuskdeerService.ListTemplates:input_type -> operator.v1.MuskdeerListRequest
-	0,  // 27: operator.v1.MuskdeerService.ListGateways:input_type -> operator.v1.MuskdeerOverviewRequest
-	2,  // 28: operator.v1.MuskdeerService.ListInstances:input_type -> operator.v1.MuskdeerInstanceListRequest
-	3,  // 29: operator.v1.MuskdeerService.GetInstance:input_type -> operator.v1.MuskdeerInstanceRequest
-	4,  // 30: operator.v1.MuskdeerService.CreateInstance:input_type -> operator.v1.MuskdeerCreateInstanceRequest
-	6,  // 31: operator.v1.MuskdeerService.UpdateInstance:input_type -> operator.v1.MuskdeerUpdateInstanceRequest
-	8,  // 32: operator.v1.MuskdeerService.StartInstance:input_type -> operator.v1.MuskdeerRunningRequest
-	8,  // 33: operator.v1.MuskdeerService.StopInstance:input_type -> operator.v1.MuskdeerRunningRequest
-	1,  // 34: operator.v1.MuskdeerService.ListInstruments:input_type -> operator.v1.MuskdeerListRequest
-	1,  // 35: operator.v1.MuskdeerService.ListAccounts:input_type -> operator.v1.MuskdeerListRequest
-	10, // 36: operator.v1.MuskdeerService.ListOrderRecords:input_type -> operator.v1.MuskdeerRecordListRequest
-	10, // 37: operator.v1.MuskdeerService.ListCancellations:input_type -> operator.v1.MuskdeerRecordListRequest
-	10, // 38: operator.v1.MuskdeerService.ListSyntheticRecords:input_type -> operator.v1.MuskdeerRecordListRequest
-	9,  // 39: operator.v1.MuskdeerService.GetAccountSnapshot:input_type -> operator.v1.MuskdeerAccountRequest
-	11, // 40: operator.v1.MuskdeerService.CancelInstanceOrders:input_type -> operator.v1.MuskdeerCancelRequest
-	41, // 41: operator.v1.MuskdeerService.ListAccountBindings:output_type -> operator.v1.MuskdeerBindingPage
-	39, // 42: operator.v1.MuskdeerService.CreateAccountBinding:output_type -> operator.v1.MuskdeerAccountBinding
-	39, // 43: operator.v1.MuskdeerService.SetAccountBindingEnabled:output_type -> operator.v1.MuskdeerAccountBinding
-	13, // 44: operator.v1.MuskdeerService.GetOverview:output_type -> operator.v1.MuskdeerOverview
-	15, // 45: operator.v1.MuskdeerService.ListTemplates:output_type -> operator.v1.MuskdeerTemplatePage
-	17, // 46: operator.v1.MuskdeerService.ListGateways:output_type -> operator.v1.MuskdeerGatewayPage
-	20, // 47: operator.v1.MuskdeerService.ListInstances:output_type -> operator.v1.MuskdeerInstancePage
-	18, // 48: operator.v1.MuskdeerService.GetInstance:output_type -> operator.v1.MuskdeerInstance
-	18, // 49: operator.v1.MuskdeerService.CreateInstance:output_type -> operator.v1.MuskdeerInstance
-	18, // 50: operator.v1.MuskdeerService.UpdateInstance:output_type -> operator.v1.MuskdeerInstance
-	18, // 51: operator.v1.MuskdeerService.StartInstance:output_type -> operator.v1.MuskdeerInstance
-	18, // 52: operator.v1.MuskdeerService.StopInstance:output_type -> operator.v1.MuskdeerInstance
-	27, // 53: operator.v1.MuskdeerService.ListInstruments:output_type -> operator.v1.MuskdeerInstrumentPage
-	29, // 54: operator.v1.MuskdeerService.ListAccounts:output_type -> operator.v1.MuskdeerAccountPage
-	31, // 55: operator.v1.MuskdeerService.ListOrderRecords:output_type -> operator.v1.MuskdeerOrderPage
-	33, // 56: operator.v1.MuskdeerService.ListCancellations:output_type -> operator.v1.MuskdeerCancellationPage
-	35, // 57: operator.v1.MuskdeerService.ListSyntheticRecords:output_type -> operator.v1.MuskdeerSyntheticPage
-	36, // 58: operator.v1.MuskdeerService.GetAccountSnapshot:output_type -> operator.v1.MuskdeerAccountSnapshot
-	12, // 59: operator.v1.MuskdeerService.CancelInstanceOrders:output_type -> operator.v1.MuskdeerCancelReply
-	41, // [41:60] is the sub-list for method output_type
-	22, // [22:41] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	45, // 13: operator.v1.MuskdeerInstanceParameters.long_grid:type_name -> operator.v1.MuskdeerLongGridParameters
+	26, // 14: operator.v1.MuskdeerInstrumentPage.items:type_name -> operator.v1.MuskdeerInstrument
+	28, // 15: operator.v1.MuskdeerAccountPage.items:type_name -> operator.v1.MuskdeerAccount
+	30, // 16: operator.v1.MuskdeerOrderPage.items:type_name -> operator.v1.MuskdeerOrderRecord
+	32, // 17: operator.v1.MuskdeerCancellationPage.items:type_name -> operator.v1.MuskdeerCancellation
+	34, // 18: operator.v1.MuskdeerSyntheticPage.items:type_name -> operator.v1.MuskdeerSyntheticRecord
+	37, // 19: operator.v1.MuskdeerAccountSnapshot.orders:type_name -> operator.v1.MuskdeerActiveOrder
+	38, // 20: operator.v1.MuskdeerAccountSnapshot.positions:type_name -> operator.v1.MuskdeerPosition
+	39, // 21: operator.v1.MuskdeerBindingPage.items:type_name -> operator.v1.MuskdeerAccountBinding
+	42, // 22: operator.v1.MuskdeerCreateBindingRequest.data:type_name -> operator.v1.MuskdeerBindingDraft
+	40, // 23: operator.v1.MuskdeerService.ListAccountBindings:input_type -> operator.v1.MuskdeerBindingListRequest
+	43, // 24: operator.v1.MuskdeerService.CreateAccountBinding:input_type -> operator.v1.MuskdeerCreateBindingRequest
+	44, // 25: operator.v1.MuskdeerService.SetAccountBindingEnabled:input_type -> operator.v1.MuskdeerSetBindingEnabledRequest
+	0,  // 26: operator.v1.MuskdeerService.GetOverview:input_type -> operator.v1.MuskdeerOverviewRequest
+	1,  // 27: operator.v1.MuskdeerService.ListTemplates:input_type -> operator.v1.MuskdeerListRequest
+	0,  // 28: operator.v1.MuskdeerService.ListGateways:input_type -> operator.v1.MuskdeerOverviewRequest
+	2,  // 29: operator.v1.MuskdeerService.ListInstances:input_type -> operator.v1.MuskdeerInstanceListRequest
+	3,  // 30: operator.v1.MuskdeerService.GetInstance:input_type -> operator.v1.MuskdeerInstanceRequest
+	4,  // 31: operator.v1.MuskdeerService.CreateInstance:input_type -> operator.v1.MuskdeerCreateInstanceRequest
+	6,  // 32: operator.v1.MuskdeerService.UpdateInstance:input_type -> operator.v1.MuskdeerUpdateInstanceRequest
+	8,  // 33: operator.v1.MuskdeerService.StartInstance:input_type -> operator.v1.MuskdeerRunningRequest
+	8,  // 34: operator.v1.MuskdeerService.StopInstance:input_type -> operator.v1.MuskdeerRunningRequest
+	1,  // 35: operator.v1.MuskdeerService.ListInstruments:input_type -> operator.v1.MuskdeerListRequest
+	1,  // 36: operator.v1.MuskdeerService.ListAccounts:input_type -> operator.v1.MuskdeerListRequest
+	10, // 37: operator.v1.MuskdeerService.ListOrderRecords:input_type -> operator.v1.MuskdeerRecordListRequest
+	10, // 38: operator.v1.MuskdeerService.ListCancellations:input_type -> operator.v1.MuskdeerRecordListRequest
+	10, // 39: operator.v1.MuskdeerService.ListSyntheticRecords:input_type -> operator.v1.MuskdeerRecordListRequest
+	9,  // 40: operator.v1.MuskdeerService.GetAccountSnapshot:input_type -> operator.v1.MuskdeerAccountRequest
+	11, // 41: operator.v1.MuskdeerService.CancelInstanceOrders:input_type -> operator.v1.MuskdeerCancelRequest
+	41, // 42: operator.v1.MuskdeerService.ListAccountBindings:output_type -> operator.v1.MuskdeerBindingPage
+	39, // 43: operator.v1.MuskdeerService.CreateAccountBinding:output_type -> operator.v1.MuskdeerAccountBinding
+	39, // 44: operator.v1.MuskdeerService.SetAccountBindingEnabled:output_type -> operator.v1.MuskdeerAccountBinding
+	13, // 45: operator.v1.MuskdeerService.GetOverview:output_type -> operator.v1.MuskdeerOverview
+	15, // 46: operator.v1.MuskdeerService.ListTemplates:output_type -> operator.v1.MuskdeerTemplatePage
+	17, // 47: operator.v1.MuskdeerService.ListGateways:output_type -> operator.v1.MuskdeerGatewayPage
+	20, // 48: operator.v1.MuskdeerService.ListInstances:output_type -> operator.v1.MuskdeerInstancePage
+	18, // 49: operator.v1.MuskdeerService.GetInstance:output_type -> operator.v1.MuskdeerInstance
+	18, // 50: operator.v1.MuskdeerService.CreateInstance:output_type -> operator.v1.MuskdeerInstance
+	18, // 51: operator.v1.MuskdeerService.UpdateInstance:output_type -> operator.v1.MuskdeerInstance
+	18, // 52: operator.v1.MuskdeerService.StartInstance:output_type -> operator.v1.MuskdeerInstance
+	18, // 53: operator.v1.MuskdeerService.StopInstance:output_type -> operator.v1.MuskdeerInstance
+	27, // 54: operator.v1.MuskdeerService.ListInstruments:output_type -> operator.v1.MuskdeerInstrumentPage
+	29, // 55: operator.v1.MuskdeerService.ListAccounts:output_type -> operator.v1.MuskdeerAccountPage
+	31, // 56: operator.v1.MuskdeerService.ListOrderRecords:output_type -> operator.v1.MuskdeerOrderPage
+	33, // 57: operator.v1.MuskdeerService.ListCancellations:output_type -> operator.v1.MuskdeerCancellationPage
+	35, // 58: operator.v1.MuskdeerService.ListSyntheticRecords:output_type -> operator.v1.MuskdeerSyntheticPage
+	36, // 59: operator.v1.MuskdeerService.GetAccountSnapshot:output_type -> operator.v1.MuskdeerAccountSnapshot
+	12, // 60: operator.v1.MuskdeerService.CancelInstanceOrders:output_type -> operator.v1.MuskdeerCancelReply
+	42, // [42:61] is the sub-list for method output_type
+	23, // [23:42] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_operator_v1_muskdeer_proto_init() }
@@ -3952,6 +4062,7 @@ func file_operator_v1_muskdeer_proto_init() {
 		(*MuskdeerInstanceParameters_MarketMaker)(nil),
 		(*MuskdeerInstanceParameters_Grid)(nil),
 		(*MuskdeerInstanceParameters_WashTrade)(nil),
+		(*MuskdeerInstanceParameters_LongGrid)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3959,7 +4070,7 @@ func file_operator_v1_muskdeer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_operator_v1_muskdeer_proto_rawDesc), len(file_operator_v1_muskdeer_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   45,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

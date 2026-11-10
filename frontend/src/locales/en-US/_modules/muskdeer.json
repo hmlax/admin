@@ -146,5 +146,10 @@
   "staleSnapshot": "Snapshot expired. Refresh to observe current state.",
   "emptyScope": "Empty scope",
   "washMaximumNotional": "Maximum notional",
-  "syntheticHistoryNotice": "Historical development records only. Current WashTrade publications are sent directly and do not add database records here."
+  "syntheticHistoryNotice": "Historical development records only. Current WashTrade publications are sent directly and do not add database records here.",
+  "spacingFraction": "Grid spacing ratio (0.01 = 1%)",
+  "stopLossFraction": "Stop below average entry (0.005 = 0.5%)",
+  "orderNotional": "Target opening notional (USDT)",
+  "maximumPositionNotional": "Maximum position notional (USDT)",
+  "longGridNotice": "Long only with cross margin. Opens the first lot on start, buys one spacing lower and sells the corresponding lot one spacing higher. A stop below venue average entry closes the position and halts the strategy until explicitly started again. Quantities follow the market lot step. Close positions before editing parameters."
 }

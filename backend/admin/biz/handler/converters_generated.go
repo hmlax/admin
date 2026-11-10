@@ -5935,6 +5935,13 @@ func toAPIMuskdeerInstanceParameters(in *operator.MuskdeerInstanceParameters) *v
 		mapped := new(v1.MuskdeerInstanceParameters_WashTrade)
 		mapped.WashTrade = toAPIMuskdeerWashParameters(value.WashTrade)
 		out.Algorithm = mapped
+	case *operator.MuskdeerInstanceParameters_LongGrid:
+		if value == nil {
+			break
+		}
+		mapped := new(v1.MuskdeerInstanceParameters_LongGrid)
+		mapped.LongGrid = toAPIMuskdeerLongGridParameters(value.LongGrid)
+		out.Algorithm = mapped
 	}
 	return out
 }
@@ -7609,6 +7616,13 @@ func toRPCMuskdeerInstanceParameters(in *v1.MuskdeerInstanceParameters) *operato
 		mapped := new(operator.MuskdeerInstanceParameters_WashTrade)
 		mapped.WashTrade = toRPCMuskdeerWashParameters(value.WashTrade)
 		out.Algorithm = mapped
+	case *v1.MuskdeerInstanceParameters_LongGrid:
+		if value == nil {
+			break
+		}
+		mapped := new(operator.MuskdeerInstanceParameters_LongGrid)
+		mapped.LongGrid = toRPCMuskdeerLongGridParameters(value.LongGrid)
+		out.Algorithm = mapped
 	}
 	return out
 }
@@ -7661,6 +7675,19 @@ func toAPIMuskdeerWashParameters(in *operator.MuskdeerWashParameters) *v1.Muskde
 	out.Quantity = in.Quantity
 	out.MaximumNotional = in.MaximumNotional
 	out.QuantityFraction = in.QuantityFraction
+	return out
+}
+func toAPIMuskdeerLongGridParameters(in *operator.MuskdeerLongGridParameters) *v1.MuskdeerLongGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerLongGridParameters)
+	out.SpacingFraction = in.SpacingFraction
+	out.StopLossFraction = in.StopLossFraction
+	out.OrderNotional = in.OrderNotional
+	out.MaximumPositionNotional = in.MaximumPositionNotional
+	out.OpenOnStart = in.OpenOnStart
+	out.HaltAfterStopLoss = in.HaltAfterStopLoss
 	return out
 }
 func toAPIClientType_ClientType(in operator.ClientType_ClientType) v1.ClientType_ClientType {
@@ -8087,6 +8114,19 @@ func toRPCMuskdeerWashParameters(in *v1.MuskdeerWashParameters) *operator.Muskde
 	out.Quantity = in.Quantity
 	out.MaximumNotional = in.MaximumNotional
 	out.QuantityFraction = in.QuantityFraction
+	return out
+}
+func toRPCMuskdeerLongGridParameters(in *v1.MuskdeerLongGridParameters) *operator.MuskdeerLongGridParameters {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerLongGridParameters)
+	out.SpacingFraction = in.SpacingFraction
+	out.StopLossFraction = in.StopLossFraction
+	out.OrderNotional = in.OrderNotional
+	out.MaximumPositionNotional = in.MaximumPositionNotional
+	out.OpenOnStart = in.OpenOnStart
+	out.HaltAfterStopLoss = in.HaltAfterStopLoss
 	return out
 }
 func toRPCNullValue(in structpb.NullValue) structpb.NullValue {
