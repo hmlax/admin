@@ -4,7 +4,11 @@ RUN npm install -g pnpm@12.16.1
 COPY . .
 RUN pnpm install --frozen-lockfile
 ARG ADMIN_APP=platform
-RUN case "$ADMIN_APP" in platform|merchant) ;; *) exit 1 ;; esac && npm run "build:$ADMIN_APP"
+ARG FRONTEND_CONFIG_REVISION
+RUN --mount=type=secret,id=frontend_aes_key,required=true \
+    test -n "$FRONTEND_CONFIG_REVISION" && \
+    case "$ADMIN_APP" in platform|merchant) ;; *) exit 1 ;; esac && \
+    VITE_AES_KEY="$(cat /run/secrets/frontend_aes_key)" npm run "build:$ADMIN_APP"
 
 FROM nginx:stable-alpine
 ARG ADMIN_APP=platform

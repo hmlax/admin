@@ -27,11 +27,16 @@ npm run build
 ## Docker
 
 ```sh
+# 从配套 Nacos data.yaml 的 runtime.crypto_key 注入 VITE_AES_KEY。
+# FRONTEND_CONFIG_REVISION 使用配套配置修订号；密钥变更时必须同时更新，避免复用旧构建缓存。
+export FRONTEND_CONFIG_REVISION=your-config-revision
 MERCHANT_CODE=your-code docker compose up --build -d
 # 或分别构建
-docker build --build-arg ADMIN_APP=platform -t go-admin/platform-admin:local .
-docker build --build-arg ADMIN_APP=merchant -t go-admin/merchant-admin:local .
+docker build --secret id=frontend_aes_key,env=VITE_AES_KEY --build-arg FRONTEND_CONFIG_REVISION --build-arg ADMIN_APP=platform -t go-admin/platform-admin:local .
+docker build --secret id=frontend_aes_key,env=VITE_AES_KEY --build-arg FRONTEND_CONFIG_REVISION --build-arg ADMIN_APP=merchant -t go-admin/merchant-admin:local .
 ```
+
+构建必须提供配套 `VITE_AES_KEY` 和配置修订号，缺失会失败；不使用仓库 `.env` 示例值构建部署镜像。BuildKit secret 只用于构建时向 Vite 传值，不写入镜像环境变量或构建参数。浏览器必须使用配套构建产物才能正确提交加密口令，接口脚本使用后台密钥登录成功不代表浏览器产物已配对。
 
 镜像构建时固定应用类型，运行 merchant 镜像时必须设置 `MERCHANT_CODE`。`ADMIN_API_UPSTREAM` 默认为 `http://host.docker.internal:7788`；Linux 的独立 docker run 需加 `--add-host=host.docker.internal:host-gateway`，Compose 已配置。
 
