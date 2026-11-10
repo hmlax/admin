@@ -107,7 +107,15 @@ func (r *ApiRepo) EnsureMuskdeerModule(ctx context.Context) (err error) {
 			return err
 		}
 		menuIDs := []uint32{root.ID}
-		if capability.Page != "" {
+		if capability.Code == muskdeer.OverviewPermissionCode {
+			if _, err := tx.PermissionMenu.Delete().Where(permissionmenu.PermissionIDEQ(perm.ID), permissionmenu.MenuIDIn(root.ID, pages[capability.Page].ID)).Exec(ctx); err != nil {
+				return err
+			}
+			menuIDs, err = ensureMuskdeerOverviewNavigation(ctx, tx, now)
+			if err != nil {
+				return err
+			}
+		} else if capability.Page != "" {
 			menuIDs = append(menuIDs, pages[capability.Page].ID)
 		}
 		for _, id := range menuIDs {

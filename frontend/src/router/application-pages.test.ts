@@ -29,20 +29,25 @@ describe('application page boundaries', () => {
     expect(Object.keys(merchantPages)).toContain(`../src/pages/app/${page}`);
   });
 
-  it.each(['overview', 'instances', 'accounts', 'orders', 'cancellations', 'snapshot'])(
-    'keeps Muskdeer %s only in the merchant bundle', (page) => {
+  it.each(['instances', 'accounts', 'orders', 'cancellations', 'snapshot'])(
+    'keeps Muskdeer %s only in the merchant bundle',
+    (page) => {
       const key = `../src/pages/app/muskdeer/${page}/index.tsx`;
       expect(Object.keys(merchantPages)).toContain(key);
       expect(Object.keys(platformPages)).not.toContain(key);
-    });
+    },
+  );
 
   it('does not install static merchant business menus before server authorization', () => {
     expect(merchantRoutes).toEqual([]);
   });
 
-  it('does not ship the retired development publication page in either portal', () => {
-    const key = '../src/pages/app/muskdeer/synthetic/index.tsx';
-    expect(Object.keys(merchantPages)).not.toContain(key);
-    expect(Object.keys(platformPages)).not.toContain(key);
-  });
+  it.each(['overview', 'synthetic'])(
+    'does not ship the retired %s page in either portal',
+    (page) => {
+      const key = `../src/pages/app/muskdeer/${page}/index.tsx`;
+      expect(Object.keys(merchantPages)).not.toContain(key);
+      expect(Object.keys(platformPages)).not.toContain(key);
+    },
+  );
 });

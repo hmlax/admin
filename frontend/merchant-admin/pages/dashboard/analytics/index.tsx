@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useMuskdeerOverview } from '@/api/hooks/muskdeer';
 import ContentContainer from '@/layouts/components/PageContainer/ContentContainer';
 
-export default function Overview() {
+export default function Analytics() {
   const { t } = useTranslation('muskdeer');
   const query = useMuskdeerOverview();
   const values = [
@@ -21,12 +21,20 @@ export default function Overview() {
       <Row gutter={[16, 16]}>
         {values.map(([label, value]) => (
           <Col xs={24} sm={12} lg={8} key={label}>
-            <Card loading={query.isLoading}><Statistic title={t(label)} value={value ?? '—'} /></Card>
+            <Card loading={query.isLoading}>
+              <Statistic title={t(label)} value={value ?? '—'} />
+            </Card>
           </Col>
         ))}
       </Row>
       <Alert type="info" title={t('syntheticNotice')} style={{ marginTop: 16 }} />
-      <Button onClick={() => void query.refetch()} loading={query.isFetching} style={{ marginTop: 16 }}>{t('refresh')}</Button>
+      <Button
+        onClick={() => void query.refetch()}
+        loading={query.isFetching}
+        style={{ marginTop: 16 }}
+      >
+        {t('refresh')}
+      </Button>
     </ContentContainer>
   );
 }

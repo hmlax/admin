@@ -7,6 +7,10 @@ const (
 	RootName                     = "Muskdeer"
 	RootPath                     = "/muskdeer"
 	RetiredSyntheticMenuName     = "MuskdeerSynthetic"
+	RetiredOverviewMenuName      = "MuskdeerOverview"
+	OverviewPermissionCode       = "muskdeer:overview:view"
+	OverviewDashboardMenuName    = "Dashboard"
+	OverviewAnalyticsMenuName    = "Analytics"
 	AccountCreatePermissionCode  = "muskdeer:account:create"
 	accountCreatePermissionTitle = "添加交易账户"
 )
@@ -34,8 +38,9 @@ func Pages() []Page {
 			Path:         "overview",
 			Resource:     "overview",
 			Title:        "总览",
-			Name:         "MuskdeerOverview",
+			Name:         RetiredOverviewMenuName,
 			MerchantOnly: true,
+			Hidden:       true,
 		},
 		{
 			Path:         "templates",
@@ -164,7 +169,7 @@ func Capabilities() []Capability {
 			MerchantOnly: true,
 		},
 		{
-			Code:         "muskdeer:overview:view",
+			Code:         OverviewPermissionCode,
 			Title:        "查看总览",
 			Page:         "overview",
 			Methods:      []string{"GetOverview"},

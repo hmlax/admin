@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go-admin/operator/internal/data/store/api"
+	"go-admin/operator/internal/data/store/menu"
 	"go-admin/operator/internal/data/store/permission"
 	"go-admin/operator/internal/data/store/permissionapi"
 	"go-admin/operator/internal/data/store/permissionmenu"
@@ -15,6 +16,49 @@ import (
 	"go-admin/platform/pkg/constants"
 	"go-admin/platform/pkg/muskdeer"
 )
+
+func TestMuskdeerOverviewNavigationMovesToDashboardWithoutChangingPermissions(t *testing.T) {
+	db := storetest.NewClientForTest(t)
+	ctx := storetest.NewSystemContext(t.Context())
+	repo := newApiRepoSqlite(t, db)
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	legacy, err := db.Client().Menu.Query().Where(menu.NameEQ(muskdeer.RetiredOverviewMenuName)).Only(ctx)
+	require.NoError(t, err)
+	_, err = db.Client().Menu.UpdateOneID(legacy.ID).SetStatus(pb.Menu_ON.String()).Save(ctx)
+	require.NoError(t, err)
+	perm, err := db.Client().Permission.Query().Where(permission.CodeEQ(muskdeer.OverviewPermissionCode)).Only(ctx)
+	require.NoError(t, err)
+	err = db.Client().PermissionMenu.Create().SetPermissionID(perm.ID).SetMenuID(legacy.ID).OnConflictColumns(permissionmenu.FieldPermissionID, permissionmenu.FieldMenuID).Ignore().Exec(ctx)
+	require.NoError(t, err)
+	role, err := db.Client().Role.Create().SetTenantID(7).SetCode("custom:overview").SetName("Custom overview reader").Save(ctx)
+	require.NoError(t, err)
+	deny, err := db.Client().RolePermission.Create().SetTenantID(7).SetRoleID(role.ID).SetPermissionID(perm.ID).SetEffect(pb.RolePermission_DENY.String()).SetStatus(pb.RolePermission_ON.String()).Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	require.NoError(t, repo.EnsureMuskdeerModule(ctx))
+	retired, err := db.Client().Menu.Get(ctx, legacy.ID)
+	require.NoError(t, err)
+	require.Equal(t, pb.Menu_OFF.String(), retired.GetStatus())
+	dashboard, err := db.Client().Menu.Query().Where(menu.NameEQ(muskdeer.OverviewDashboardMenuName)).Only(ctx)
+	require.NoError(t, err)
+	analytics, err := db.Client().Menu.Query().Where(menu.NameEQ(muskdeer.OverviewAnalyticsMenuName)).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, dashboard.ID, analytics.GetParentId())
+	links, err := db.Client().PermissionMenu.Query().Where(permissionmenu.PermissionIDEQ(perm.ID)).All(ctx)
+	require.NoError(t, err)
+	var linkedMenus []uint32
+	for _, link := range links {
+		linkedMenus = append(linkedMenus, link.GetMenuId())
+	}
+	require.ElementsMatch(t, []uint32{dashboard.ID, analytics.ID}, linkedMenus)
+	permissionID, err := db.Client().Permission.Query().Where(permission.CodeEQ(muskdeer.OverviewPermissionCode)).OnlyID(ctx)
+	require.NoError(t, err)
+	require.Equal(t, perm.ID, permissionID)
+	preservedDeny, err := db.Client().RolePermission.Get(ctx, deny.ID)
+	require.NoError(t, err)
+	require.Equal(t, pb.RolePermission_DENY.String(), preservedDeny.GetEffect())
+}
 
 func TestMuskdeerModuleMergePreservesIDsCustomPermissionsAndTenantBoundary(t *testing.T) {
 	db := storetest.NewClientForTest(t)
