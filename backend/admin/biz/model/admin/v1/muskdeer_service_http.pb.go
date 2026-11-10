@@ -7,6 +7,7 @@ import (
 
 const OperationMuskdeerServiceCancelInstanceOrders = "/operator.v1.MuskdeerService/CancelInstanceOrders"
 const OperationMuskdeerServiceCreateAccountBinding = "/operator.v1.MuskdeerService/CreateAccountBinding"
+const OperationMuskdeerServiceCreateAccount = "/operator.v1.MuskdeerService/CreateAccount"
 const OperationMuskdeerServiceCreateInstance = "/operator.v1.MuskdeerService/CreateInstance"
 const OperationMuskdeerServiceGetAccountSnapshot = "/operator.v1.MuskdeerService/GetAccountSnapshot"
 const OperationMuskdeerServiceGetInstance = "/operator.v1.MuskdeerService/GetInstance"
@@ -28,6 +29,7 @@ const OperationMuskdeerServiceUpdateInstance = "/operator.v1.MuskdeerService/Upd
 type MuskdeerServiceHTTPServer interface {
 	CancelInstanceOrders(context.Context, *MuskdeerCancelRequest) (*MuskdeerCancelReply, error)
 	CreateAccountBinding(context.Context, *MuskdeerCreateBindingRequest) (*MuskdeerAccountBinding, error)
+	CreateAccount(context.Context, *MuskdeerCreateAccountRequest) (*MuskdeerAccount, error)
 	CreateInstance(context.Context, *MuskdeerCreateInstanceRequest) (*MuskdeerInstance, error)
 	GetAccountSnapshot(context.Context, *MuskdeerAccountRequest) (*MuskdeerAccountSnapshot, error)
 	GetInstance(context.Context, *MuskdeerInstanceRequest) (*MuskdeerInstance, error)

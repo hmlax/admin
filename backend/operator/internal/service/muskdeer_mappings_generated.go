@@ -282,6 +282,21 @@ func fromCoreAccountPage(in *core.AccountPage) *pb.MuskdeerAccountPage {
 	}
 	return out
 }
+func fromCoreAccountDraft(in *core.AccountDraft) *pb.MuskdeerAccountDraft {
+	if in == nil {
+		return nil
+	}
+	out := &pb.MuskdeerAccountDraft{
+		UserId:               in.UserId,
+		FundId:               in.FundId,
+		InstrumentId:         in.InstrumentId,
+		MarketDataSource:     in.MarketDataSource,
+		MaximumNotional:      in.MaximumNotional,
+		MaximumOrderNotional: in.MaximumOrderNotional,
+		Leverage:             in.Leverage,
+	}
+	return out
+}
 func fromCoreOrderRecord(in *core.OrderRecord) *pb.MuskdeerOrderRecord {
 	if in == nil {
 		return nil
@@ -707,6 +722,21 @@ func toCoreAccountPage(in *pb.MuskdeerAccountPage) *core.AccountPage {
 	}
 	for _, v := range in.Items {
 		out.Items = append(out.Items, toCoreAccount(v))
+	}
+	return out
+}
+func toCoreAccountDraft(in *pb.MuskdeerAccountDraft) *core.AccountDraft {
+	if in == nil {
+		return nil
+	}
+	out := &core.AccountDraft{
+		UserId:               in.UserId,
+		FundId:               in.FundId,
+		InstrumentId:         in.InstrumentId,
+		MarketDataSource:     in.MarketDataSource,
+		MaximumNotional:      in.MaximumNotional,
+		MaximumOrderNotional: in.MaximumOrderNotional,
+		Leverage:             in.Leverage,
 	}
 	return out
 }

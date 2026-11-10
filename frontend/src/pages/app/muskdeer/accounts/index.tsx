@@ -1,12 +1,18 @@
 import { formatTimestampMs } from '../components/timestamp';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ProColumns } from '@ant-design/pro-components';
-import { Tag } from 'antd';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { Button, Tag } from 'antd';
+import { useAccess } from '@/core/access';
 import type { MuskdeerAccount } from '@/api/generated/admin/v1';
 import { muskdeerReaders } from '@/api/hooks/muskdeer';
 import ResourceTable from '../components/ResourceTable';
+import AccountForm from '../components/AccountForm';
 export default function Page() {
  const { t } = useTranslation('muskdeer');
+ const { hasAccessByCodes } = useAccess();
+ const actionRef = useRef<ActionType>(null);
+ const [adding, setAdding] = useState(false);
  const columns: ProColumns<MuskdeerAccount>[] = [
 { title: t('search'), dataIndex: 'search', hideInTable: true },
 { title: t('accountId'), dataIndex: 'accountId', hideInSearch: true, width: 160 },
@@ -22,5 +28,9 @@ export default function Page() {
 { title: t('availableQuote'), dataIndex: 'availableQuote', hideInSearch: true, width: 160 },
 { title: t('snapshotExpiresAtMs'), dataIndex: 'snapshotExpiresAtMs', hideInSearch: true, width: 160, render: (_, row) => formatTimestampMs(row.snapshotExpiresAtMs) },
 ];
- return <ResourceTable<MuskdeerAccount> resource="accounts" columns={columns} fetch={muskdeerReaders.accounts} />;
+ return <>
+  <ResourceTable<MuskdeerAccount> resource="accounts" columns={columns} fetch={muskdeerReaders.accounts} actionRef={actionRef}
+   toolbar={hasAccessByCodes(['muskdeer:account:create']) ? [<Button key="create" type="primary" onClick={() => setAdding(true)}>{t('addAccount')}</Button>] : []} />
+  {adding && <AccountForm onClose={() => setAdding(false)} onSaved={() => void actionRef.current?.reload()} />}
+ </>;
 }

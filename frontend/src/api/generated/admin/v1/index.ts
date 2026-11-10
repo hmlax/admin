@@ -3518,8 +3518,25 @@ export type MuskdeerSetBindingEnabledRequest = {
   id?: number;
 };
 
+export type MuskdeerAccountDraft = {
+  fundId?: string;
+  instrumentId?: string;
+  leverage?: number;
+  marketDataSource?: string;
+  maximumNotional?: string;
+  maximumOrderNotional?: string;
+  userId?: string;
+};
+
+export type MuskdeerCreateAccountRequest = {
+  data?: MuskdeerAccountDraft;
+};
+
 // 平台提供公共配置；商户独立配置和操作其账户及策略实例。
 export interface MuskdeerService {
+  CreateAccount(
+    request: MuskdeerCreateAccountRequest,
+  ): Promise<MuskdeerAccount>;
   ListAccountBindings(
     request: MuskdeerBindingListRequest,
   ): Promise<MuskdeerBindingPage>;
@@ -3583,6 +3600,14 @@ export function createMuskdeerServiceClient(
   transport: ClientTransport,
 ): MuskdeerService {
   return {
+    CreateAccount(request) {
+      const path = `admin/v1/muskdeer/accounts`;
+      const body = JSON.stringify(request);
+      return transport.unary(path, 'POST', body, {
+        service: 'MuskdeerService',
+        method: 'CreateAccount',
+      }) as Promise<MuskdeerAccount>;
+    },
     ListAccountBindings(request) {
       const path = `admin/v1/muskdeer/account-bindings`;
       const body = null;

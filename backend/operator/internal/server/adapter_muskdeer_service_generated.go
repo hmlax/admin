@@ -12,6 +12,9 @@ type MuskdeerServiceAdapter struct {
 	inner *service.MuskdeerService
 }
 
+func (s *MuskdeerServiceAdapter) CreateAccount(ctx context.Context, in *operator.MuskdeerCreateAccountRequest) (*operator.MuskdeerAccount, error) {
+	return s.inner.CreateAccount(ctx, in)
+}
 func (s *MuskdeerServiceAdapter) ListAccountBindings(ctx context.Context, in *operator.MuskdeerBindingListRequest) (*operator.MuskdeerBindingPage, error) {
 	return s.inner.ListAccountBindings(ctx, in)
 }

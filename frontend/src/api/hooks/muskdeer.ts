@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
-import type { MuskdeerInstanceDraft, MuskdeerInstance, MuskdeerRunningRequest, MuskdeerCancelRequest, MuskdeerBindingDraft, MuskdeerSetBindingEnabledRequest } from '@/api/generated/admin/v1';
+import type { MuskdeerAccountDraft, MuskdeerInstanceDraft, MuskdeerInstance, MuskdeerRunningRequest, MuskdeerCancelRequest, MuskdeerBindingDraft, MuskdeerSetBindingEnabledRequest } from '@/api/generated/admin/v1';
 import { useUserStore } from '@/stores/user';
 
 export const muskdeerReaders = {
@@ -42,3 +42,4 @@ export const cancelMuskdeerOrders = (input: MuskdeerCancelRequest) => apiClient.
 export const createMuskdeerBinding = (data: MuskdeerBindingDraft) => apiClient.muskdeerService.CreateAccountBinding({ data });
 export const setMuskdeerBindingEnabled = (input: MuskdeerSetBindingEnabledRequest) => apiClient.muskdeerService.SetAccountBindingEnabled(input);
 export const getMuskdeerInstance = (id: number) => apiClient.muskdeerService.GetInstance({ id });
+export const createMuskdeerAccount = (data: MuskdeerAccountDraft) => apiClient.muskdeerService.CreateAccount({ data });

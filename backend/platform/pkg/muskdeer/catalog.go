@@ -2,11 +2,13 @@
 package muskdeer
 
 const (
-	Module                   = "muskdeer"
-	ServiceTag               = "MuskdeerService"
-	RootName                 = "Muskdeer"
-	RootPath                 = "/muskdeer"
-	RetiredSyntheticMenuName = "MuskdeerSynthetic"
+	Module                       = "muskdeer"
+	ServiceTag                   = "MuskdeerService"
+	RootName                     = "Muskdeer"
+	RootPath                     = "/muskdeer"
+	RetiredSyntheticMenuName     = "MuskdeerSynthetic"
+	AccountCreatePermissionCode  = "muskdeer:account:create"
+	accountCreatePermissionTitle = "添加交易账户"
 )
 
 type Page struct {
@@ -194,6 +196,13 @@ func Capabilities() []Capability {
 			Title:        "查看账户额度",
 			Page:         "accounts",
 			Methods:      []string{"ListAccounts"},
+			MerchantOnly: true,
+		},
+		{
+			Code:         AccountCreatePermissionCode,
+			Title:        accountCreatePermissionTitle,
+			Page:         "accounts",
+			Methods:      []string{"CreateAccount", "ListInstruments"},
 			MerchantOnly: true,
 		},
 		{

@@ -2501,6 +2501,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/MuskdeerAccountPage'
+        post:
+            tags:
+                - MuskdeerService
+            operationId: MuskdeerService_CreateAccount
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/MuskdeerCreateAccountRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MuskdeerAccount'
     /admin/v1/muskdeer/cancellations:
         get:
             tags:
@@ -6759,6 +6776,24 @@ components:
                     type: boolean
                 version:
                     type: string
+        MuskdeerAccountDraft:
+            type: object
+            properties:
+                userId:
+                    type: string
+                fundId:
+                    type: string
+                instrumentId:
+                    type: string
+                marketDataSource:
+                    type: string
+                maximumNotional:
+                    type: string
+                maximumOrderNotional:
+                    type: string
+                leverage:
+                    type: integer
+                    format: uint32
         MuskdeerAccountPage:
             type: object
             properties:
@@ -6872,6 +6907,11 @@ components:
                         $ref: '#/components/schemas/MuskdeerCancellation'
                 total:
                     type: string
+        MuskdeerCreateAccountRequest:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/MuskdeerAccountDraft'
         MuskdeerCreateBindingRequest:
             type: object
             properties:

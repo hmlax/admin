@@ -6,11 +6,13 @@ import (
 	"math"
 	"time"
 
+	"github.com/tx7do/go-crud/viewer"
 	"go-admin/operator/internal/data/store"
 	binding "go-admin/operator/internal/data/store/muskdeeraccountbinding"
 	"go-admin/operator/internal/data/store/tenant"
 	pb "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/middleware/auth"
+	"go-admin/platform/pkg/muskdeer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -41,7 +43,7 @@ func (r *MuskdeerBindingRepo) Scope(ctx context.Context) ([]string, error) {
 	if actor.GetTenantId() == 0 {
 		return nil, status.Error(codes.PermissionDenied, muskdeerScopeDenied)
 	}
-	rows, err := r.db.Client().MuskdeerAccountBinding.Query().Where(binding.TenantIDEQ(actor.GetTenantId()), binding.IsEnabledEQ(true), binding.DeletedAtIsNil()).All(ctx)
+	rows, err := r.db.Client().MuskdeerAccountBinding.Query().Where(binding.TenantIDEQ(actor.GetTenantId()), binding.IsEnabledEQ(true), binding.VersionGT(muskdeerBindingPendingVersion), binding.DeletedAtIsNil()).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +112,7 @@ func (r *MuskdeerBindingRepo) List(ctx context.Context, in *pb.MuskdeerBindingLi
 	return out, nil
 }
 
-func (r *MuskdeerBindingRepo) Create(ctx context.Context, in *pb.MuskdeerBindingDraft) (*pb.MuskdeerAccountBinding, error) {
+func (r *MuskdeerBindingRepo) Create(ctx context.Context, in *pb.MuskdeerBindingDraft) (out *pb.MuskdeerAccountBinding, err error) {
 	actor, err := MuskdeerIdentity(ctx, true)
 	if err != nil {
 		return nil, err
@@ -125,8 +127,26 @@ func (r *MuskdeerBindingRepo) Create(ctx context.Context, in *pb.MuskdeerBinding
 	if !exists {
 		return nil, status.Error(codes.NotFound, "tenant not found")
 	}
+	tx, err := r.db.Client().Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer store.MakeTxCleanup(tx, &err)()
+	if user, ok := muskdeer.AccountUser(in.GetAccountId()); ok {
+		trusted := viewer.WithSystemContext(ctx)
+		if err := lockMuskdeerEnrollment(trusted, tx.GormDB()); err != nil {
+			return nil, err
+		}
+		rows, err := userBindings(trusted, tx.GormDB(), user)
+		if err != nil {
+			return nil, err
+		}
+		if err := exclusiveMuskdeerUser(rows, in.GetTenantId(), false); err != nil {
+			return nil, err
+		}
+	}
 	now := time.Now().UTC()
-	row, err := r.db.Client().MuskdeerAccountBinding.Create().SetTenantID(in.TenantId).SetAccountID(in.AccountId).SetIsEnabled(in.Enabled).SetVersion(1).SetCreatedBy(actor.UserId).SetUpdatedBy(actor.UserId).SetCreatedAt(now).SetUpdatedAt(now).Save(ctx)
+	row, err := tx.MuskdeerAccountBinding.Create().SetTenantID(in.TenantId).SetAccountID(in.AccountId).SetIsEnabled(in.Enabled).SetVersion(muskdeerBindingActiveVersion).SetCreatedBy(actor.UserId).SetUpdatedBy(actor.UserId).SetCreatedAt(now).SetUpdatedAt(now).Save(ctx)
 	if err != nil {
 		return nil, err
 	}

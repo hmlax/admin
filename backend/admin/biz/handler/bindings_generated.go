@@ -2073,6 +2073,30 @@ func BindMuskdeerServiceCreateAccountBinding(service v1.MuskdeerServiceHTTPServe
 			}
 		}}
 }
+func BindMuskdeerServiceCreateAccount(service v1.MuskdeerServiceHTTPServer) transport.Binding {
+	return transport.Binding{
+		Operation: v1.OperationMuskdeerServiceCreateAccount,
+		Stream:    false,
+		Handler: func(ctx context.Context, c *app.RequestContext) {
+			in := new(v1.MuskdeerCreateAccountRequest)
+			if err := transport.BindRequest(c, in, "*"); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.ValidateRequest(in); err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			reply, err := service.CreateAccount(ctx, in)
+			if err != nil {
+				transport.FailRequest(c, err)
+				return
+			}
+			if err := transport.EncodeAPIResponse(c, reply); err != nil {
+				transport.FailRequest(c, err)
+			}
+		}}
+}
 func BindMuskdeerServiceCreateInstance(service v1.MuskdeerServiceHTTPServer) transport.Binding {
 	return transport.Binding{
 		Operation: v1.OperationMuskdeerServiceCreateInstance,

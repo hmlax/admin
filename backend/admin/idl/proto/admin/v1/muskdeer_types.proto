@@ -153,3 +153,10 @@ message MuskdeerLongGridParameters {
  string order_notional = 3; string maximum_position_notional = 4;
  bool open_on_start = 5; bool halt_after_stop_loss = 6;
 }
+
+message MuskdeerAccountDraft {
+ string user_id = 1; string fund_id = 2; string instrument_id = 3;
+ string market_data_source = 4; string maximum_notional = 5;
+ string maximum_order_notional = 6; uint32 leverage = 7;
+}
+message MuskdeerCreateAccountRequest { MuskdeerAccountDraft data = 1; }

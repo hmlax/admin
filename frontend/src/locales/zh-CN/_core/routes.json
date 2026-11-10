@@ -99,7 +99,7 @@
   "MuskdeerTemplates": "策略模板",
   "MuskdeerInstances": "策略实例",
   "MuskdeerInstruments": "品种",
-  "MuskdeerAccounts": "账户额度",
+  "MuskdeerAccounts": "交易账户",
   "MuskdeerOrders": "订单记录",
   "MuskdeerCancellations": "撤单记录",
   "MuskdeerSynthetic": "开发成交",

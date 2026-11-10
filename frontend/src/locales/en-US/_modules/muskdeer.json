@@ -10,7 +10,7 @@
   "templates": "Strategy templates",
   "instances": "Strategy instances",
   "instruments": "Instruments",
-  "accounts": "Account limits",
+  "accounts": "Trading accounts",
   "orders": "Order records",
   "cancellations": "Cancellations",
   "synthetic": "Development publications",
@@ -151,5 +151,9 @@
   "stopLossFraction": "Stop below average entry (0.005 = 0.5%)",
   "orderNotional": "Target opening notional (USDT)",
   "maximumPositionNotional": "Maximum position notional (USDT)",
-  "longGridNotice": "Long only with cross margin. Opens the first lot on start, buys one spacing lower and sells the corresponding lot one spacing higher. A stop below venue average entry closes the position and halts the strategy until explicitly started again. Quantities follow the market lot step. Close positions before editing parameters."
+  "longGridNotice": "Long only with cross margin. Opens the first lot on start, buys one spacing lower and sells the corresponding lot one spacing higher. A stop below venue average entry closes the position and halts the strategy until explicitly started again. Quantities follow the market lot step. Close positions before editing parameters.",
+  "addAccount": "Add trading account",
+  "accountEnrollmentNotice": "Connect an existing venue user and fund. The user must already be authorized for this merchant. Configure strategies separately after adding the account.",
+  "tradingIDRequired": "Enter a valid positive account ID",
+  "accountAdded": "Trading account added"
 }

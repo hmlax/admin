@@ -2383,6 +2383,34 @@ func toAPIMuskdeerAccountBinding(in *operator.MuskdeerAccountBinding) *v1.Muskde
 	out.Version = in.Version
 	return out
 }
+func toRPCMuskdeerCreateAccountRequest(in *v1.MuskdeerCreateAccountRequest) *operator.MuskdeerCreateAccountRequest {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerCreateAccountRequest)
+	out.Data = toRPCMuskdeerAccountDraft(in.Data)
+	return out
+}
+func toAPIMuskdeerAccount(in *operator.MuskdeerAccount) *v1.MuskdeerAccount {
+	if in == nil {
+		return nil
+	}
+	out := new(v1.MuskdeerAccount)
+	out.Id = in.Id
+	out.AccountId = in.AccountId
+	out.UserId = in.UserId
+	out.FundId = in.FundId
+	out.Symbol = in.Symbol
+	out.MaximumNotional = in.MaximumNotional
+	out.MaximumOrderNotional = in.MaximumOrderNotional
+	out.Leverage = in.Leverage
+	out.Enabled = in.Enabled
+	out.ObservedNotional = in.ObservedNotional
+	out.ReservedNotional = in.ReservedNotional
+	out.AvailableQuote = in.AvailableQuote
+	out.SnapshotExpiresAtMs = in.SnapshotExpiresAtMs
+	return out
+}
 func toRPCMuskdeerCreateInstanceRequest(in *v1.MuskdeerCreateInstanceRequest) *operator.MuskdeerCreateInstanceRequest {
 	if in == nil {
 		return nil
@@ -5893,6 +5921,20 @@ func toRPCMuskdeerBindingDraft(in *v1.MuskdeerBindingDraft) *operator.MuskdeerBi
 	out.Enabled = in.Enabled
 	return out
 }
+func toRPCMuskdeerAccountDraft(in *v1.MuskdeerAccountDraft) *operator.MuskdeerAccountDraft {
+	if in == nil {
+		return nil
+	}
+	out := new(operator.MuskdeerAccountDraft)
+	out.UserId = in.UserId
+	out.FundId = in.FundId
+	out.InstrumentId = in.InstrumentId
+	out.MarketDataSource = in.MarketDataSource
+	out.MaximumNotional = in.MaximumNotional
+	out.MaximumOrderNotional = in.MaximumOrderNotional
+	out.Leverage = in.Leverage
+	return out
+}
 func toRPCMuskdeerInstanceDraft(in *v1.MuskdeerInstanceDraft) *operator.MuskdeerInstanceDraft {
 	if in == nil {
 		return nil
@@ -5978,26 +6020,6 @@ func toAPIMuskdeerPosition(in *operator.MuskdeerPosition) *v1.MuskdeerPosition {
 	out.SignedQuantity = in.SignedQuantity
 	out.EntryPrice = in.EntryPrice
 	out.Leverage = in.Leverage
-	return out
-}
-func toAPIMuskdeerAccount(in *operator.MuskdeerAccount) *v1.MuskdeerAccount {
-	if in == nil {
-		return nil
-	}
-	out := new(v1.MuskdeerAccount)
-	out.Id = in.Id
-	out.AccountId = in.AccountId
-	out.UserId = in.UserId
-	out.FundId = in.FundId
-	out.Symbol = in.Symbol
-	out.MaximumNotional = in.MaximumNotional
-	out.MaximumOrderNotional = in.MaximumOrderNotional
-	out.Leverage = in.Leverage
-	out.Enabled = in.Enabled
-	out.ObservedNotional = in.ObservedNotional
-	out.ReservedNotional = in.ReservedNotional
-	out.AvailableQuote = in.AvailableQuote
-	out.SnapshotExpiresAtMs = in.SnapshotExpiresAtMs
 	return out
 }
 func toAPIMuskdeerCancellation(in *operator.MuskdeerCancellation) *v1.MuskdeerCancellation {
