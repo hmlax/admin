@@ -1,8 +1,11 @@
 package runtimeconfig
 
+import "go-admin/platform/pkg/tracing"
+
 // Settings holds application options supplied by Nacos server.yaml/data.yaml.
 // Bootstrap's protobuf owns database, Redis, transport, JWT, OSS and logger fields.
 type Settings struct {
+	Tracing           tracing.Config   `yaml:"tracing"`
 	SMTP              SMTPSettings     `yaml:"smtp"`
 	SMS               SMSSettings      `yaml:"sms"`
 	CryptoKey         string           `yaml:"crypto_key"`

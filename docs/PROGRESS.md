@@ -1,5 +1,13 @@
 # 做市管理接入进度
 
+## 2026-11-11 管理后台 Jaeger 追踪
+
+Nacos runtime.tracing提供独立admin/operator的OTLP端点、TLS、整数ppm采样和导出期限，env仍仅连接Nacos，OTEL环境不覆盖运行设置。每进程拥有独立provider、2048个span非阻塞队列、256批量及有界停机flush，不替换全局provider。框架原日志自动关联活跃span，审计Trace ID优先取实际server span，覆盖浏览器未传traceparent的请求。
+
+Hertz入口全局追踪路由/状态并返回X-Trace-ID，实际gRPC传输贯通operator及核心Console，包含原NewStream单次发送客户端；4xx/5xx、校验错误和panic均标记失败。operator数据库使用原enable_trace开关及显式provider，Redis只记录命令名；导出过滤SQL、参数和异常原文。没有修改HTTP业务协议、权限、账户归属或前端构建参数。
+
+验证：完整后端测试、相关race/vet、两个入口构建、官方163条HTTP绑定/API/Wire生成通过；补充Hertz→gRPC父子关系与错误、审计关联、OTEL配置隔离、真实OTLP接收与停机flush、导出队列满不阻塞业务、脱敏回归通过。核心配套为1dc8daf，实际发布和Jaeger链路查询后续另记；不以孤立span冒充端到端调用验收。
+
 ## 2026-11-10 账户页面修复实际发布
 
 190e5c6bd3d7的operator/admin/商户前端与核心f6a0a506767b已配套部署，管理库先备份，无新表或DDL。实际商户镜像保持与后台配对的AES参数及原登录凭据；原账号经平台/商户代理登录成功。商户真实HTTP读取21账户和40实例，运行装载版本一致；添加权限仅在商户上下文出现，开发成交菜单在双端导航均不存在。

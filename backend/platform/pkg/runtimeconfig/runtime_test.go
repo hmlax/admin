@@ -120,3 +120,20 @@ func TestNacosBootstrapEnvironment(t *testing.T) {
 		t.Fatal("Nacos bootstrap settings lost")
 	}
 }
+
+func TestNacosOwnsTracingSettings(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://wrong:1")
+	t.Setenv("OTEL_TRACES_SAMPLER", "always_off")
+	server := strings.Replace(testServerConfig, "  sso:", "  tracing:\n    enabled: true\n    endpoint: tracing.example.test:4317\n    insecure: false\n    sampling_per_million: 100000\n    export_timeout: 3s\n  sso:", 1)
+	cfg, err := Decode([]byte(server), []byte(testDataConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Runtime.Tracing.Endpoint != "tracing.example.test:4317" || cfg.Runtime.Tracing.ExportTimeout != 3*time.Second {
+		t.Fatal("Nacos tracing settings were lost or overridden")
+	}
+	cfg.Runtime.Tracing.SamplingPerMillion = 1000001
+	if validate(cfg, "admin") == nil {
+		t.Fatal("invalid tracing sampler accepted")
+	}
+}

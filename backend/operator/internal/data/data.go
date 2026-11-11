@@ -15,6 +15,7 @@ import (
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/oss"
 	"go-admin/platform/pkg/serviceid"
+	"go-admin/platform/pkg/tracing"
 )
 
 func NewClientType() operatorV1.ClientType_ClientType {
@@ -31,6 +32,9 @@ func NewRedisClient(ctx *bootstrap.Context) (*redis.Client, func(), error) {
 	l := ctx.NewLoggerHelper("redis/data/admin-service")
 
 	cli := redisClient.NewClient(cfg.Data, klog.NewHelper(bLogger.AsKratosLogger(l)))
+	if cli != nil {
+		cli.AddHook(tracing.RedisHook{})
+	}
 
 	return cli, func() {
 		if err := cli.Close(); err != nil {

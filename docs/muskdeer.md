@@ -59,3 +59,10 @@ frontend 执行 `npm run typecheck`、`npm run build`、`npm run test:tenant-rou
 商户首页 `/dashboard/analytics` 展示业务概览的模板、实例、请求运行、账户、订单记录、已发布开发成交和未知开发成交数量，支持原来的定时与手动刷新。只有商户构建加载该业务组件，平台首页沿用框架组件。
 
 原 `/muskdeer/overview` 页面已删除，对应菜单在 operator 启动的幂等目录同步中置 OFF。原 `muskdeer:overview:view` 权限和 API 保持，通过 Dashboard / Analytics 菜单关联提供新入口，不增加跨商户或平台业务访问权。部署 operator 和商户前端后，刷新页面以重新读取授权导航。
+
+
+Jaeger tracing is configured in Nacos `server.yaml` under `runtime.tracing`: `enabled`, collector `endpoint` (host:port), `insecure`, optional `root_cert_file`, integer `sampling_per_million`, and `export_timeout` (for example `3s`). Environment variables continue to bootstrap Nacos only; no `OTEL_*` fallback is used. The process service names are `muskdeer-admin` and `muskdeer-operator`, separate from other deployments sharing Jaeger.
+
+The HTTP entry creates a W3C trace before authentication and returns `X-Trace-ID`. HTTP → operator → core gRPC preserves parent spans, including the existing core single-dispatch client. HTTP 4xx/5xx and gRPC/domain failures are marked as errors. Enable the existing `data.database.enable_trace` option to include operator database timings; SQL text/parameters and exception text are not exported. Redis timings include command names only; existing framework logging automatically correlates the active trace.
+
+Each process owns its provider and bounded asynchronous export queue. Shutdown drains services and flushes spans within a fixed deadline; collector failure does not become a business readiness dependency. Sampling retains complete sampled request chains, and completed synchronous operations are searchable independently of long-lived market subscription spans. No frontend rebuild, menu or permission change is required for tracing.

@@ -21,6 +21,7 @@ operatorV1 "go-admin/platform/pb/operator"
 "github.com/go-kratos/kratos/v2/middleware/recovery"
 "go-admin/platform/pkg/rpcbridge"
 "go-admin/platform/pkg/runtimeconfig"
+"go-admin/platform/pkg/tracing"
 grpcCore "google.golang.org/grpc"
 )
 '''+f'func NewGRPCServer({newparams}, gateway *GatewayService) (*grpc.Server,error) {{\n'+'''cfg:=ctx.GetConfig().GetServer().GetGrpc()
@@ -29,7 +30,8 @@ options:=[]grpc.ServerOption{
  grpc.Address(cfg.GetAddr()),
  grpc.Timeout(cfg.GetTimeout().AsDuration()),
  grpc.Middleware(recovery.Recovery(),rpcbridge.Server()),
- grpc.Options(grpcCore.MaxRecvMsgSize(70<<20),grpcCore.MaxSendMsgSize(70<<20)),
+ grpc.Options(grpcCore.MaxRecvMsgSize(70<<20),grpcCore.MaxSendMsgSize(70<<20),grpcCore.StatsHandler(tracing.ServerHandler(runtimeconfig.TracingFromContext(ctx).Provider()))),
+ grpc.UnaryInterceptor(tracing.UnaryErrors),
 }
 if advertised:=runtimeconfig.SettingsFromContext(ctx).GRPCAdvertiseAddr;advertised!="" {
  endpoint,err:=runtimeconfig.Endpoint("grpc",cfg.GetAddr(),advertised)

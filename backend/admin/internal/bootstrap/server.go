@@ -25,6 +25,7 @@ import (
 	"go-admin/platform/pkg/runtimeconfig"
 	"go-admin/platform/pkg/security"
 	"go-admin/platform/pkg/serviceid"
+	"go-admin/platform/pkg/tracing"
 
 	"google.golang.org/grpc"
 )
@@ -85,7 +86,7 @@ func New(ctx *bootstrap.Context, register RegisterRoutes) ([]*HTTPServer, func()
 		kgrpc.WithTimeout(cfg.GetServer().GetGrpc().GetTimeout().AsDuration()),
 		kgrpc.WithMiddleware(rpcbridge.Client()),
 		kgrpc.WithUnaryInterceptor(rpcbridge.ReplyHeaders()),
-		kgrpc.WithOptions(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(70<<20), grpc.MaxCallSendMsgSize(70<<20))),
+		kgrpc.WithOptions(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(70<<20), grpc.MaxCallSendMsgSize(70<<20)), grpc.WithStatsHandler(tracing.ClientHandler(runtimeconfig.TracingFromContext(ctx).Provider()))),
 	}
 	if reg := runtimeconfig.Registrar(ctx); reg != nil {
 		discovery, ok := reg.(registry.Discovery)
@@ -117,6 +118,7 @@ func New(ctx *bootstrap.Context, register RegisterRoutes) ([]*HTTPServer, func()
 			ctx.GetLogger().Error(ctx.Context(), err.Error())
 		}
 	})
+	cache.AddHook(tracing.RedisHook{})
 	tokenCache := security.NewUserTokenCache(ctx, cache)
 	authenticator := security.NewAuthenticator(ctx, tokenCache)
 	checker := security.NewTokenChecker(ctx, authenticator, operatorV1.ClientType_admin)
@@ -131,6 +133,7 @@ func New(ctx *bootstrap.Context, register RegisterRoutes) ([]*HTTPServer, func()
 		closeAll()
 		return nil, nil, err
 	}
+	api.router.Use(tracing.HTTPMiddleware(runtimeconfig.TracingFromContext(ctx).Provider()))
 	apiRouter := api.router
 	cleanup = append(cleanup, func() {
 		api.cancel()

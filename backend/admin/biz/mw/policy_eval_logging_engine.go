@@ -13,6 +13,7 @@ import (
 	"github.com/tx7do/go-crud/viewer"
 	"github.com/tx7do/go-utils/trans"
 	authzEngine "github.com/tx7do/kratos-authz/engine"
+	"go.opentelemetry.io/otel/trace"
 
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/httpmeta"
@@ -125,10 +126,11 @@ func (e *evalLoggingEngine) resolvePolicyCached(ctx context.Context, subject, pa
 	return pid, pol
 }
 
-// TraceIDFromContext 取链路追踪ID：优先 W3C TraceContext 的 traceparent 头
-// （格式 00-{trace-id}-{span-id}-{flags}，取 trace-id 段）；无则回退 X-Request-Id，
-// 与 api/operation/data_access 审计的 request_id 同源，可跨日志关联同一请求。
+// TraceIDFromContext uses the active server span, then legacy request headers.
 func TraceIDFromContext(ctx context.Context) string {
+	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
+		return sc.TraceID().String()
+	}
 	htr, ok := httpmeta.FromContext(ctx)
 	if !ok {
 		return ""

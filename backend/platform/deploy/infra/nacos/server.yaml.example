@@ -16,6 +16,12 @@ logger:
 authz:
   type: casbin
 runtime:
+  tracing:
+    enabled: false
+    endpoint: jaeger.internal.example:4317
+    insecure: false
+    sampling_per_million: 100000
+    export_timeout: 3s
   operator_endpoint: '' # Empty selects Nacos discovery for operator.grpc.
   sso:
     issuer: ''

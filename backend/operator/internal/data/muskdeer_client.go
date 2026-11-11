@@ -19,6 +19,10 @@ import (
 
 	pb "go-admin/platform/pb/muskdeer/strategy/console/v1"
 	"go-admin/platform/pkg/runtimeconfig"
+	"go-admin/platform/pkg/tracing"
+
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 const muskdeerDisabled = "Muskdeer connection is disabled"
@@ -30,7 +34,7 @@ type MuskdeerConnection struct {
 }
 
 func NewMuskdeerConnection(ctx *bootstrap.Context) (*MuskdeerConnection, func(), error) {
-	result, err := OpenMuskdeerConnection(runtimeconfig.SettingsFromContext(ctx).Muskdeer)
+	result, err := OpenMuskdeerConnection(runtimeconfig.SettingsFromContext(ctx).Muskdeer, runtimeconfig.TracingFromContext(ctx).Provider())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -45,7 +49,7 @@ func NewMuskdeerConnection(ctx *bootstrap.Context) (*MuskdeerConnection, func(),
 }
 
 // OpenMuskdeerConnection snapshots Nacos infrastructure settings; no insecure fallback.
-func OpenMuskdeerConnection(cfg runtimeconfig.MuskdeerSettings) (*MuskdeerConnection, error) {
+func OpenMuskdeerConnection(cfg runtimeconfig.MuskdeerSettings, providers ...trace.TracerProvider) (*MuskdeerConnection, error) {
 	if !cfg.Enabled {
 		return &MuskdeerConnection{}, nil
 	}
@@ -71,6 +75,10 @@ func OpenMuskdeerConnection(cfg runtimeconfig.MuskdeerSettings) (*MuskdeerConnec
 	if !slices.Contains(leaf.DNSNames, "operator.grpc") {
 		return nil, errors.New("Muskdeer client certificate requires operator.grpc identity")
 	}
+	provider := trace.TracerProvider(noop.NewTracerProvider())
+	if len(providers) > 0 && providers[0] != nil {
+		provider = providers[0]
+	}
 	conn, err := grpc.NewClient("passthrough:///"+cfg.Endpoint,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 			MinVersion:   tls.VersionTLS13,
@@ -79,6 +87,7 @@ func OpenMuskdeerConnection(cfg runtimeconfig.MuskdeerSettings) (*MuskdeerConnec
 			Certificates: []tls.Certificate{cert},
 		})),
 		grpc.WithNoProxy(), grpc.WithDisableRetry(), grpc.WithDisableServiceConfig(),
+		grpc.WithStatsHandler(tracing.ClientHandler(provider)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(16<<20), grpc.MaxCallSendMsgSize(16<<20)),
 	)
 	if err != nil {

@@ -3,14 +3,16 @@ package server
 
 import (
 	"fmt"
-	"github.com/go-kratos/kratos/v2/middleware/recovery"
-	"github.com/go-kratos/kratos/v2/transport/grpc"
-	"github.com/tx7do/go-utils/authorizer"
-	"github.com/tx7do/kratos-bootstrap/bootstrap"
 	"go-admin/operator/internal/service"
 	operatorV1 "go-admin/platform/pb/operator"
 	"go-admin/platform/pkg/rpcbridge"
 	"go-admin/platform/pkg/runtimeconfig"
+	"go-admin/platform/pkg/tracing"
+
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/transport/grpc"
+	"github.com/tx7do/go-utils/authorizer"
+	"github.com/tx7do/kratos-bootstrap/bootstrap"
 	grpcCore "google.golang.org/grpc"
 )
 
@@ -66,7 +68,8 @@ func NewGRPCServer(
 		grpc.Address(cfg.GetAddr()),
 		grpc.Timeout(cfg.GetTimeout().AsDuration()),
 		grpc.Middleware(recovery.Recovery(), rpcbridge.Server()),
-		grpc.Options(grpcCore.MaxRecvMsgSize(70<<20), grpcCore.MaxSendMsgSize(70<<20)),
+		grpc.Options(grpcCore.MaxRecvMsgSize(70<<20), grpcCore.MaxSendMsgSize(70<<20), grpcCore.StatsHandler(tracing.ServerHandler(runtimeconfig.TracingFromContext(ctx).Provider()))),
+		grpc.UnaryInterceptor(tracing.UnaryErrors),
 	}
 	if advertised := runtimeconfig.SettingsFromContext(ctx).GRPCAdvertiseAddr; advertised != "" {
 		endpoint, err := runtimeconfig.Endpoint("grpc", cfg.GetAddr(), advertised)

@@ -25,6 +25,7 @@ import (
 	"gorm.io/gorm/schema"
 
 	"go-admin/operator/internal/data/store"
+	"go-admin/platform/pkg/runtimeconfig"
 )
 
 // NewGormClient connects to the configured database without executing DDL.
@@ -48,7 +49,7 @@ func NewGormClient(ctx *bootstrap.Context) (*store.DBClient, func(), error) {
 	var pool *sql.DB
 	var err error
 	if database.GetEnableTrace() {
-		pool, err = otelsql.Open(poolDriver, database.GetSource(), otelsql.WithAttributes(attribute.String("db.system", driver)))
+		pool, err = otelsql.Open(poolDriver, database.GetSource(), otelsql.WithAttributes(attribute.String("db.system", driver)), otelsql.WithTracerProvider(runtimeconfig.TracingFromContext(ctx).Provider()), otelsql.WithSpanOptions(otelsql.SpanOptions{DisableQuery: true}))
 	} else {
 		pool, err = sql.Open(poolDriver, database.GetSource())
 	}

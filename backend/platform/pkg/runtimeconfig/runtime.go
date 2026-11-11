@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	nacosRegistry "github.com/go-kratos/kratos/contrib/registry/nacos/v2"
 	"github.com/go-kratos/kratos/v2"
@@ -29,11 +30,13 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"go-admin/platform/pkg/serviceid"
+	"go-admin/platform/pkg/tracing"
 )
 
 const (
 	registryKey = "runtime.registry"
 	settingsKey = "runtime.settings"
+	tracingKey  = "runtime.tracing"
 )
 
 type Configuration struct {
@@ -209,6 +212,9 @@ func loadDocuments(client configGetter, name string) (*Configuration, error) {
 }
 
 func validate(cfg *Configuration, name string) error {
+	if err := tracing.Validate(cfg.Runtime.Tracing); err != nil {
+		return err
+	}
 	if cfg.GetServer().GetGrpc().GetTimeout().AsDuration() <= 0 {
 		return fmt.Errorf("server.grpc.timeout must be positive")
 	}
@@ -274,9 +280,26 @@ func NewContext(parent context.Context, name, version string) (*bootstrap.Contex
 	}
 	logger := bLogger.NewLoggerProvider(cfg.Logger, info)
 	ctx := bootstrap.NewContextWithParam(parent, info, cfg.Bootstrap, logger)
+	tracer, err := tracing.New(parent, cfg.Runtime.Tracing, tracing.Identity{
+		Service:  "muskdeer-" + name,
+		Instance: info.GetInstanceId(),
+		Version:  version,
+	})
+	if err != nil {
+		naming.CloseClient()
+		return nil, nil, err
+	}
+	ctx.SetValue(tracingKey, tracer)
 	ctx.SetValue(registryKey, reg)
 	ctx.SetValue(settingsKey, cfg.Runtime)
-	return ctx, naming.CloseClient, nil
+	return ctx, func() {
+		naming.CloseClient()
+		shutdown, cancel := context.WithTimeout(context.WithoutCancel(parent), 5*time.Second)
+		defer cancel()
+		if err := tracer.Close(shutdown); err != nil {
+			logger.Error(shutdown, "tracing shutdown failed", "err", err)
+		}
+	}, nil
 }
 
 func Run(name, version string, initApp bootstrap.InitAppFunc) error {
@@ -344,4 +367,11 @@ func Endpoint(scheme, address, advertised string) (*url.URL, error) {
 		}
 	}
 	return url.Parse(scheme + "://" + net.JoinHostPort(host, port))
+}
+
+// TracingFromContext returns the one owned provider created from Nacos settings.
+func TracingFromContext(ctx *bootstrap.Context) *tracing.Runtime {
+	value, _ := ctx.GetValue(tracingKey)
+	result, _ := value.(*tracing.Runtime)
+	return result
 }
