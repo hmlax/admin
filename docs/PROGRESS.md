@@ -1,5 +1,13 @@
 # 做市管理接入进度
 
+## 2026-11-11 Jaeger 实际发布与验收
+
+46fa0e135f3f的operator/admin与核心1dc8daf687eb已配套发布；管理库和Nacos原文备份，env仍只引导Nacos。只增加追踪设置及原数据库enable_trace开关，没有数据库迁移、前端重建、AES变更或权限调整。既有平台/商户前端容器保持，仅重新加载Nginx解析新后台地址。
+
+原账号双端实际登录、商户21账户/40实例与全部装载修订、平台业务隔离通过。一个真实HTTP请求的138个span连接六个服务，验证同一Trace ID、有效父子引用及数据库/Redis耗时；无浏览器追踪头时正确生成X-Trace-ID，只读404在后台与核心产生5个错误span。实时策略链路进一步包含订单服务与撮合引擎，执行日志已带追踪字段。
+
+Nacos逐文档读回与候选一致；原实例具体参数、启停/控制版本、账户归属、业务schema账本及历史记录核对保持。后台请求全量、高频核心根trace采样10%，父采样决定跨服务继承。共享Jaeger当前为内存存储，本次不修改其存储或其他应用。实际链路、凭据及完整备份仅保存于私有验收记录，不写入仓库。
+
 ## 2026-11-11 管理后台 Jaeger 追踪
 
 Nacos runtime.tracing提供独立admin/operator的OTLP端点、TLS、整数ppm采样和导出期限，env仍仅连接Nacos，OTEL环境不覆盖运行设置。每进程拥有独立provider、2048个span非阻塞队列、256批量及有界停机flush，不替换全局provider。框架原日志自动关联活跃span，审计Trace ID优先取实际server span，覆盖浏览器未传traceparent的请求。

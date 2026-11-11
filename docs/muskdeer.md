@@ -66,3 +66,6 @@ Jaeger tracing is configured in Nacos `server.yaml` under `runtime.tracing`: `en
 The HTTP entry creates a W3C trace before authentication and returns `X-Trace-ID`. HTTP → operator → core gRPC preserves parent spans, including the existing core single-dispatch client. HTTP 4xx/5xx and gRPC/domain failures are marked as errors. Enable the existing `data.database.enable_trace` option to include operator database timings; SQL text/parameters and exception text are not exported. Redis timings include command names only; existing framework logging automatically correlates the active trace.
 
 Each process owns its provider and bounded asynchronous export queue. Shutdown drains services and flushes spans within a fixed deadline; collector failure does not become a business readiness dependency. Sampling retains complete sampled request chains, and completed synchronous operations are searchable independently of long-lived market subscription spans. No frontend rebuild, menu or permission change is required for tracing.
+
+
+2026-11-11 已配套发布后台46fa0e135f3f和核心1dc8daf687eb。实际HTTP链路串起六个服务（138个span），并验证无追踪头时的服务端Trace ID、404错误标记、数据库/Redis耗时及策略→订单服务→撮合引擎传播。后台全量，高频核心根trace采样10%；已采样的父决策向下保持。原21账户/40实例配置、启停、账户归属、schema与历史核对保留，既有前端容器、AES配套和原登录凭据不变。Jaeger沿用现有共享内存存储，重启会丢失内存中的历史trace；本次没有变更共享存储或其他应用。
